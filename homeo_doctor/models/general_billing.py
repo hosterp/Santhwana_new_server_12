@@ -3342,13 +3342,8 @@ class OTBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date',default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one(
-        'doctor.profile', string='Doctor',
-        compute="_compute_doctor_name", store=True, readonly=False,
-    )
-    doctor_manual = fields.Boolean(
-        string='Manual Doctor Override', default=False, copy=False,
-    )
+    doctor = fields.Many2one('doctor.profile', string='Doctor')
+    doctor_manual = fields.Boolean(default=False, copy=False)
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
     bill_types = fields.Many2one('bill.type', string='Bill Type')
@@ -3410,9 +3405,6 @@ class OTBilling(models.Model):
         if self.env.context.get('no_sync'):
             return super(OTBilling, self).write(vals)
 
-        if 'doctor' in vals and not self.env.context.get('skip_doctor_manual'):
-            vals['doctor_manual'] = True
-
         res = super(OTBilling, self).write(vals)
 
         patient_fields = {'patient_name', 'mobile', 'age', 'gender'}
@@ -3448,193 +3440,120 @@ class OTBilling(models.Model):
         ], limit=1)
         return employee.id
 
-    @api.onchange('doctor')
-    def _onchange_doctor_manual(self):
-        if self.doctor:
-            self.doctor_manual = True
+    def _lookup_ot_doctor(self):
+        self.ensure_one()
+        if not self.mrd_no or not self.bill_date:
+            return False
 
-    @api.onchange('mrd_no', 'bill_date', 'bill_type')
+        bill_date = self.bill_date
+        if isinstance(bill_date, datetime):
+            bill_date = bill_date.date()
+
+        reg_log = self.env['patient.registration'].search([
+            '|', ('user_id', '=', self.mrd_no.id), ('patient_id', '=', self.mrd_no.id),
+            ('date', '=', bill_date)
+        ], order='date desc', limit=1)
+        if not reg_log:
+            reg_log = self.env['patient.registration'].search([
+                '|', ('user_id', '=', self.mrd_no.id), ('patient_id', '=', self.mrd_no.id),
+                ('date', '<', bill_date)
+            ], order='date desc', limit=1)
+
+        doctor = False
+        if self.bill_type == 'admitted':
+            admission_log = self.env['hospital.admitted.patient'].sudo().search([
+                ('patient_id', '=', self.mrd_no.id),
+                ('admission_date', '<=', bill_date)
+            ], order='admission_date desc', limit=1)
+            if admission_log and (not admission_log.discharge_date or bill_date <= admission_log.discharge_date):
+                doctor = admission_log.attending_doctor.id
+
+            if not doctor and reg_log:
+                target_doctor = reg_log.doctor.id
+                if not target_doctor and getattr(reg_log, 'doctor_id', False):
+                    f_doc = self.env['doctor.profile'].search([('name', '=', reg_log.doctor_id)], limit=1)
+                    if f_doc:
+                        target_doctor = f_doc.id
+                doctor = target_doctor
+        else:
+            appt_today = self.env['patient.appointment'].search([
+                ('patient_id', '=', self.mrd_no.id),
+                ('appointment_date', '=', bill_date),
+                ('status', '=', 'confirmed')
+            ], order='id desc', limit=1)
+            if appt_today and appt_today.doctor_ids:
+                doctor = appt_today.doctor_ids[0].id
+
+            if not doctor and reg_log and reg_log.date == bill_date:
+                target_doctor = reg_log.doctor.id
+                if not target_doctor and reg_log.doctor_id:
+                    f_doc = self.env['doctor.profile'].search([('name', '=', reg_log.doctor_id)], limit=1)
+                    if f_doc:
+                        target_doctor = f_doc.id
+                if target_doctor:
+                    doctor = target_doctor
+
+            if not doctor and reg_log:
+                target_doctor = reg_log.doctor.id
+                if not target_doctor and reg_log.doctor_id:
+                    f_doc = self.env['doctor.profile'].search([('name', '=', reg_log.doctor_id)], limit=1)
+                    if f_doc:
+                        target_doctor = f_doc.id
+                if target_doctor:
+                    doctor = target_doctor
+
+            if not doctor:
+                appt_prev = self.env['patient.appointment'].search([
+                    ('patient_id', '=', self.mrd_no.id),
+                    ('appointment_date', '<', bill_date),
+                    ('status', '=', 'confirmed')
+                ], order='appointment_date desc', limit=1)
+                if appt_prev and appt_prev.doctor_ids:
+                    doctor = appt_prev.doctor_ids[0].id
+
+            if not doctor:
+                doctor = self.mrd_no.doc_name.id
+
+            if not doctor:
+                admission_log = self.env['hospital.admitted.patient'].sudo().search([
+                    ('patient_id', '=', self.mrd_no.id),
+                    ('admission_date', '<=', bill_date)
+                ], order='admission_date desc', limit=1)
+                if admission_log and (not admission_log.discharge_date or bill_date <= admission_log.discharge_date):
+                    doctor = admission_log.attending_doctor.id
+
+        if not doctor and self.bill_type == 'admitted':
+            historical_admission = self.env['discharged.patient.record'].sudo().search([
+                ('patient_id', '=', self.mrd_no.reference_no),
+                ('admitted_date', '<=', datetime.combine(bill_date, datetime.max.time())),
+                ('discharge_date', '>=', datetime.combine(bill_date, datetime.min.time()))
+            ], limit=1)
+            if historical_admission:
+                doctor = historical_admission.doctor.id
+
+        if not doctor:
+            doctor = self.mrd_no.doctor.id or self.mrd_no.doc_name.id
+
+        return doctor or False
+
+    @api.onchange('mrd_no')
     def _onchange_mrd_no_update_doctor(self):
         for rec in self:
-            if rec.doctor_manual:
+            if rec.status in ['paid', 'cancelled']:
                 continue
-
-            if rec.doctor and rec.status in ['paid', 'cancelled']:
-                continue
-
-            if not rec.doctor and isinstance(rec.id, int):
-                existing = self.sudo().browse(rec.id)
-                if existing.doctor_manual and existing.doctor:
-                    rec.doctor = existing.doctor.id
-                    continue
-                if existing.doctor:
-                    rec.doctor = existing.doctor.id
-                    continue
-
             if not rec.mrd_no or not rec.bill_date:
                 continue
+            rec.doctor = rec._lookup_ot_doctor()
 
-            bill_date = rec.bill_date
-            admitted_date = rec.mrd_no.admitted_date
-            discharge_date = rec.mrd_no.discharge_date  # add this field if it exists in patient model
-
-            # Normalize dates
-            if admitted_date and isinstance(admitted_date, datetime):
-                admitted_date = admitted_date.date()
-            if discharge_date and isinstance(discharge_date, datetime):
-                discharge_date = discharge_date.date()
-            if isinstance(bill_date, datetime):
-                bill_date = bill_date.date()
-
-            # Context-Aware Selection
-            if rec.bill_type == 'admitted':
-                if (rec.mrd_no.admission_boolean and admitted_date and admitted_date <= bill_date and (not discharge_date or bill_date <= discharge_date)):
-                     rec.doctor = rec.mrd_no.doctor.id
-                else:
-                     rec.doctor = rec.mrd_no.doctor.id
-            else:
-                # 1. Try Consultation log
-                reg_log = self.env['patient.registration'].search([
-                    '|', ('user_id', '=', rec.mrd_no.id), ('patient_id', '=', rec.mrd_no.id),
-                    ('date', '<=', bill_date)
-                ], order='date desc', limit=1)
-                
-                if reg_log and reg_log.doctor:
-                    rec.doctor = reg_log.doctor.id
-                else:
-                    # 2. Try Appointment fallback
-                    appt = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.mrd_no.id),
-                        ('appointment_date', '<=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='appointment_date desc', limit=1)
-                    if appt and appt.doctor_ids:
-                        rec.doctor = appt.doctor_ids[0].id
-                    else:
-                        # 3. Use master registration doctor
-                        rec.doctor = rec.mrd_no.doc_name.id
-
-    @api.depends(
-        'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date',
-        'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type', 'doctor_manual',
-    )
-    def _compute_doctor_name(self):
+    @api.onchange('bill_date', 'bill_type')
+    def _onchange_bill_date_update_doctor(self):
         for rec in self:
-            if rec.doctor_manual:
+            if rec.status in ['paid', 'cancelled'] or rec.doctor:
                 continue
-
-            if rec.doctor and rec.status in ['paid', 'cancelled']:
+            if not rec.mrd_no or not rec.bill_date:
                 continue
+            rec.doctor = rec._lookup_ot_doctor()
 
-            if not rec.doctor and isinstance(rec.id, int):
-                existing = rec.sudo().browse(rec.id)
-                if existing.doctor_manual and existing.doctor:
-                    rec.doctor = existing.doctor.id
-                    continue
-                if existing.doctor:
-                    rec.doctor = existing.doctor.id
-                    continue
-
-            doctor = False
-            if rec.mrd_no and rec.bill_date:
-                bill_date = rec.bill_date
-                # Lookup Consultation (Revisit)
-                reg_log = self.env["patient.registration"].search([
-                    "|", ("user_id", "=", rec.mrd_no.id), ("patient_id", "=", rec.mrd_no.id),
-                    ("date", "=", bill_date)
-                ], order="date desc", limit=1)
-
-                if not reg_log:
-                    reg_log = self.env["patient.registration"].search([
-                        "|", ("user_id", "=", rec.mrd_no.id), ("patient_id", "=", rec.mrd_no.id),
-                        ("date", "<", bill_date)
-                    ], order="date desc", limit=1)
-
-                if isinstance(bill_date, datetime):
-                    bill_date = bill_date.date()
-
-                # Determine Priority based on Bill Type
-                if rec.bill_type == 'admitted':
-                    # 1️⃣ IP Priority: Admission logs
-                    admission_log = self.env["hospital.admitted.patient"].sudo().search([
-                        ("patient_id", "=", rec.mrd_no.id),
-                        ("admission_date", "<=", bill_date)
-                    ], order="admission_date desc", limit=1)
-                    if admission_log and (not admission_log.discharge_date or bill_date <= admission_log.discharge_date):
-                        doctor = admission_log.attending_doctor.id
-
-                    # 2. Fallback to Consultation
-                    if not doctor and reg_log:
-                        target_doctor = reg_log.doctor.id
-                        if not target_doctor and (hasattr(reg_log, "doctor_id") and reg_log.doctor_id):
-                            f_doc = self.env["doctor.profile"].search([("name", "=", reg_log.doctor_id)], limit=1)
-                            if f_doc: target_doctor = f_doc.id
-                        doctor = target_doctor
-                else:
-                    # 1️⃣ OP Priority: Appointment for TODAY
-                    appt_today = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.mrd_no.id),
-                        ('appointment_date', '=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='id desc', limit=1)
-                    if appt_today and appt_today.doctor_ids:
-                        doctor = appt_today.doctor_ids[0].id
-
-                    # 2️⃣ OP Priority: Consultation logs for TODAY
-                    if not doctor and (reg_log and reg_log.date == bill_date):
-                        target_doctor = reg_log.doctor.id
-                        if not target_doctor and reg_log.doctor_id:
-                            f_doc = self.env['doctor.profile'].search([('name', '=', reg_log.doctor_id)], limit=1)
-                            if f_doc: target_doctor = f_doc.id
-                        if target_doctor:
-                            doctor = target_doctor
-                    
-                    # 3️⃣ Historical Consultation logs
-                    if not doctor and reg_log:
-                        target_doctor = reg_log.doctor.id
-                        if not target_doctor and reg_log.doctor_id:
-                            f_doc = self.env['doctor.profile'].search([('name', '=', reg_log.doctor_id)], limit=1)
-                            if f_doc: target_doctor = f_doc.id
-                        if target_doctor:
-                            doctor = target_doctor
-                    
-                    # 4️⃣ Historical Appointment Fallback (Latest confirmed)
-                    if not doctor:
-                        appt_prev = self.env['patient.appointment'].search([
-                            ('patient_id', '=', rec.mrd_no.id),
-                            ('appointment_date', '<', bill_date),
-                            ('status', '=', 'confirmed')
-                        ], order='appointment_date desc', limit=1)
-                        if appt_prev and appt_prev.doctor_ids:
-                            doctor = appt_prev.doctor_ids[0].id
-                    
-                    # 5️⃣ UHID Master Record (The main OP doctor)
-                    if not doctor:
-                        doctor = rec.mrd_no.doc_name.id
-
-                    # 4️⃣ Fallback to Admission (only if UHID master has no doctor, which is unlikely)
-                    if not doctor:
-                        admission_log = self.env['hospital.admitted.patient'].sudo().search([
-                            ('patient_id', '=', rec.mrd_no.id),
-                            ('admission_date', '<=', bill_date)
-                        ], order='admission_date desc', limit=1)
-                        if admission_log and (not admission_log.discharge_date or bill_date <= admission_log.discharge_date):
-                            doctor = admission_log.attending_doctor.id
-
-                # 3️⃣ Historical Snapshot (Only for IP bills)
-                if not doctor and rec.bill_type == 'admitted':
-                    historical_admission = self.env['discharged.patient.record'].sudo().search([
-                        ('patient_id', '=', rec.mrd_no.reference_no),
-                        ('admitted_date', '<=', datetime.combine(bill_date, datetime.max.time())),
-                        ('discharge_date', '>=', datetime.combine(bill_date, datetime.min.time()))
-                    ], limit=1)
-                    if historical_admission: doctor = historical_admission.doctor.id
-
-                # 4️⃣ Master Record Fallback
-                if not doctor:
-                    doctor = rec.mrd_no.doctor.id or rec.mrd_no.doc_name.id
-
-            rec.doctor = doctor
     def action_cancel(self):
         for rec in self:
             # Update current record
@@ -3851,7 +3770,6 @@ class OTBilling(models.Model):
     @api.onchange('mrd_no')
     def _onchange_mrd_no(self):
         if self.mrd_no:
-            self.doctor_manual = False
             self.patient_name = self.mrd_no.patient_id
             self.age = self.mrd_no.age
             self.gender = self.mrd_no.gender
