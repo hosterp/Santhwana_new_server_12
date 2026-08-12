@@ -1,0 +1,134 @@
+<odoo>
+    <data>
+
+        <!-- Tree View for Hospital Room -->
+        <record id="view_hospital_room_tree" model="ir.ui.view">
+            <field name="name">hospital.room.tree</field>
+            <field name="model">hospital.room</field>
+            <field name="arch" type="xml">
+                <tree string="Hospital Rooms">
+                    <field name="room_number"/>
+                    <field name="room_type_new" string="Room Category"/>
+                    <field name="advance_amount" invisible="1"/>
+                    <field name="bed_count" invisible="1"/>
+                    <field name="occupied_beds" invisible="1"/>
+                    <field name="available_rooms" invisible="1"/>
+                    <field name="block_new" string="Floor"/>
+                    <field name="bed_number_new"/>
+                    <field name="rent_half"/>
+                    <field name="rent_full"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View for Hospital Room -->
+        <record id="view_hospital_room_form" model="ir.ui.view">
+            <field name="name">hospital.room.form</field>
+            <field name="model">hospital.room</field>
+            <field name="arch" type="xml">
+                <form string="Hospital Room">
+                    <sheet>
+                        <group col="4">
+                            <group>
+                                <field name="room_number"/>
+                                <field name="rent_half"/>
+                                <field name="service_charge" invisible="1"/>
+                                <field name="bed_count" invisible="1"/>
+                                <!--                                <field name="occupied_beds" readonly="1"/>-->
+                                <field name="is_available" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="block_new" string="Floor"/>
+                                <field name="rent_full"/>
+                                <field name="extesion_no" invisible="1"/>
+                                <field name="tax" invisible="1"/>
+                                <!--                                <field name="available_rooms" readonly="1"/>-->
+                                <!--                                <field name="block"/>-->
+
+                            </group>
+                            <group>
+                                <field name="room_type_new" string="Room Category"/>
+                                <field name="room_status" invisible="1"/>
+                                <field name="description" string="Amenity Details"/>
+                                <field name="advance_amount" invisible="1"/>
+
+
+                            </group>
+                            <group>
+
+                                <field name="bed_number_new"/>
+
+                                <field name="nurse_fee" invisible="1"/>
+                            </group>
+
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+
+        <!-- Patient Admission Tree View -->
+        <record id="view_patient_admit_tree" model="ir.ui.view">
+            <field name="name">hospital.admitted.patient.tree</field>
+            <field name="model">hospital.admitted.patient</field>
+            <field name="arch" type="xml">
+                <tree string="Admitted Patients">
+                    <field name="name"/>
+                    <field name="bed_id"/>
+                    <field name="room_id"/>
+                    <field name="admission_date"/>
+                    <field name="status"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Patient Admission Form View -->
+        <record id="view_patient_admit_form" model="ir.ui.view">
+            <field name="name">hospital.admitted.patient.form</field>
+            <field name="model">hospital.admitted.patient</field>
+            <field name="arch" type="xml">
+                <form string="Admit Patient">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="bed_id"/>
+                            <field name="room_id" readonly="1"/>
+                            <field name="admission_date"/>
+                            <field name="discharge_date"/>
+                            <field name="status"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Actions -->
+        <record id="action_hospital_room" model="ir.actions.act_window">
+            <field name="name">Hospital Rooms</field>
+            <field name="res_model">hospital.room</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record id="action_admitted_patient" model="ir.actions.act_window">
+            <field name="name">Admitted Patients</field>
+            <field name="res_model">hospital.admitted.patient</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Menu -->
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_hospital_config" name="Configuration" parent="menu_lab_root" sequence="20"/>
+        <menuitem id="menu_hospital_room" name="Rooms" parent="menu_hospital_config" action="action_hospital_room"
+                  sequence="1"/>
+        <!--        <menuitem id="menu_hospital_patient" name="Admitted Patients" parent="menu_hospital_config"-->
+        <!--                  action="action_admitted_patient" invisible="1"/>-->
+
+
+        <!--         <menuitem id="menu_lab_root" name="Master" parent="menu_homeo_head" sequence="11"/>-->
+        <!--        <menuitem id="menu_hospital_room_config" name="Room Configuration" parent="menu_lab_root"/>-->
+        <!--        <menuitem id="menu_hospital_room" name="Rooms" parent="menu_hospital_room_config"-->
+        <!--                  action="action_hospital_room"/>-->
+
+    </data>
+</odoo>

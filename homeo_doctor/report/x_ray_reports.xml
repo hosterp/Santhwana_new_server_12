@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <report
+        id="action_report_xray_invoice"
+        string="X-Ray Scan Invoice"
+        model="scanning.x.ray"
+        report_type="qweb-pdf"
+        name="homeo_doctor.report_xray_invoice"
+        file="homeo_doctor.report_xray_invoice"
+    />
+</odoo>

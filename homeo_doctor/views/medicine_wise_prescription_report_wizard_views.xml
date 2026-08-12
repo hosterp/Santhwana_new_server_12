@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Wizard Form -->
+        <record id="view_pharmacy_prescription_report_wizard" model="ir.ui.view">
+            <field name="name">pharmacy.prescription.report.wizard.form</field>
+            <field name="model">pharmacy.prescription.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Prescription Report">
+                    <group>
+                        <field name="from_date"/>
+                        <field name="to_date"/>
+                        <field name="medicine_id"/>
+                    </group>
+                    <footer>
+                        <button name="action_print_report"
+                                type="object"
+                                string="Print PDF"
+                                class="btn-primary"/>
+                        <button string="Cancel"
+                                class="btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Wizard Action (to open the form) -->
+        <record id="action_pharmacy_prescription_report_wizard" model="ir.actions.act_window">
+            <field name="name">Prescription Report</field>
+            <field name="res_model">pharmacy.prescription.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_pharmacy_prescription_report_wizard"/>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Menu Item -->
+        <menuitem id="menu_pharmacy_prescription_report"
+                  parent="homeo_doctor.menu_reports_root"
+                  action="action_pharmacy_prescription_report_wizard"
+                  string="Prescription Report"
+                  sequence="20"/>
+    </data>
+</odoo>

@@ -1,0 +1,171 @@
+<odoo>
+    <data>
+        <template id="report_doctor_lab_report">
+            <t t-call="web.basic_layout">
+                <div class="page">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                        <img t-att-src="'/web/binary/company_logo'"
+                             style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+
+
+                        <div style="text-align: center;">
+                            <h1 style="font-size: 25px; margin: 0; font-weight: bold; color: #2c3e50;">SANTHWANA
+                                HOSPITAL
+                            </h1>
+                            <p style="margin: 5px 0; font-size: 16px; color: #555;">NCC Rd, Samithy Nagar, Ambalamukku,
+                                Thiruvananthapuram, Kerala 695005
+                            </p>
+                            <p style="margin: 5px 0; font-size: 16px; color: #555;">Mobile No:
+                                91884 29198
+
+                            </p>
+                            <!--                            &lt;!&ndash;                                        <p style="margin: 5px 0; font-size: 15px; color: #555;">&ndash;&gt;-->
+                            <!--                            &lt;!&ndash;                                            <strong>PH:</strong>&ndash;&gt;-->
+                            <!--                            &lt;!&ndash;                                            0471-2432121, 9188429198 |&ndash;&gt;-->
+                            <!--                            &lt;!&ndash;                                            <strong>Email:</strong>&ndash;&gt;-->
+                            <!--                            &lt;!&ndash;                                            <a href="mailto:santhwanatvpm@gmail.com"&ndash;&gt;-->
+                            <!--                            &lt;!&ndash;                                               style="color: #007bff; text-decoration: none;">&ndash;&gt;-->
+                            <!--                            &lt;!&ndash;                                                santhwanatvpm@gmail.com&ndash;&gt;-->
+                            <!--                            &lt;!&ndash;                                            </a>&ndash;&gt;-->
+                            <!--                            &lt;!&ndash;                                        </p>&ndash;&gt;-->
+                        </div>
+                    </div>
+                    <h5 style="text-align: center;">Lab Billing Report</h5>
+                    <t t-if="data">
+                        <p style="text-align: center; margin-top: 5px;">
+                            From:
+                            <strong t-esc="data.get('from_date', '')"/> 
+                            To:
+                            <strong t-esc="data.get('to_date', '')"/>
+                        </p>
+                    </t>
+
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>SL No</th>
+                                <th>Date</th>
+                                <th>Bill Number</th>
+                                <th>Patient Name</th>
+                                <th>UHID</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="counter" t-value="0"/>
+                            <t t-set="total_amount" t-value="0"/>
+                            <t t-foreach="report_data" t-as="data">
+                                <t t-if="data">
+                                    <tr>
+                                        <td>
+                                            <t t-esc="counter + 1"/>
+                                            <t t-set="counter" t-value="counter + 1"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="data['date']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="data['bill_number']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="data['patient_name']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="data['mrd_op_no']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="data['total_bill_amount']"/>
+                                            <t t-set="total_amount" t-value="total_amount + data['total_bill_amount']"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+
+                            <tr>
+                                <td colspan="5" style="text-align: right;">
+                                    <strong>Total</strong>
+                                </td>
+                                <td>
+                                    <strong>
+                                        <t t-esc="total_amount"/>
+                                    </strong>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </template>
+        <record id="lab_billing_paperformat" model="report.paperformat">
+            <field name="name">Lab Billing PDF Format</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="orientation">Portrait</field>
+            <field name="header_line" eval="False"/>
+        </record>
+
+
+        <record id="report_doctor_lab_report_pdf" model="ir.actions.report">
+            <field name="name">Doctor Lab Report</field>
+            <field name="model">doctor.lab.report.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">homeo_doctor.report_doctor_lab_report</field>
+            <field name="print_report_name">Doctor Lab Report</field>
+            <field name="paperformat_id" ref="lab_billing_paperformat"/>
+        </record>
+
+        <!-- Wizard View for Report Generation -->
+        <record id="view_doctor_lab_report_wizard" model="ir.ui.view">
+            <field name="name">doctor.lab.report.wizard.form</field>
+            <field name="model">doctor.lab.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Generate Doctor Lab Report">
+                    <group col="3">
+                        <group>
+                            <field name="from_date"/>
+                        </group>
+                        <group>
+                            <field name="to_date"/>
+                        </group>
+                        <group>
+                            <field name="mode_pay"/>
+                        </group>
+                        <group>
+                            <field name="bill_type"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button string="Pdf Report" type="object" name="action_generate_report" class="btn-primary"/>
+                        <button name="action_download_excel" type="object" string="Download Excel"
+                                class="oe_highlight"/>
+                        <button string="Cancel" type="object" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action for the Wizard -->
+        <record id="action_doctor_lab_report_wizard" model="ir.actions.act_window">
+            <field name="name">Generate Lab Billing Report</field>
+            <field name="res_model">doctor.lab.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_doctor_lab_report_wizard"/>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Menu Items -->
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_auditing_root" name="Auditing Reports" parent="menu_homeo_head" sequence="22"/>
+
+
+        <menuitem id="menu_lab_billing_wizard_reports"
+                  name="Lab billing Wizard Report"
+                  parent="menu_auditing_root"
+                  action="action_doctor_lab_report_wizard"
+                  sequence="3"/>
+    </data>
+</odoo>

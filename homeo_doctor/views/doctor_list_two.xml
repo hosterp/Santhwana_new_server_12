@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <record id="view_doctor_collection_custom_wizard_form_view" model="ir.ui.view">
+        <field name="name">doctor.collection.custom.wizard.form</field>
+        <field name="model">doctor.wise.collection.list.two</field>
+        <field name="arch" type="xml">
+            <form string="Doctor Wise Collection Custom Report">
+
+                <group col="3">
+                    <group>
+                        <field name="date_from"/>
+                    </group>
+                    <group>
+                        <field name="date_to"/>
+                    </group>
+                    <group>
+                        <field name="doctor_id"/>
+                    </group>
+                </group>
+
+                <footer>
+                    <button name="action_print_excel"
+                            string="Print Excel"
+                            type="object"
+                            class="btn-primary"/>
+
+                    <button string="Cancel"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+
+            </form>
+        </field>
+    </record>
+
+
+    <!-- Wizard Action -->
+    <record id="action_doctor_collection_custom_wizard_two" model="ir.actions.act_window">
+        <field name="name">Doctor Collection</field>
+        <field name="res_model">doctor.wise.collection.list.two</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+<!--    <menuitem id="menu_reports_root" name="Reports" parent="menu_homeo_head" sequence="21"/>-->
+    <menuitem
+                id="menu_homeo_head"
+                name="HOSPITAL"
+                sequence="0"/>
+    <menuitem id="menu_reports_roo_super_admin"
+              name="Super User"
+              parent="menu_homeo_head"
+              sequence="30"/>
+    <menuitem id="menu_doctor_collection_custom"
+              name="Doctors List"
+              parent="menu_reports_roo_super_admin"
+    />
+     <menuitem id="menu_doctor_collection_list2"
+              name="Doctors List 2"
+              parent="menu_doctor_collection_custom"
+              action="action_doctor_collection_custom_wizard_two" sequence="2"/>
+</odoo>

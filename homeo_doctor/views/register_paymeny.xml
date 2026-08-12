@@ -1,0 +1,14 @@
+<odoo>
+    <data>
+        <record id="view_account_payment_register_form_inherit_customer" model="ir.ui.view">
+            <field name="name">account.payment.register.form.inherit.customer</field>
+            <field name="model">account.payment.register</field>
+            <field name="inherit_id" ref="account.view_account_payment_register_form"/>
+            <field name="arch" type="xml">
+                <field name="payment_method_id" position="after">
+                    <field name="pay_mode"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>

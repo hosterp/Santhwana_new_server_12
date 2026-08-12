@@ -1,0 +1,187 @@
+<odoo>
+    <data>
+
+        <!-- Report Template -->
+        <template id="report_pharmacy_description_pdf">
+            <t t-call="web.basic_layout">
+
+                <div class="page">
+                    <div style="padding-top: 2mm; margin-bottom: 10px;">
+                        <!-- Hospital Header Block -->
+                        <div style="flex-grow: 1; text-align: center;">
+                            <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                SANTHWANA HOSPITAL
+                            </h1>
+
+
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                N.C.C Road,Ambalamukku,Trivandrum-695005
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Phone: 0471-2432121,4223131
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                            </p>
+
+                            <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                            <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                            <!--                                </h2>-->
+
+                        </div>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <h5>Pharmacy Description Report</h5>
+                        <p>
+                            <t t-esc="data['from_date']"/>
+                            to
+                            <t t-esc="data['to_date']"/>
+                        </p>
+                    </div>
+
+
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>SL No</th>
+                                <th>Receipt No</th>
+                                <th>Date Time</th>
+                                <th>Name</th>
+                                <th>Payment Mode</th>
+                                <!--                                <th>gst</th>-->
+                                <th>Payable Amount</th>
+                                <!--                                <th>Paying Amount</th>-->
+                                <!--                                <th>Balance Amount</th>-->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="data['report_data']" t-as="line">
+                                <tr>
+                                    <td>
+                                        <t t-esc="line['sl_no']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['receipt_no']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['date_time']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['name']"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line['payment_mathod']"/>
+                                    </td>
+                                    <!--                                    <td>-->
+                                    <!--                                        <t t-esc="line['gst']"/>-->
+                                    <!--                                    </td>-->
+                                    <td>
+                                        <t t-esc="line['payable_amount']"/>
+                                    </td>
+                                    <!--                                    <td>-->
+                                    <!--                                        <t t-esc="line['paying_amount']"/>-->
+                                    <!--                                    </td>-->
+                                    <!--                                    <td>-->
+                                    <!--                                        <t t-esc="line['balance_amount']"/>-->
+                                    <!--                                    </td>-->
+                                </tr>
+                            </t>
+                            <tr>
+                                <td colspan="5" style="text-align: right;">
+                                    <strong>Total:</strong>
+                                </td>
+                                <td>
+                                    <strong>
+                                        <t t-esc="data['payable_total']"/>
+                                    </strong>
+                                </td>
+                                <!--                                <td>-->
+                                <!--                                    <strong>-->
+                                <!--                                        <t t-esc="data['paying_total']"/>-->
+                                <!--                                    </strong>-->
+                                <!--                                </td>-->
+                                <!--                                <td>-->
+                                <!--                                    <strong>-->
+                                <!--                                        <t t-esc="data['balance_total']"/>-->
+                                <!--                                    </strong>-->
+                                <!--                                </td>-->
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </template>
+        <record id="paperformat_pharmacy_description" model="report.paperformat">
+            <field name="name">Pharmacy Description A4</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">5</field>
+            <field name="margin_bottom">5</field>
+            <field name="margin_left">5</field>
+            <field name="margin_right">5</field>
+            <field name="header_line" eval="False"/>
+            <field name="dpi">90</field>
+        </record>
+
+        <record id="view_pharmacy_description_wizard" model="ir.ui.view">
+            <field name="name">pharmacy.description.wizard.form</field>
+            <field name="model">pharmacy.description.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Pharmacy Description Wizard">
+                    <group col="3">
+                        <group>
+                            <field name="from_date"/>
+                        </group>
+                        <group>
+                            <field name="to_date"/>
+                        </group>
+                        <group>
+                            <field name="op_category"/>
+                        </group>
+                        <group>
+                            <field name="mode_pay"/>
+                        </group>
+
+                    </group>
+                    <footer>
+                        <button string="PDF Report" type="object" name="action_generate_report"
+                                class="btn-primary"/>
+                        <button string="Download Excel" type="object"
+                                name="action_generate_excel_report"
+                                class="btn-secondary"/>
+                        <button string="Cancel" special="cancel" class="btn-secondary"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <!-- Report Action for Pharmacy Description -->
+        <record id="action_report_pharmacy_description" model="ir.actions.report">
+            <field name="name">Pharmacy Description Report</field>
+            <field name="model">pharmacy.description.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">homeo_doctor.report_pharmacy_description_pdf</field>
+            <field name="report_file">homeo_doctor.report_pharmacy_description_pdf</field>
+            <field name="paperformat_id" ref="homeo_doctor.paperformat_pharmacy_description"/>
+        </record>
+
+        <!-- Action for Pharmacy Report Wizard -->
+        <record id="action_pharmacy_description_wizard" model="ir.actions.act_window">
+            <field name="name">Pharmacy Report Wizard</field>
+            <field name="res_model">pharmacy.description.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Menu Items -->
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+       <menuitem id="menu_auditing_root" name="Auditing Reports" parent="menu_homeo_head" sequence="22"/>
+        <menuitem id="menu_pharmacy_report_wizard" name="Pharmacy Report" parent="menu_auditing_root"
+                  action="action_pharmacy_description_wizard" sequence="4"/>
+
+    </data>
+</odoo>

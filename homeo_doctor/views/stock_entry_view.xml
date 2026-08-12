@@ -1,0 +1,110 @@
+<odoo>
+    <record id="view_stock_entry_tree" model="ir.ui.view">
+        <field name="name">stock.entry.tree</field>
+        <field name="model">stock.entry</field>
+        <field name="arch" type="xml">
+            <tree string="Stock Entries"  decoration-danger="is_expired"
+                  decoration-primary="expiry_status == '30'"
+                  decoration-warning="expiry_status == '60'"
+                  decoration-info="expiry_status == '90'"
+                  decoration-success="expiry_status == '120'" editable="bottom">
+                <field name="name" invisible="1"/>
+                <field name="invoice_id" invisible="1"/>
+                <field name="date"/>
+                <field name="category"/>
+                <field name="product_id" string="Medicine"/>
+                <field name="qty"/>
+                <field name="dispensed"/>
+                <field name="quantity"/>
+                <field name="pack" invisible="1"/>
+                <field name="company" string="MFC"/>
+                <field name="supplier_name"/>
+                <field name="manf_date"/>
+                <field name="exp_date"/>
+                <field name="hsn"/>
+                <field name="batch"/>
+                <field name="rate"/>
+                <field name="supplier_mrp" string="MRP"/>
+                <field name="pup" string="PUP"/>
+                <field name="gst" string="GST"/>
+                <field name="rack" invisible="1"/>
+                <field name="uom_id" invisible="1"/>
+                <field name="state" invisible="1"/>
+                <field name="is_expired" invisible="1"/>
+                <field name="expiry_status" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+    <record id="view_stock_entry_tree_search_new" model="ir.ui.view">
+        <field name="name">stock.entry.tree.search.new</field>
+        <field name="model">stock.entry</field>
+        <field name="arch" type="xml">
+            <tree string="Stock Entries" decoration-danger="is_expired">
+                <field name="name" invisible="1"/>
+                <field name="invoice_id" invisible="1"/>
+                <field name="date"/>
+                <field name="category"/>
+                <field name="product_id" string="Medicine"/>
+                <field name="qty"/>
+                <field name="dispensed"/>
+                <field name="quantity"/>
+                <field name="pack" invisible="1"/>
+                <field name="company"/>
+                <field name="manf_date"/>
+                <field name="exp_date"/>
+                <field name="hsn"/>
+                <field name="batch"/>
+                <field name="rate"/>
+                <field name="supplier_mrp" string="MRP"/>
+                <field name="pup" string="PUP"/>
+                <field name="gst" string="GST"/>
+                <field name="rack"/>
+                <field name="uom_id" invisible="1"/>
+                <field name="state" invisible="1"/>
+                <field name="is_expired" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+    <record id="view_stock_entry_search" model="ir.ui.view">
+        <field name="name">stock.entry.search</field>
+        <field name="model">stock.entry</field>
+        <field name="arch" type="xml">
+            <search string="Search Stock Entries">
+                <field name="product_id"/>
+                <field name="batch"/>
+                <field name="manf_date"/>
+                <field name="exp_date"/>
+                <filter string="Group by Medicine" name="group_by_product" context="{'group_by': 'product_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_stock_entry" model="ir.actions.act_window">
+        <field name="name">Stock Entries</field>
+        <field name="res_model">stock.entry</field>
+        <field name="view_mode">tree</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_sm">No stock entries yet.</p>
+        </field>
+        <field name="search_view_id" ref="view_stock_entry_search"/>
+    </record>
+    <record id="action_stock_entry_search_new" model="ir.actions.act_window">
+        <field name="name">Stock Entries search new</field>
+        <field name="res_model">stock.entry</field>
+        <field name="view_mode">tree</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_sm">No stock entries yet.</p>
+        </field>
+        <field name="search_view_id" ref="view_stock_entry_search"/>
+        <field name="view_id" ref="view_stock_entry_tree_search_new"/>
+        <field name="context">{'group_by': 'product_id'}</field>
+    </record>
+
+    <menuitem id="stock_entry_menu" name="Stock" sequence="41"/>
+    <menuitem id="menu_pharmacy_root" name="Pharmacy" sequence="5" parent="menu_homeo_head"/>
+    <menuitem id="menu_stock_entry_action" name="Stock"
+              parent="menu_pharmacy_root" action="action_stock_entry"/>
+    <menuitem id="menu_stock_entry_search_new_action" name="Stock Search"
+              parent="menu_pharmacy_root" action="action_stock_entry_search_new" sequence="5"/>
+
+</odoo>

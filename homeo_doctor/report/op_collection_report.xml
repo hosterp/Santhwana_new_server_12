@@ -1,0 +1,320 @@
+<odoo>
+    <data>
+        <record id="view_doctor_collection_wizard" model="ir.ui.view">
+            <field name="name">doctor.collection.wizard.form</field>
+            <field name="model">doctor.wise.collection.wizard</field>
+            <field name="arch" type="xml">
+                <form string="OP Collection Report">
+                    <group col="3">
+                        <group>
+                            <field name="date_from"/>
+                        </group>
+                        <group>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="doctor_id"/>
+                        </group>
+
+                    </group>
+
+                    <!--                    <notebook>-->
+                    <!--                        <page>-->
+                    <!--                            <field name="line_ids" nolabel="1" options="{'no_create': True, 'no_edit': True}">-->
+                    <!--                                <tree>-->
+                    <!--                                    <field name="reference_no"/>-->
+                    <!--                                    <field name="patient_name"/>-->
+                    <!--                                    <field name="doctor_id"/>-->
+                    <!--                                    <field name="payment_mode"/>-->
+                    <!--                                    <field name="amount" sum="Total"/>-->
+                    <!--                                </tree>-->
+                    <!--                            </field>-->
+                    <!--                        </page>-->
+                    <!--                    </notebook>-->
+                    <notebook>
+                        <page>
+                            <field name="line_ids" nolabel="1" options="{'no_create': True, 'no_edit': True}">
+                                <tree limit="10000">
+                                    <field name="date"/>
+                                    <field name="bill_number"/>
+                                    <field name="reference_no"/>
+                                    <field name="patient_name"/>
+                                    <field name="doctor_id"/>
+                                    <field name="payment_mode"/>
+                                    <field name="consultation_fee" sum="consultation fee"/>
+<!--                                    <field name="registration_fee1"/>-->
+<!--                                    <field name="registration_fee"/>-->
+                                    <field name="cash_amount" string="Cash" sum="Cash Total"/>
+                                    <field name="credit_amount" string="Credit" sum="Credit Total"/>
+                                    <field name="total_amount" string="Total Amount" sum="Grand Total"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+
+                    <footer>
+                        <button name="action_view_report" type="object" string="View" class="btn-primary"/>
+                        <button name="action_print_pdf" type="object" string="Print PDF" class="btn-secondary"/>
+                        <button name="action_print_excel" type="object" string="Download Excel" class="btn-success"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <report
+                id="action_report_doctor_collection_pdf"
+                model="doctor.wise.collection.wizard"
+                string="Doctor Collection Report"
+                report_type="qweb-pdf"
+                name="homeo_doctor.report_doctor_collection_pdf_template"
+                file="homeo_doctor.report_doctor_collection_pdf_template"
+                print_report_name="'Doctor Collection - %s' % (object.date_from)"
+        />
+
+        <template id="report_doctor_collection_pdf_template">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <div class="page" style="padding-top: 5px;">
+                        <div style="max-width: 700px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">
+                            <!-- Logo on the left -->
+                            <div style="flex: 0 0 100px; margin-right: 10px;">
+                                <img src="/web/binary/company_logo" alt="Logo"
+                                     style="max-height: 100px; max-width: 100px; border-radius: 50%;"/>
+                            </div>
+
+
+                            <div style="flex-grow: 1; text-align: center;">
+                                <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                    SANTHWANA HOSPITAL
+                                </h1>
+
+
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    N.C.C Road,Ambalamukku,Trivandrum-695005
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Phone: 0471-2432121,4223131
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    D.L. NOS:1-378/20-2002,1-379/21-2002
+                                </p>
+
+                                <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                <!--                                </h2>-->
+
+                            </div>
+                        </div>
+                        <h2 style="text-align:center;">OP Collection Report</h2>
+                        <p style="text-align:center;">
+                            <strong>From:</strong>
+                            <t t-esc="doc.date_from.strftime('%d/%m/%Y') if doc.date_from else ''"/>
+                            <strong>To:</strong>
+                            <t t-esc="doc.date_to.strftime('%d/%m/%Y') if doc.date_to else ''"/>
+                        </p>
+
+
+                        <table style="width:100%; border-collapse: collapse;" border="1">
+                            <thead>
+                                <t t-set="payment_modes" t-value="['cash','card','upi','credit','cheque']"/>
+                                <tr>
+                                    <!--                                    <th>Doctor</th>-->
+                                    <th>Sl No.</th>
+                                    <th>Date</th>
+                                    <th>UHID</th>
+                                    <th>Bill Number</th>
+                                    <th>Patient</th>
+                                    <th>Consultation Fee</th>
+                                    <!--                                    <t t-foreach="payment_modes" t-as="mode">-->
+                                    <!--                                        <th>-->
+                                    <!--                                            <t t-esc="mode.capitalize()"/>-->
+                                    <!--                                        </th>-->
+                                    <!--                                    </t>-->
+                                    <th>Cash/Card/UPI</th>
+                                    <th>Credit</th>
+                                    <th>Others</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Group lines by doctor -->
+                                <!-- Group lines by doctor -->
+                                <!-- Initialize grouped dictionary -->
+                                <t t-set="grouped" t-value="{}"/>
+
+                                <!-- Loop through lines -->
+                                <t t-foreach="doc.line_ids" t-as="line">
+                                    <t t-set="doctor_id" t-value="line.doctor_id.id or 0"/>
+
+                                    <!-- Rebuild grouped dict safely -->
+                                    <t t-set="grouped"
+                                       t-value="grouped | dict({doctor_id: (grouped[doctor_id] if doctor_id in grouped else []) + [line]})"/>
+                                </t>
+
+                                <!-- Loop through grouped doctors -->
+                                <t t-foreach="grouped.items()" t-as="g">
+                                    <t t-set="doctor" t-value="env['doctor.profile'].browse(g[0])"/>
+                                    <t t-set="lines" t-value="g[1]"/>
+
+                                    <!-- Doctor Header -->
+                                    <tr style="background:#ddd;">
+                                        <td colspan="7">
+                                            <strong>
+                                                <t t-esc="doctor.name or 'No Doctor'"/>
+                                            </strong>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Lines per doctor -->
+                                    <t t-foreach="lines" t-as="line">
+                                        <t t-set="sl" t-value="(sl or 0) + 1"/>
+                                        <tr>
+
+                                            <td>
+                                                <t t-esc="sl"/>
+                                            </td>
+
+                                            <td>
+                                                <t t-esc="line.date"/>
+                                            </td>
+
+
+                                            <td>
+                                                <t t-esc="line.reference_no"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="line.bill_number"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="line.patient_name"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="line.consultation_fee"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="line.cash_amount"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="line.credit_amount"/>
+                                            </td>
+                                            <!--                                            <t t-foreach="payment_modes" t-as="mode">-->
+                                            <!--                                                <td style="text-align:right;">-->
+                                            <!--                                                    <t t-esc="line.amount if line.payment_mode == mode else ''"/>-->
+                                            <!--                                                </td>-->
+                                            <!--                                            </t>-->
+                                            <td>
+
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <t t-esc="line.total_amount"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+
+                                    <!-- Subtotal per doctor -->
+
+                                    <tr>
+                                        <!-- Empty cells to align -->
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td style="text-align:right;">
+                                            <strong>
+                                                <t t-esc="sum(l.consultation_fee for l in lines)"/>
+                                            </strong>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <strong>
+                                                <t t-esc="sum(l.cash_amount for l in lines)"/>
+                                            </strong>
+                                        </td>
+
+                                        <td style="text-align:right;">
+                                            <strong>
+                                                <t t-esc="sum(l.credit_amount for l in lines)"/>
+                                            </strong>
+                                        </td>
+                                        <td></td>
+                                        <td style="text-align:right;">
+                                            <strong>
+                                                <t t-esc="sum(l.total_amount for l in lines)"/>
+                                            </strong>
+                                        </td>
+
+
+                                    </tr>
+
+                                </t>
+                            </tbody>
+
+                            <!-- Grand Total -->
+                            <tfoot>
+                                <tr>
+                                    <!--                                    <td colspan="6" style="text-align:right;">-->
+                                    <!--                                        <strong>Grand Total</strong>-->
+                                    <!--                                    </td>-->
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td style="text-align:right;">
+                                        <strong>
+                                            Consultation:
+                                            <t t-esc="sum(line.consultation_fee for line in doc.line_ids)"/>
+                                        </strong>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <strong>
+                                            Cash :
+                                            <t t-esc="sum(line.cash_amount for line in doc.line_ids)"/>
+                                        </strong>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <strong>
+                                            Credit:
+                                            <t t-esc="sum(line.credit_amount for line in doc.line_ids)"/>
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        <strong>Others :</strong>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <strong>
+                                            Grand Total:
+                                            <t t-esc="sum(line.total_amount for line in doc.line_ids)"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </template>
+
+        <record id="action_doctor_collection_wizard" model="ir.actions.act_window">
+            <field name="name">OP Collection Report</field>
+            <field name="res_model">doctor.wise.collection.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_collection_root" name="Collection Report" parent="menu_homeo_head" sequence="23"/>
+        <menuitem id="menu_doctor_collection_root" name="Doctor Wise Collection Report" parent="menu_collection_root"/>
+        <menuitem id="menu_op_collection_report"
+                  name="OP Collection Report"
+                  parent="menu_doctor_collection_root"
+                  action="action_doctor_collection_wizard" sequence="7"/>
+    </data>
+</odoo>

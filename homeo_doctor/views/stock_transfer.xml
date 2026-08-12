@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Stock Transfer Form View -->
+        <record id="view_stock_transfer_form" model="ir.ui.view">
+            <field name="name">stock.transfer.form</field>
+            <field name="model">stock.transfer</field>
+            <field name="arch" type="xml">
+                <form string="Stock Transfer">
+                    <header>
+                        <button name="action_confirm" string="Confirm" type="object" states="draft"
+                                class="oe_highlight"/>
+                        <button name="action_done" string="Validate Transfer" type="object" states="confirmed"
+                                class="oe_highlight"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="sub_details">
+                                <!-- Single row with all 3 fields -->
+                                <div class="row mx-n1">
+                                    <div class="col px-1" style="max-width: 33.33%;">
+                                        <div class="form-group row my-1">
+                                            <label for="date" class="col-md-4 col-form-label py-0 small text-nowrap">
+                                                Date
+                                            </label>
+                                            <div class="col-md-8 field-container py-0">
+                                                <field name="date"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 33.33%;">
+                                        <div class="form-group row my-1">
+                                            <label for="location_from"
+                                                   class="col-md-4 col-form-label py-0 small text-nowrap">Location From
+                                            </label>
+                                            <div class="col-md-8 field-container py-0">
+                                                <field name="location_from"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 33.33%;">
+                                        <div class="form-group row my-1">
+                                            <label for="location_to"
+                                                   class="col-md-4 col-form-label py-0 small text-nowrap">Location To
+                                            </label>
+                                            <div class="col-md-8 field-container py-0">
+                                                <field name="location_to"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <notebook>
+                            <page string="Products">
+                                <field name="line_ids">
+                                    <tree editable="bottom">
+                                        <field name="category"/>
+                                        <field name="products_id"/>
+                                        <field name="pack"/>
+                                        <field name="quantity"/>
+                                        <field name="total"/>
+                                        <field name="rate"/>
+                                        <field name="supplier_mrp"/>
+                                        <field name="mfc"/>
+                                        <field name="manf_date"/>
+                                        <field name="exp_date"/>
+                                        <field name="hsn"/>
+                                        <field name="batch"/>
+                                        <field name="gst"/>
+                                        <field name="rack" invisible="1"/>
+                                        <field name="stock_in_hand"/>
+                                        <field name="is_addition"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                        <group>
+                            <field name="notes"/>
+                        </group>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- Stock Transfer Tree View -->
+        <record id="view_stock_transfer_tree" model="ir.ui.view">
+            <field name="name">stock.transfer.tree</field>
+            <field name="model">stock.transfer</field>
+            <field name="arch" type="xml">
+                <tree string="Stock Transfers" decoration-info="state == 'draft'" decoration-success="state == 'done'">
+                    <field name="name"/>
+                    <field name="date"/>
+                    <field name="location_from"/>
+                    <field name="location_to"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Stock Transfer Search View -->
+        <record id="view_stock_transfer_search" model="ir.ui.view">
+            <field name="name">stock.transfer.search</field>
+            <field name="model">stock.transfer</field>
+            <field name="arch" type="xml">
+                <search string="Stock Transfers">
+                    <field name="name"/>
+                    <field name="date"/>
+                    <field name="location_from"/>
+                    <field name="location_to"/>
+                    <filter string="Draft" name="draft" domain="[('state','=','draft')]"/>
+                    <filter string="Confirmed" name="confirmed" domain="[('state','=','confirmed')]"/>
+                    <filter string="Done" name="done" domain="[('state','=','done')]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Status" name="status" context="{'group_by':'state'}"/>
+                        <filter string="Date" name="date" context="{'group_by':'date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Stock Transfer Action -->
+        <record id="action_stock_transfer" model="ir.actions.act_window">
+            <field name="name">Stock Transfers</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">stock.transfer</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Stock Transfer
+                </p>
+            </field>
+        </record>
+
+
+        <!--stock out list view        -->
+
+        <record id="view_stock_transfer_line_removal_tree" model="ir.ui.view">
+            <field name="name">stock.transfer.line.removal.tree</field>
+            <field name="model">stock.transfer.line</field>
+            <field name="arch" type="xml">
+                <tree string="Stock Removals" create="true" delete="true" edit="true">
+                    <field name="transfer_id"/>
+                    <field name="product_id"/>
+                    <field name="quantity"/>
+
+                    <field name="rate"/>
+                    <field name="pack"/>
+                    <field name="batch"/>
+                    <field name="manf_date"/>
+                    <field name="exp_date"/>
+                    <field name="hsn"/>
+                    <field name="rack"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Action to open the view -->
+        <record id="action_stock_transfer_line_removal" model="ir.actions.act_window">
+            <field name="name">Stock Removals</field>
+            <field name="res_model">stock.transfer.line</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('is_addition', '=', False)]</field>
+            <field name="view_id" ref="view_stock_transfer_line_removal_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No stock removals found
+                </p>
+                <p>
+                    Create a new stock removal record.
+                </p>
+            </field>
+        </record>
+
+        <!--stock In list view-->
+
+        <record id="view_stock_transfer_line_addition_tree" model="ir.ui.view">
+            <field name="name">stock.transfer.line.addition.tree</field>
+            <field name="model">stock.transfer.line</field>
+            <field name="arch" type="xml">
+                <tree string="Stock Additions" create="true" delete="true" edit="true">
+                    <field name="transfer_id"/>
+                    <field name="product_id"/>
+                    <field name="quantity"/>
+
+                    <field name="rate"/>
+                    <field name="pack"/>
+                    <field name="batch"/>
+                    <field name="manf_date"/>
+                    <field name="exp_date"/>
+                    <field name="hsn"/>
+                    <field name="rack"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Action to open the view -->
+        <record id="action_stock_transfer_line_addition" model="ir.actions.act_window">
+            <field name="name">Stock Additions</field>
+            <field name="res_model">stock.transfer.line</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('is_addition', '=', True)]</field>
+            <field name="view_id" ref="view_stock_transfer_line_addition_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No stock additions found
+                </p>
+                <p>
+                    Create a new stock addition record.
+                </p>
+            </field>
+        </record>
+
+
+        <!-- First create the root menu for Stock Transfer -->
+        <menuitem id="menu_stock_transfer_root"
+                  name="Stock Transfer"
+                  parent="purchase.menu_purchase_root"
+                  sequence="11"/>
+
+        <!-- Menu item to access the view -->
+        <menuitem id="menu_stock_transfer_line_addition"
+                  name="Stock In"
+                  action="action_stock_transfer_line_addition"
+                  parent="menu_stock_transfer_root"
+                  sequence="19"/>
+
+
+        <!-- Menu item to access the view -->
+        <menuitem id="menu_stock_transfer_line_removal"
+                  name="Stock Out"
+                  action="action_stock_transfer_line_removal"
+                  parent="menu_stock_transfer_root"
+                  sequence="20"/>
+
+
+        <!-- Then create the submenu -->
+        <menuitem id="menu_stock_transfer"
+                  name="Stock Transfers"
+                  parent="menu_stock_transfer_root"
+                  action="action_stock_transfer"
+                  sequence="9"/>
+
+        <!-- Sequence for stock.transfer -->
+        <record id="seq_stock_transfer" model="ir.sequence">
+            <field name="name">Stock Transfer</field>
+            <field name="code">stock.transfer</field>
+            <field name="prefix">ST/</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

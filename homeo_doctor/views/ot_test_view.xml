@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Tree view -->
+        <record id="view_ot_tree" model="ir.ui.view">
+            <field name="name">ot.test.tree</field>
+            <field name="model">ot.test</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="price"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form view -->
+        <record id="view_ot_test_form" model="ir.ui.view">
+            <field name="name">ot.test.form</field>
+            <field name="model">ot.test</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group col="2">
+                            <group>
+                                <field name="name"/>
+                            </group>
+                            <group>
+                                <field name="price"/>
+                            </group>
+                        </group>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_ot_test" model="ir.actions.act_window">
+            <field name="name">OT Tests</field>
+            <field name="res_model">ot.test</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_xray_test_tree"/>
+        </record>
+
+        <!-- Menu -->
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_ot_test" name="OT Tests"
+                  parent="menu_lab_root" action="action_ot_test" sequence="25"/>
+
+    </data>
+</odoo>

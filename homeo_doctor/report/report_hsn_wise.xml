@@ -1,0 +1,144 @@
+<odoo>
+    <template id="report_hsn_gst_summary">
+        <t t-call="web.basic_layout">
+            <div class="page">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                    <img t-att-src="'/web/binary/company_logo'"
+                         style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+
+
+                    <div style="flex-grow: 1; text-align: center;">
+                        <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                            SANTHWANA HOSPITAL
+                        </h1>
+
+
+                        <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                            N.C.C Road,Ambalamukku,Trivandrum-695005
+                        </p>
+                        <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                            Phone: 0471-2432121,4223131
+                        </p>
+                        <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                            Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                        </p>
+                        <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                            NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                        </p>
+
+                        <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                        <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                        <!--                                </h2>-->
+
+                    </div>
+                </div>
+                <h3 style="text-align: center;">HSN Wise GST Report</h3>
+                <p style="text-align: center;">From
+                    <t t-esc="docs.from_date"/>
+                    to
+                    <t t-esc="docs.to_date"/>
+                </p>
+
+                <t t-if="not report_lines">
+                    <p style="color:red; text-align:center;">No data found in selected range.</p>
+                </t>
+
+                <t t-if="report_lines">
+                    <table class="table table-sm table-bordered" style="font-size: 12px; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Sl No</th>
+                                <th>HSN Code</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Total Qty</th>
+                                <th>GST%</th>
+                                <th>Total Value</th>
+                                <th>Taxable</th>
+                                <th>CGST</th>
+                                <th>SGST</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="sl" t-value="1"/>
+                            <t t-foreach="report_lines" t-as="line">
+                                <tr>
+                                    <td>
+                                        <t t-esc="sl"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line.get('hsn') or ''"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line.get('description') or ''"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line.get('op_category') or ''"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line.get('qty') or 0"/>
+                                    </td>
+                                    <td><t t-esc="line.get('gst') or 0"/>%
+                                    </td>
+                                    <td>
+                                        <t t-esc="'%.2f' % (line.get('rate') or 0.0)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="'%.2f' % (line.get('taxable') or 0.0)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="'%.2f' % (line.get('cgst') or 0.0)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="'%.2f' % (line.get('sgst') or 0.0)"/>
+                                    </td>
+                                </tr>
+                                <t t-set="sl" t-value="sl + 1"/>
+                            </t>
+                            <tr style="font-weight: bold; background: #f0f0f0;">
+                                <td colspan="4" style="text-align:right;">Total</td>
+                                <td>
+                                    <t t-esc="totals.get('qty') or 0"/>
+                                </td>
+                                <td></td>
+                                <td>
+                                    <t t-esc="'%.2f' % (totals.get('rate') or 0.0)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="'%.2f' % (totals.get('taxable') or 0.0)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="'%.2f' % (totals.get('cgst') or 0.0)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="'%.2f' % (totals.get('sgst') or 0.0)"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </t>
+            </div>
+        </t>
+    </template>
+    <record id="sales_hsn_report_paperformat" model="report.paperformat">
+        <field name="name">Sales HSN Report PDF Format</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="orientation">Portrait</field>
+        <field name="header_line" eval="False"/>
+    </record>
+    <record id="action_report_hsn_gst_summary" model="ir.actions.report">
+        <field name="name">HSN GST Summary</field>
+        <field name="model">hsn.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">homeo_doctor.report_hsn_gst_summary</field>
+        <field name="report_file">homeo_doctor.report_hsn_gst_summary</field>
+        <field name="paperformat_id" ref="sales_hsn_report_paperformat"/>
+    </record>
+
+
+</odoo>

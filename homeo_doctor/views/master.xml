@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_lab_investigation_tree" model="ir.ui.view">
+            <field name="name">lab.investigation.tree</field>
+            <field name="model">lab.investigation</field>
+            <field name="arch" type="xml">
+                <tree editable="bottom">
+                    <field name="lab_department" />
+                    <field name="investigation_name"/>
+                    <field name="bill_code"/>
+                    <field name="rate"/>
+                </tree>
+            </field>
+        </record>
+        <record id="view_lab_investigation_form" model="ir.ui.view">
+            <field name="name">lab.investigation.form</field>
+            <field name="model">lab.investigation</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group col="2">
+                            <group>
+                                <field name="lab_department"/>
+                                <field name="investigation_name"/>
+                            </group>
+                            <group>
+                                <field name="bill_code"/>
+                                <field name="rate"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="view_lab_department_tree" model="ir.ui.view">
+            <field name="name">lab.department.tree</field>
+            <field name="model">lab.department</field>
+            <field name="arch" type="xml">
+                <tree class="lab_department">
+                    <field name="department_name"/>
+                    <field name="order_no"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="view_lab_department_form" model="ir.ui.view">
+            <field name="name">lab.department.form</field>
+            <field name="model">lab.department</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="department_name"/>
+                            <field name="order_no"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="action_lab_department" model="ir.actions.act_window">
+            <field name="name">Department</field>
+            <field name="res_model">lab.department</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <record id="action_lab_investigation" model="ir.actions.act_window">
+            <field name="name">Investigation</field>
+            <field name="res_model">lab.investigation</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'group_by': ['lab_department']}</field>
+        </record>
+
+        <record id="view_patient_registration_fee_form" model="ir.ui.view">
+            <field name="name">patient.registration.fee.form</field>
+            <field name="model">patient.registration.fee</field>
+            <field name="arch" type="xml">
+                <form string="Patient Registration Fee">
+                    <sheet>
+                        <group>
+                            <field name="fee"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="view_patient_registration_fee_tree" model="ir.ui.view">
+            <field name="name">patient.registration.fee.tree</field>
+            <field name="model">patient.registration.fee</field>
+            <field name="arch" type="xml">
+                <tree string="Patient Registration Fees">
+                    <field name="fee"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Action to Open the Form View -->
+        <record id="action_patient_registration_fee" model="ir.actions.act_window">
+            <field name="name">Patient Registration Fee</field>
+            <field name="res_model">patient.registration.fee</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_patient_registration_fee_tree"/>
+        </record>
+
+        <!-- Menu Item to Access the Form -->
+        <menuitem id="menu_patient_registration_fee"
+                  name="Patient Registration Fee"
+                  parent="menu_lab_root"
+                  action="action_patient_registration_fee"
+                  sequence="3"
+        />
+
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_lab" name="Lab" parent="menu_lab_root" sequence="1"/>
+        <menuitem id="menu_lab_department" name="Department" parent="menu_lab" action="action_lab_department"
+                  sequence="1"/>
+        <menuitem id="menu_lab_investigation" name="Investigation" parent="menu_lab" action="action_lab_investigation"
+                  sequence="2"/>
+
+
+    </data>
+</odoo>

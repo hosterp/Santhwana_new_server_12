@@ -1,0 +1,82 @@
+<odoo>
+    <record id="view_fast_moving_form" model="ir.ui.view">
+        <field name="name">fast.moving.medicine.form.view</field>
+        <field name="model">fast.moving.medicine.form</field>
+        <field name="arch" type="xml">
+            <form string="Fast Moving Medicine Report">
+                <group col="3">
+                    <group>
+                        <field name="from_date"/>
+                    </group>
+                    <group>
+                        <field name="to_date"/>
+                    </group>
+                    <group>
+                        <button name="compute_fast_moving" type="object" string="Go" class="btn-primary"/>
+                    </group>
+                </group>
+                <field name="line_ids">
+                    <tree create="0" delete="0" editable="bottom">
+                        <field name="is_selected"/>
+                        <button name="action_open_monthly_sales" type="object" string="Details"/>
+                        <field name="product_id" readonly="1"/>
+                        <field name="total_qty" readonly="1"/>
+                    </tree>
+                </field>
+                <footer>
+                    <button name="action_view_selected_monthly_sales" type="object" string="View" class="btn-primary"/>
+                    <button name="print_fast_moving_report" type="object" string="Print" class="btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_fast_moving_form" model="ir.actions.act_window">
+        <field name="name">Fast Moving Medicines</field>
+        <field name="res_model">fast.moving.medicine.form</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <record id="view_fast_moving_monthly_sales_form" model="ir.ui.view">
+        <field name="name">fast.moving.medicine.monthly.form.view</field>
+        <field name="model">fast.moving.medicine.monthly.form</field>
+        <field name="arch" type="xml">
+            <form string="Medicine Monthly Sales">
+                <sheet>
+                    <group col="2">
+                        <field name="monthly_product_id" readonly="1"/>
+                        <field name="reference_date" readonly="1"/>
+                    </group>
+                    <field name="dashboard_html" nolabel="1" widget="html" readonly="1"/>
+                </sheet>
+                <footer>
+                    <button name="print_monthly_sales_report" type="object" string="Print" class="btn-primary"/>
+                    <button string="Back" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="view_fast_moving_selected_monthly_sales_form" model="ir.ui.view">
+        <field name="name">fast.moving.medicine.selected.monthly.form.view</field>
+        <field name="model">fast.moving.medicine.selected.monthly.form</field>
+        <field name="arch" type="xml">
+            <form string="Selected Medicine Monthly Sales">
+                <sheet>
+                    <group col="2">
+                        <field name="reference_date" readonly="1"/>
+                    </group>
+                    <field name="dashboard_html" nolabel="1" widget="html" readonly="1"/>
+                </sheet>
+                <footer>
+                    <button name="print_selected_monthly_sales_report" type="object" string="Print" class="btn-primary"/>
+                    <button string="Back" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <menuitem id="menu_reports_root" name="Reports" parent="menu_homeo_head" sequence="21"/>
+    <menuitem id="menu_fast_moving_form"
+              name="Fast Moving Medicines"
+              parent="menu_reports_root"
+              action="action_fast_moving_form" sequence="11"/>
+
+</odoo>

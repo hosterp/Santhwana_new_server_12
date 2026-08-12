@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="paperformat_admission_challan_landscape" model="report.paperformat">
+            <field name="name">Admission Challan Landscape</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="orientation">Landscape</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="header_line" eval="False"/>
+        </record>
+
+        <record id="action_report_admission_challan" model="ir.actions.report">
+            <field name="name">Admission Challan</field>
+            <field name="model">patient.reg</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">homeo_doctor.report_admission_challan</field>
+            <field name="report_file">homeo_doctor.report_admission_challan</field>
+            <field name="binding_model_id" ref="model_patient_reg"/>
+            <field name="binding_type">report</field>
+            <field name="paperformat_id" ref="homeo_doctor.paperformat_admission_challan_landscape"/>
+        </record>
+
+        <!-- Report template -->
+        <template id="report_admission_challan">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="web.external_layout">
+                        <div class="page" style="font-size: 16px; line-height: 1.4; font-family: Arial, sans-serif;">
+
+                            <div style="max-width: 700px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">
+                                <!-- Logo on the left -->
+                                <div style="flex: 0 0 60px; margin-right: 10px;">
+                                    <img src="/web/binary/company_logo" alt="Logo"
+                                         style="max-height: 60px; border-radius: 50%;"/>
+                                </div>
+
+
+                                <div style="flex-grow: 1; text-align: center;">
+                                    <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                        SANTHWANA HOSPITAL
+                                    </h1>
+
+
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        N.C.C Road,Ambalamukku,Trivandrum-695005
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        Phone: 0471-2432121,4223131
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                    </p>
+
+                                    <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                    <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                    <!--                                </h2>-->
+
+                                </div>
+                            </div>
+                            <h2 class="text-center">Admission Challan</h2>
+
+                            <div class="row mt-4">
+                                <div class="col-6">
+                                    <strong>Challan No:</strong>
+                                    <span t-field="o.admitted_bill_number"/>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <strong>Date:</strong>
+                                    <span t-field="o.create_date" t-options='{"format": "dd/MM/yyyy"}'/>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <table class="table table-bordered">
+                                        <tr>
+                                            <td width="30%">
+                                                <strong>Patient Name:</strong>
+                                            </td>
+                                            <td width="70%">
+                                                <span t-field="o.patient_id"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Reference No.:</strong>
+                                            </td>
+                                            <td>
+                                                <span t-field="o.reference_no"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Room Category:</strong>
+                                            </td>
+                                            <td>
+                                                <span t-field="o.room_category_new"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Room Number:</strong>
+                                            </td>
+                                            <td>
+                                                <span t-field="o.room_number_new"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Bed:</strong>
+                                            </td>
+                                            <td>
+                                                <span t-field="o.bed_id"/>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>
+                                                <strong>Payment Mode:</strong>
+                                            </td>
+                                            <td>
+                                                <span t-field="o.advance_mode_payment"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Advance Amount:</strong>
+                                            </td>
+                                            <td>
+                                                <span t-field="o.amount_in_advance"/>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="row mt-5">
+                                <!--                                <div class="col-6">-->
+                                <!--                                    <p>Patient's Signature</p>-->
+                                <!--                                </div>-->
+                                <div class="col-6 text-right">
+                                    <p>Authorized Signature</p>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>

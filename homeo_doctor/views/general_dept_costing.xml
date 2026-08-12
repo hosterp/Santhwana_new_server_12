@@ -1,0 +1,54 @@
+<odoo>
+    <data>
+        <record id="view_general_department_costing_form" model="ir.ui.view">
+            <field name="name">general.department.costing.form</field>
+            <field name="model">general.dept.costing</field>
+            <field name="arch" type="xml">
+                <form class="lab_form">
+                    <sheet>
+                        <group col="4">
+                            <group>
+                                <field name="department"/>
+                                <field name="tax"/>
+
+                            </group>
+                            <group>
+                                <field name="code"/>
+                                <field name="tax_type"/>
+
+                            </group>
+                            <group>
+                                <field name="particular_name"/>
+                            </group>
+                            <group>
+                                <field name="amount"/>
+
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="view_general_dept_costing_tree" model="ir.ui.view">
+            <field name="name">general.department.costing.tree</field>
+            <field name="model">general.dept.costing</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="department"/>
+                    <field name="code"/>
+                    <field name="particular_name"/>
+                    <field name="amount"/>
+                </tree>
+            </field>
+        </record>
+        <record id="action_general_dept_costing" model="ir.actions.act_window">
+            <field name="name">General Department Costing</field>
+            <field name="res_model">general.dept.costing</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <menuitem id="menu_general_billing" name="General Billing" parent="menu_lab_root" sequence="3"/>
+        <menuitem id="menu_general_dept_costing" name="General Dept.Costing" parent="menu_general_billing"
+                  action="action_general_dept_costing"
+                  sequence="2"/>
+    </data>
+</odoo>

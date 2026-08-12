@@ -1,0 +1,293 @@
+<odoo>
+    <!-- Custom minimal layout -->
+    <template id="lab_minimal_layout">
+        <t t-call="web.basic_layout">
+            <div class="header">
+                <div style="flex-grow: 1; text-align: center;">
+                    <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                        SANTHWANA HOSPITAL
+                    </h1>
+
+
+                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                        N.C.C Road,Ambalamukku,Trivandrum-695005
+                    </p>
+                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                        Phone: 0471-2432121,9188429198
+                    </p>
+                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                        Email:santhwanatvpm@gmail.com
+                    </p>
+                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                        NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                    </p>
+
+                    <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                    <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                    <!--                                </h2>-->
+
+                </div>
+            </div>
+            <t t-raw="0"/>
+        </t>
+    </template>
+    <!-- Main invoice template -->
+    <template id="report_lab_result_report_template">
+        <t t-call="web.html_container">
+            <t t-if="not request.env.context.get('no_auto_print')">
+                <script type="text/javascript">
+                    window.onload = function() {
+                    window.print();
+                    };
+                </script>
+            </t>
+
+            <t t-foreach="docs" t-as="o">
+                <t t-call="homeo_doctor.lab_minimal_layout">
+                    <div class="page">
+                        <!--                        <div style="max-width: 1000px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">-->
+                        <!--                            <div style="flex: 0 0 120px; margin-right: 15px;">-->
+                        <!--                                <img src="/web/binary/company_logo" alt="Logo"-->
+                        <!--                                     style="max-height: 110px; max-width: 110px; border-radius: 50%;"/>-->
+                        <!--                            </div>-->
+                        <!--                            &lt;!&ndash; Text on the right, centered inside its block &ndash;&gt;-->
+                        <!--                            <div style="flex-grow: 1; text-align: center;">-->
+                        <!--                                <h1 style="font-size: 32px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                        <!--                                    SANTHWANA HOSPITAL-->
+                        <!--                                </h1>-->
+                        <!--                                <h2 style="font-size: 24px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                        <!--                                    GST NO : 32AAKFD0959P1Z1-->
+                        <!--                                </h2>-->
+                        <!--                                <h3 style="font-size: 20px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                        <!--                                    DL NO : KL-TVM-108048, KL-TVM-108049-->
+                        <!--                                </h3>-->
+                        <!--                                <p style="margin: 5px 0; font-size: 18px; color: #555;">-->
+                        <!--                                    NCC Rd, Samithy Nagar, Ambalamukku, Thiruvananthapuram, Kerala 695005-->
+                        <!--                                </p>-->
+                        <!--                                <p style="margin: 5px 0; font-size: 18px; color: #555;">-->
+                        <!--                                    Phone: 0471-2373004, Mobile: 91884 29198,-->
+                        <!--                                    <span style="color: #007bff;">dpmshospital@gmail.com</span>-->
+                        <!--                                </p>-->
+                        <!--                            </div>-->
+                        <!--                        </div>-->
+
+                        <!-- Header Section -->
+                        <div class="row">
+                            <!--                            <div  class="col-12 text-center">-->
+                            <!--                                <h1 style="font-size: 25px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                            <!--                                    SANTHWANA HOSPITAL-->
+                            <!--                                </h1>-->
+                            <!--                                <p style="margin: 5px 0; font-size: 16px; color: #555;">-->
+                            <!--                                    NCC Rd, Samithy Nagar, Ambalamukku, Thiruvananthapuram, Kerala 695005-->
+                            <!--                                </p>-->
+                            <!--                                <p style="margin: 5px 0; font-size: 16px; color: #555;">-->
+                            <!--                                    Phone: 91884 29198| dpmshospital@gmail.com-->
+                            <!--                                </p>-->
+                            <!--                            </div>-->
+
+                            <div class="col-12 text-center">
+                                <h5 class="mt-2 mb-4">  LAB Result</h5>
+                            </div>
+                        </div>
+
+                        <!--                        &lt;!&ndash; Invoice Information &ndash;&gt;-->
+                        <!--                        <div class="row mb-4">-->
+                        <!--                            <div class="col-6">-->
+                        <!--                                <table class="table table-borderless">-->
+                        <!--                                    <tr>-->
+                        <!--                                        <td class="pl-0"><strong>Test Date:</strong></td>-->
+                        <!--                                        <td><span t-field="o.test_on"/></td>-->
+                        <!--                                    </tr>-->
+                        <!--                                    &lt;!&ndash; <tr>-->
+                        <!--                                        <td class="pl-0"><strong>Referral ID:</strong></td>-->
+                        <!--                                        <td><span t-field="o.referral_id"/></td>-->
+                        <!--                                    </tr> &ndash;&gt;-->
+                        <!--                                </table>-->
+                        <!--                            </div>-->
+                        <!--                        </div>-->
+
+
+                        <div class="row mb-4" style="font-size: 20px;">
+                            <div class="col-6">
+                                <div class="p-3" style="border: 2px  border-radius: 6px;">
+                                    <table class="table table-borderless mb-0" style="width: 100%; line-height: 1.6;">
+                                        <tr>
+                                            <td style="padding: 4px 8px;">
+                                                <strong>UHID:</strong>
+                                            </td>
+                                            <td style="padding: 4px 8px;">
+                                                <span t-field="o.patient_id"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 4px 8px;">
+                                                <strong>Name:</strong>
+                                            </td>
+                                            <td style="padding: 4px 8px;">
+                                                <span t-field="o.patient_name"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 4px 8px;">
+                                                <strong>Age/Gender:</strong>
+                                            </td>
+                                            <td style="padding: 4px 8px;">
+                                                <t t-if="o.patient_id">
+                                                    <span t-esc="o.patient_id.age"/>
+                                                    /
+                                                    <span t-esc="o.patient_id.gender"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <span t-esc="o.age"/>
+                                                    /
+                                                    <span t-esc="o.gender"/>
+                                                </t>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 4px 8px;">
+                                                <strong>Address:</strong>
+                                            </td>
+                                            <td style="padding: 4px 8px;">
+                                                <span t-field="o.patient_id.address"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 4px 8px;">
+                                                <strong>Doctor Name:</strong>
+                                            </td>
+                                            <td style="padding: 4px 8px;">
+                                                <span t-field="o.doctor"/>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="p-3" style="border: 2px  border-radius: 6px;">
+                                    <table class="table table-borderless mb-0" style="width: 100%; line-height: 1.6;">
+                                        <tr>
+                                            <td style="padding: 4px 8px;">
+                                                <strong>Bill Number:</strong>
+                                            </td>
+                                            <td style="padding: 4px 8px;">
+                                                <span t-field="o.bill_number"/>
+                                            </td>
+                                        </tr>
+                                        <!--                                        <tr>-->
+                                        <!--                                            <td style="padding: 4px 8px;">-->
+                                        <!--                                                <strong>Mobile Number:</strong>-->
+                                        <!--                                            </td>-->
+                                        <!--                                            <td style="padding: 4px 8px;">-->
+                                        <!--                                                <span t-field="o.patient_id.phone_number"/>-->
+                                        <!--                                            </td>-->
+                                        <!--                                        </tr>-->
+                                        <tr>
+<!--                                            <td style="padding: 4px 8px;">-->
+<!--                                                <strong>Sample On:</strong>-->
+<!--                                            </td>-->
+<!--                                            <td style="padding: 4px 8px;">-->
+<!--                                                <span t-field="o.sample_collected"/>-->
+<!--                                            </td>-->
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 4px 8px;">
+                                                <strong>Test Result On:</strong>
+                                            </td>
+                                            <td style="padding: 4px 8px;">
+                                                <span t-field="o.test_on"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+<!--                                            <td style="padding: 4px 8px;">-->
+<!--                                                <strong>Lab Collected On:</strong>-->
+<!--                                            </td>-->
+<!--                                            <td style="padding: 4px 8px;">-->
+<!--                                                <span t-field="o.lab_collection"/>-->
+<!--                                            </td>-->
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <table
+                                    style="width: 100%; font-size: 20px; border-collapse: collapse;">
+                                <thead style="background-color: #f9f9f9; color: Black; width:100%; border-top:2px solid #000; border-bottom:2px solid #000; margin-bottom:10px;">
+                                    <tr style="line-height: 1.6;">
+                                        <th class="text-center" style="width: 5%;">No.</th>
+                                        <th style="width: 30%;">Test Name</th>
+                                        <th style="width: 20%;">Result</th>
+                                        <th style="width: 15%;">Unit</th>
+                                        <th style="width: 30%;">Reference Range</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-set="seen_lab_types" t-value="[]"/>
+                                    <t t-set="counter" t-value="1"/>
+
+                                    <t t-foreach="o.lab_line_ids.filtered(lambda l: l.include_in_report)" t-as="line">
+                                        <t t-if="line.lab_type_id.id not in seen_lab_types">
+                                            <!-- Subheading -->
+                                            <tr>
+                                                <td colspan="5"
+                                                    style="font-weight: bold; background-color: #e6e6e6; padding: 6px 10px;">
+                                                    <span t-esc="line.lab_type_id.display_name"/>
+                                                </td>
+                                            </tr>
+
+                                            <!-- Test Lines for This Group -->
+                                            <t t-foreach="o.lab_line_ids.filtered(lambda l: l.include_in_report and l.lab_type_id.id == line.lab_type_id.id)"
+                                               t-as="subline">
+                                                <tr style="line-height: 1.6;">
+                                                    <td class="text-center">
+                                                        <span t-esc="counter"/>
+                                                        <t t-set="counter" t-value="counter + 1"/>
+                                                    </td>
+                                                    <td style="padding: 4px 8px;">
+                                                        <span t-field="subline.lab_test_name"/>
+                                                    </td>
+                                                    <td style="padding: 4px 8px;">
+                                                        <span t-field="subline.lab_result"/>
+                                                    </td>
+                                                    <td style="padding: 4px 8px;">
+                                                        <span t-field="subline.unit"/>
+                                                    </td>
+                                                    <td style="padding: 4px 8px;">
+                                                        <span t-field="subline.lab_reference_range"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+
+                                            <t t-set="seen_lab_types" t-value="seen_lab_types + [line.lab_type_id.id]"/>
+                                        </t>
+                                    </t>
+                                </tbody>
+
+                            </table>
+                        </div>
+
+
+                        <div class="row mt-5" style="font-size: 20px; margin-top: 60px;">
+                            <div class="col-8">
+                                <p style="margin-top: 60px;">
+                                    LAB TECHNICIAN :
+                                    <span t-esc="o.lab_technician.name or ''"/>
+                                </p>
+                            </div>
+                            <div class="col-4 text-center">
+                                <p style="margin-top: 60px;">
+                                    LAB INCHARGE :
+                                    <span t-esc="o.lab_incharge.name or ''"/>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

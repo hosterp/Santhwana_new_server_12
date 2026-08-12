@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Report Definition -->
+        <record id="action_report_ip_part_billing" model="ir.actions.report">
+            <field name="name">IP Part Billing</field>
+            <field name="model">ip.part.billing</field>
+            <field name="report_type">qweb-html</field>
+            <field name="report_name">homeo_doctor.report_ip_part_billing_document</field>
+            <field name="report_file">homeo_doctor.report_ip_part_billing_document</field>
+            <field name="binding_model_id" ref="model_ip_part_billing"/>
+            <field name="binding_type">report</field>
+        </record>
+
+        <!-- Report Template -->
+        <template id="report_ip_part_billing_document">
+            <t t-call="web.html_container">
+                <t t-if="not request.env.context.get('no_auto_print')">
+                    <script type="text/javascript">
+                        window.onload = function() {
+                        setTimeout(function() {
+                        window.print();
+                        }, 500);
+                        };
+                    </script>
+                </t>
+                <t t-foreach="docs" t-as="doc">
+
+                    <div class="page">
+                        <style>
+                            @media print {
+                            @page {
+                            size: A3 landscape;
+                            margin: 10mm;
+                            }
+
+                            body {
+                            font-size: 25px !important;
+                            font-family: Arial, sans-serif;
+                            }
+
+                            table, td, th {
+                            font-size: 25px !important;
+                            }
+                            }
+                            @media print {
+                            td {
+                            font-size: 25px !important;
+                            }
+                            }
+                            h1 { font-size: 38px; }
+                            h2 { font-size: 32px; }
+                            h3 { font-size: 28px; }
+                            p, td, th { font-size: 20px; }
+                            }
+                        </style>
+
+                        Custom Header
+                        <div class="page" style="padding: 15px; font-family: Arial, sans-serif; font-size: 22px;">
+
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <div style="flex: 0 0 120px; margin-right: 15px;">
+                                    <img src="/web/binary/company_logo" alt="Logo"
+                                         style="max-height: 150px; max-width: 150px; border-radius: 50%;"/>
+                                </div>
+                                <div style="flex-grow: 1; text-align: center;">
+                                    <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                        SANTHWANA HOSPITAL
+                                    </h1>
+
+
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        N.C.C Road,Ambalamukku,Trivandrum-695005
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        Phone: 0471-2432121,4223131
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                    </p>
+
+                                    <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                    <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                    <!--                                </h2>-->
+
+                                </div>
+                            </div>
+
+                            <hr style="border: 1px solid #000; margin: 10px 0;"/>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                                <div style="flex: 1; text-align: left; font-weight: bold;">DEPARTMENT: IP PART BILLING
+
+                                </div>
+                                <div style="flex: 1; text-align: center; font-weight: bold;">
+                                    <t t-esc="doc.mode_pay.upper()"/>
+                                    BILL
+                                </div>
+                                <div style="flex: 1; text-align: right; font-weight: bold;">Bill No:
+                                    <t t-esc="doc.bill_number"/>
+                                </div>
+                            </div>
+
+
+                            <!-- Bill Title -->
+                            <hr style="border: 1px solid #000; margin: 10px 0;"/>
+                            <div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9;">
+
+                                <!-- Patient Information Section - Modified to show 4 fields per row -->
+
+                                <table style="width: 100%; font-size: 25px; border-collapse: collapse;">
+                                    <!-- First Row: Bill Number, Bill Date, Bill Type, UHID -->
+                                    <!--                                    <tr>-->
+                                    <!--&lt;!&ndash;                                        <td style="font-weight: bold; width: 12%; padding: 5px;">Department:</td>&ndash;&gt;-->
+                                    <!--&lt;!&ndash;                                        <td style="width: 13%; padding: 5px;">&ndash;&gt;-->
+                                    <!--&lt;!&ndash;                                            <span t-field="doc.bill_type"/>&ndash;&gt;-->
+                                    <!--&lt;!&ndash;                                        </td>&ndash;&gt;-->
+                                    <!--                                        -->
+                                    <!--                                    </tr>-->
+                                    <tr>
+                                        <td style="font-weight: bold; width: 12%; padding: 5px;">UHID:</td>
+                                        <td style="width: 13%; padding: 5px;">
+                                            <span t-field="doc.mrd_no"/>
+                                        </td>
+                                        <td style="font-weight: bold; width: 12%; padding: 5px;">Bill Date &amp; Time:
+                                        </td>
+                                        <td style="width: 13%; padding: 5px;">
+                                            <span t-field="doc.bill_date" t-options="{'widget': 'datetime'}"/>
+                                        </td>
+
+
+                                    </tr>
+
+                                    <!-- Second Row: Patient Name, Age, Gender, Mobile -->
+                                    <tr>
+                                        <td style="font-weight: bold; padding: 5px;">Patient Name:</td>
+                                        <td style="padding: 5px;">
+                                            <t t-esc="doc.patient_name"/>
+                                            <span style="margin-left: 10px;">
+                                                (
+                                                <t t-esc="str(doc.age) + '/' + dict(doc._fields['gender'].selection).get(doc.gender, '')"/>
+                                                )
+                                            </span>
+                                        </td>
+                                        <td style="font-weight: bold; padding: 5px;">Mode of Pay:</td>
+                                        <td style="padding: 5px;" t-if="doc.mode_pay">
+                                            <span t-esc="doc.mode_pay.upper()"/>
+                                        </td>
+
+
+                                    </tr>
+                                    <!--                                        <td style="font-weight: bold; padding: 5px;">Age:</td>-->
+                                    <!--                                        <td style="padding: 5px;"><span t-field="doc.age"/></td>-->
+                                    <!--                                        <td style="font-weight: bold; padding: 5px;">Gender:</td>-->
+                                    <!--                                        <td style="padding: 5px;"><span t-field="doc.gender"/></td>-->
+
+                                    <td style="font-weight: bold; padding: 5px;">Mobile:</td>
+                                    <td style="padding: 5px;">
+                                        <span t-field="doc.mobile"/>
+                                    </td>
+                                    <!--                                        <td style="font-weight: bold; width: 12%; padding: 5px;">Bill Type:</td>-->
+                                    <!--                                        <td style="width: 13%; padding: 5px;"><span t-field="doc.bill_type"/></td>-->
+                                    <td style="font-weight: bold; padding: 5px;">Admitted Date:</td>
+                                    <td style="padding: 5px;">
+                                        <span t-field="doc.admitted_date" t-if="doc.admitted_date"/>
+                                    </td>
+
+
+                                    <!-- Third Row: Doctor, Department, OP Category, Admitted Date -->
+                                    <tr>
+                                        <td style="font-weight: bold; padding: 5px;">Doctor:</td>
+                                        <td style="padding: 5px;">
+                                            <t t-if="doc.doctor">
+                                                <t t-esc="doc.doctor.name"/>
+                                                <t t-if="doc.doctor.department_id">
+                                                    (<t t-esc="doc.doctor.department_id.display_name"/>)
+                                                </t>
+                                            </t>
+                                        </td>
+                                        <td style="font-weight: bold; width: 12%; padding: 5px;">From - to Date:</td>
+                                        <td style="width: 13%; padding: 5px;">
+                                            <span t-field="doc.from_date" t-options="{'widget': 'datetime'}"/>
+                                            -
+                                            <span t-field="doc.to_date" t-options="{'widget': 'datetime'}"/>
+                                        </td>
+                                    </tr>
+
+                                </table>
+
+                                <!-- Date Range Section (if applicable) -->
+                                <!--                                <t t-if="doc.from_date or doc.to_date">-->
+                                <!--                                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd;">-->
+                                <!--                                        <table style="width: 100%; font-size: 14px;">-->
+                                <!--                                            <tr>-->
+
+                                <!--                                                <td style="font-weight: bold; width: 12%; padding: 5px;" t-if="doc.rent_full_day">Full Day Rent:</td>-->
+                                <!--                                                <td style="width: 13%; padding: 5px;" t-if="doc.rent_full_day">₹<span t-field="doc.rent_full_day"/></td>-->
+                                <!--                                                <td style="font-weight: bold; width: 12%; padding: 5px;" t-if="doc.rent_half_day">Half Day Rent:</td>-->
+                                <!--                                                <td style="width: 13%; padding: 5px;" t-if="doc.rent_half_day">₹<span t-field="doc.rent_half_day"/></td>-->
+                                <!--                                            </tr>-->
+                                <!--                                        </table>-->
+                                <!--                                    </div>-->
+                                <!--                                </t>-->
+                            </div>
+
+                            <!-- Billing Items Table -->
+                            <div style="margin-bottom: 20px;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 25px;">
+                                    <thead>
+                                        <tr style="background-color: #3498db; color: black;">
+                                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;font-size: 25px;">
+                                                Sl.No
+                                            </th>
+                                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;font-size: 25px;">
+                                                Particulars
+                                            </th>
+                                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;font-size: 25px;">
+                                                Rate
+                                            </th>
+                                            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;font-size: 25px;">
+                                                Qty
+                                            </th>
+                                            <!--                                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Tax</th>-->
+                                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;font-size: 25px;">
+                                                Total
+                                                Amount
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-set="line_number" t-value="1"/>
+                                        <tr t-foreach="doc.general_bill_line_ids" t-as="line">
+                                            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                                                <span t-esc="line_number"/>
+                                                <t t-set="line_number" t-value="line_number + 1"/>
+                                            </td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">
+                                                <span t-field="line.particulars"/>
+                                            </td>
+                                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                                ₹
+                                                <span t-field="line.rate"/>
+                                            </td>
+                                            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                                                <span t-field="line.quantity"/>
+                                            </td>
+                                            <!--                                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">-->
+                                            <!--                                                ₹<span t-field="line.tax"/>-->
+                                            <!--                                            </td>-->
+                                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                                ₹
+                                                <span t-field="line.total_amt"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Summary Section -->
+                            <!--                            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">-->
+                            <!--                                &lt;!&ndash; Left side - Amount summary &ndash;&gt;-->
+                            <!--                                <div style="width: 45%; border: 1px solid #ddd; padding: 15px; background-color: #f9f9f9;">-->
+                            <!--                                    <table style="width: 100%; font-size: 14px;">-->
+                            <!--                                        <tr>-->
+                            <!--                                            <td style="font-weight: bold;">Total Items:</td>-->
+                            <!--                                            <td style="text-align: right;"><span t-field="doc.total_item"/></td>-->
+                            <!--                                        </tr>-->
+                            <!--                                        <tr>-->
+                            <!--                                            <td style="font-weight: bold;">Total Quantity:</td>-->
+                            <!--                                            <td style="text-align: right;"><span t-field="doc.total_qty"/></td>-->
+                            <!--                                        </tr>-->
+                            <!--                                        <tr>-->
+                            <!--                                            <td style="font-weight: bold;">Total Amount:</td>-->
+                            <!--                                            <td style="text-align: right;">₹<span t-field="doc.total_amount"/></td>-->
+                            <!--                                        </tr>-->
+                            <!--                                        <tr t-if="doc.discount">-->
+                            <!--                                            <td style="font-weight: bold;">Discount:</td>-->
+                            <!--                                            <td style="text-align: right;">₹<span t-field="doc.discount"/></td>-->
+                            <!--                                        </tr>-->
+                            <!--                                        <tr t-if="doc.rent">-->
+                            <!--                                            <td style="font-weight: bold;">Rent:</td>-->
+                            <!--                                            <td style="text-align: right;">₹<span t-field="doc.rent"/></td>-->
+                            <!--                                        </tr>-->
+                            <!--                                        <tr style="border-top: 2px solid #3498db; font-weight: bold; font-size: 16px;">-->
+                            <!--                                            <td>Net Amount:</td>-->
+                            <!--                                            <td style="text-align: right;">₹<span t-field="doc.net_amount"/></td>-->
+                            <!--                                        </tr>-->
+                            <!--                                        <tr>-->
+                            <!--                                            <td style="font-weight: bold;">Amount Paid:</td>-->
+                            <!--                                            <td style="text-align: right;">₹<span t-field="doc.amount_paid"/></td>-->
+                            <!--                                        </tr>-->
+                            <!--                                        <tr>-->
+                            <!--                                            <td style="font-weight: bold;">Balance:</td>-->
+                            <!--                                            <td style="text-align: right;">₹<span t-field="doc.balance"/></td>-->
+                            <!--                                        </tr>-->
+                            <!--                                    </table>-->
+                            <!--                                </div>-->
+
+                            <!--                                &lt;!&ndash; Right side - Payment details &ndash;&gt;-->
+                            <!--                                <div style="width: 45%;">-->
+                            <!--                                    <div style="border: 1px solid #ddd; padding: 15px; background-color: #f9f9f9;">-->
+                            <!--                                        <table style="width: 100%; font-size: 14px;">-->
+                            <!--                                            <tr>-->
+                            <!--                                                <td style="font-weight: bold; width: 120px;">Payment Method:</td>-->
+                            <!--                                                <td><span t-field="doc.mode_pay"/></td>-->
+                            <!--                                            </tr>-->
+                            <!--                                            <tr t-if="doc.reference">-->
+                            <!--                                                <td style="font-weight: bold;">Reference:</td>-->
+                            <!--                                                <td><span t-field="doc.reference"/></td>-->
+                            <!--                                            </tr>-->
+                            <!--                                            <tr t-if="doc.remarks">-->
+                            <!--                                                <td style="font-weight: bold;">Remarks:</td>-->
+                            <!--                                                <td><span t-field="doc.remarks"/></td>-->
+                            <!--                                            </tr>-->
+                            <!--                                        </table>-->
+                            <!--                                    </div>-->
+                            <!--                                </div>-->
+                            <!--                            </div>-->
+
+                            <!-- Amount in Words  and total amt-->
+                            <!--                            <div t-if="doc.amount_in_words" style="border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; background-color: #f0f8ff;">-->
+                            <!--                                <strong>Amount in Words:</strong> <span t-field="doc.amount_in_words"/>-->
+                            <!--                            </div>-->
+
+                            <table style="width: 100%; border-collapse: collapse; font-size: 25px; margin-top: 10px;">
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" style="padding: 5px;">
+                                            <strong>In Words:</strong>
+                                            <strong>
+                                                <t t-esc="doc.amount_in_words"/>
+                                            </strong>
+                                        </td>
+                                        <td colspan="2" style="font-weight: bold; padding: 5px; text-align: right;">
+                                            Total: ₹
+                                            <t t-esc="doc.total_amount"/>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+
+                            <!-- Footer -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; ">
+                                <div style="text-align: left; font-weight: bold;">Prepared By :
+                                    <t t-esc="doc.staff_name.display_name"/>
+                                </div>
+                                <div style="text-align: center; font-weight: bold; flex-grow: 1;">Checked By</div>
+                                <div style="text-align: right; font-weight: bold;">Cashier</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+
+        </template>
+
+        <!-- Menu Item to Print Report -->
+        <record id="paperformat_ip_billing" model="report.paperformat">
+            <field name="name">IP Billing A3 Landscape</field>
+            <field name="default" eval="True"/>
+            <field name="format">A3</field> <!-- Change to A3 -->
+            <field name="orientation">Landscape</field> <!-- Change to Landscape -->
+            <field name="margin_top">20</field>
+            <field name="margin_bottom">20</field>
+            <field name="margin_left">10</field>
+            <field name="margin_right">10</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">10</field>
+            <field name="dpi">90</field>
+        </record>
+
+
+        <!-- Assign paper format to report -->
+        <record id="action_report_ip_part_billing" model="ir.actions.report">
+            <field name="paperformat_id" ref="paperformat_ip_billing"/>
+        </record>
+    </data>
+</odoo>
+

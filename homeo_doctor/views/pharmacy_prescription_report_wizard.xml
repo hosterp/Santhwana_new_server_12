@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_pharmacy_prescription_report_wizard" model="ir.ui.view">
+        <field name="name">pharmacy.prescription.report.wizard.form</field>
+        <field name="model">pharmacy.prescription.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Prescription Report">
+                <group col="4">
+                    <group >
+                        <field name="date_from"/>
+                    </group>
+                    <group>
+                        <field name="date_to"/>
+                    </group>
+                    <group>
+                        <field name="medicines_id"/>
+                    </group>
+                    <group>
+                        <field name="with_patient_name"/>
+                    </group>
+
+                </group>
+                <footer>
+                    <button string="Print Report" type="object" name="print_report" class="btn-primary"/>
+                    <button string="View" type="object" name="print_report_html" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+     <report
+        id="report_pharmacy_html_prescription"
+        model="pharmacy.prescription.report.wizard"
+        string="Pharmacy Prescription"
+        report_type="qweb-html"
+        name="homeo_doctor.report_pharmacy_prescription_template"
+        file="homeo_doctor.report_pharmacy_prescription_template"
+        print_report_name="'Prescription - %s' % (object.id)"
+    />
+    <record id="action_pharmacy_prescription_report_wizard" model="ir.actions.act_window">
+        <field name="name">Medicine Report</field>
+        <field name="res_model">pharmacy.prescription.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_reports_root" name="Reports" parent="menu_homeo_head" sequence="21"/>
+    <menuitem id="menu_medicine_report"
+              name="Medicine Report"
+              parent="menu_reports_root"
+              action="action_pharmacy_prescription_report_wizard"
+              sequence="11"/>
+</odoo>

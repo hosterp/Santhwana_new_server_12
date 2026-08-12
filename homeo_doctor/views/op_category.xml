@@ -1,0 +1,64 @@
+<odoo>
+    <data>
+        <record id="view_op_category_form" model="ir.ui.view">
+            <field name="name">op.category.form</field>
+            <field name="model">op.category</field>
+            <field name="arch" type="xml">
+                <form class="lab_form">
+                    <sheet>
+                        <group col="4">
+                            <group>
+                                <field name="category_name"/>
+                                <field name="have_reg_fee"/>
+                                <field name="have_consultation_fee"/>
+                                <field name="revaluation_validity"/>
+                                <field name="have_discount_limit"/>
+                            </group>
+                            <group>
+                                <field name="code"/>
+                                <field name="reg_fee"/>
+                                <field name="consultation_fee"/>
+                                <field name="have_credit_limit"/>
+                                <field name="discount_limit_type"/>
+                            </group>
+                            <group>
+                                <field name="parent_category"/>
+                                <field name="reg_validity"/>
+                                <field name="consultation_validity"/>
+                                <field name="credit_limit_type"/>
+                                <field name="discount_limit_calculation_type"/>
+
+                            </group>
+                            <group>
+                                <field name="ip_link"/>
+                                <field name="mode_of_pay"/>
+                                <field name="revaluation_fee"/>
+                                <field name="credit_amount"/>
+                                <field name="discount_limit_amount"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="view_op_category_tree" model="ir.ui.view">
+            <field name="name">op.category.tree</field>
+            <field name="model">op.category</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="category_name"/>
+                    <field name="code"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_op_category" model="ir.actions.act_window">
+            <field name="name">OP Category</field>
+            <field name="res_model">op.category</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <menuitem id="menu_op" name="OP" parent="menu_lab_root" sequence="2"/>
+        <menuitem id="menu_op_category" name="OP Category" parent="menu_op" action="action_op_category"
+                  sequence="1"/>
+    </data>
+</odoo>

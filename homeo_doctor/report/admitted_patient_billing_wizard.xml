@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <template id="report_patient_admission_pdf">
+            <t t-call="web.basic_layout">
+                <t t-set="o" t-value="doc"/>
+                <div class="page">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                        <img t-att-src="'/web/binary/company_logo'"
+                             style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+
+                        <div style="flex-grow: 1; text-align: center;">
+                            <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                SANTHWANA HOSPITAL
+                            </h1>
+
+
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                N.C.C Road,Ambalamukku,Trivandrum-695005
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Phone: 0471-2432121,4223131
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                            </p>
+
+                            <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                            <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                            <!--                                </h2>-->
+
+                        </div>
+                    </div>
+
+                    <!-- Header Section -->
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h5 style="margin: 0; font-size: 22px;">Patient Admission Report</h5>
+                        <p style="margin: 5px 0;">From:
+                            <t t-esc="date_from"/>
+                        </p>
+                        <p style="margin: 5px 0;">To:
+                            <t t-esc="date_to"/>
+                        </p>
+                    </div>
+
+                    <!-- Table Styling -->
+                    <table class="table table-condensed"
+                           style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2; text-align: left;">
+                                <th style="padding: 8px; border: 1px solid #ccc;">UHID</th>
+                                <th style="padding: 8px; border: 1px solid #ccc;">Patient Name</th>
+                                <th style="padding: 8px; border: 1px solid #ccc;">Admission Date</th>
+                                <th style="padding: 8px; border: 1px solid #ccc;">Room</th>
+                                <th style="padding: 8px; border: 1px solid #ccc; text-align: right;">Total Bill Amount
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="total" t-value="0"/>
+                            <t t-foreach="report_data" t-as="line">
+                                <tr>
+                                    <td style="padding: 6px; border: 1px solid #ddd;">
+                                        <t t-esc="line['uhid']"/>
+                                    </td>
+                                    <td style="padding: 6px; border: 1px solid #ddd;">
+                                        <t t-esc="line['patient_name']"/>
+                                    </td>
+                                    <td style="padding: 6px; border: 1px solid #ddd;">
+                                        <t t-esc="line['admitted_date']"/>
+                                    </td>
+                                    <td style="padding: 6px; border: 1px solid #ddd;">
+                                        <t t-esc="line['room']"/>
+                                    </td>
+                                    <td style="padding: 6px; border: 1px solid #ddd; text-align: right;">
+                                        <t t-esc="line['total_amount']"/>
+                                    </td>
+                                </tr>
+                                <t t-set="total" t-value="total + line['total_amount']"/>
+                            </t>
+
+                            <!-- Total Row -->
+                            <tr style="background-color: #e6e6e6;">
+                                <td colspan="4" style="text-align: right; padding: 8px; border: 1px solid #ccc;">
+                                    <strong>Total Amount:</strong>
+                                </td>
+                                <td style="text-align: right; padding: 8px; border: 1px solid #ccc;">
+                                    <strong>
+                                        <t t-esc="total"/>
+                                    </strong>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </template>
+        <record id="patient_admission_billing_paperformat" model="report.paperformat">
+            <field name="name">Patient Admission Billing PDF Format</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="orientation">Portrait</field>
+            <field name="header_line" eval="False"/>
+        </record>
+
+        <report
+                id="_action_report_patient_admission_pdf"
+                model="admission.billing.wizard"
+                string="Patient Admission Report"
+                report_type="qweb-pdf"
+                name="homeo_doctor.report_patient_admission_pdf"
+                file="homeo_doctor.report_patient_admission_pdf"
+                print_report_name="'Patient_Admission_Report'"
+                paperformat="patient_admission_billing_paperformat"
+        />
+
+        <!-- Wizard Form View Definition -->
+        <record id="admission_billing_wizard_form" model="ir.ui.view">
+            <field name="name">admission.billing.wizard.form</field>
+            <field name="model">admission.billing.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Billing Report">
+                    <group col="2">
+                        <group>
+                            <field name="date_from"/>
+                        </group>
+                        <group>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_generate_report" string="Print Report" type="object" class="oe_highlight"/>
+                        <button name="action_download_excel" string="Excel Report" type="object" class="oe_highlight"/>
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Wizard Action for Showing the Form -->
+        <record id="action_admission_billing_wizard" model="ir.actions.act_window">
+            <field name="name">Admitted Billing Report</field>
+            <field name="res_model">admission.billing.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Menu Definition -->
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_reports_root" name="Reports" parent="menu_homeo_head" sequence="21"/>
+        <menuitem id="menu_admitted_patient_report" name="Admitted Patient Billing Report"
+                  parent="menu_reports_root" action="action_admission_billing_wizard" sequence="6"/>
+
+    </data>
+</odoo>

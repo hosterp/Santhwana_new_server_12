@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_intent_record_template">
+        <t t-call="web.html_container">
+            <t t-call="web.internal_layout">
+                <!-- Header -->
+<!--                <div class="header">-->
+<!--                    <div class="row">-->
+<!--                        <div class="col-xs-12 text-center">-->
+<!--                            <h2 t-field="company.name"/>-->
+<!--                            <p t-field="company.street"/>-->
+<!--                            <p t-field="company.city"/>-->
+<!--                            <p t-field="company.country_id.name"/>-->
+<!--                            <p>Phone: <span t-field="company.phone"/></p>-->
+<!--                            <p>Email: <span t-field="company.email"/></p>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <hr/>-->
+<!--                </div>-->
+
+                <!-- Title and Subtitle -->
+                <div class="text-center">
+                    <h1>Intent Record Report</h1>
+                    <h3>Detailed List of Intent Records</h3>
+                </div>
+
+                <!-- Report Table -->
+                <div class="page">
+                    <table class="table table-bordered" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="padding: 8px; border: 1px solid #ddd;">Date</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Doctor Name</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Medicine</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Quantity</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Current Stock</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Urgent</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Very Urgent</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Normal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="docs" t-as="record" style="background-color: #ffffff;">
+                                <td style="padding: 8px; border: 1px solid #ddd;"><span t-field="record.date" t-options='{"format": "dd MMM yyyy"}'/></td>
+                                <td style="padding: 8px; border: 1px solid #ddd;"><span t-field="record.doctor_name"/></td>
+                                <td style="padding: 8px; border: 1px solid #ddd;"><span t-field="record.medicine"/></td>
+                                <td style="padding: 8px; border: 1px solid #ddd;"><span t-field="record.quantity"/></td>
+                                <td style="padding: 8px; border: 1px solid #ddd;"><span t-field="record.current_stock"/></td>
+                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                    <span t-if="record.urgent" style="color: red;">✔</span>
+                                    <span t-else="">✖</span>
+                                </td>
+                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                    <span t-if="record.very_urgent" style="color: red;">✔</span>
+                                    <span t-else="">✖</span>
+                                </td>
+                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                    <span t-if="record.normal" style="color: green;">✔</span>
+                                    <span t-else="">✖</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer -->
+<!--                <div class="footer">-->
+<!--                    <hr/>-->
+<!--                    <div class="text-center">-->
+<!--                        <p>Page <span class="page"/> of <span class="topage"/></p>-->
+<!--                        <p>Generated on <span t-field="datetime.datetime.now()" t-options='{"format": "dd MMM yyyy hh:mm a"}'/></p>-->
+<!--                        <p>Confidential - For Internal Use Only</p>-->
+<!--                    </div>-->
+<!--                </div>-->
+            </t>
+        </t>
+    </template>
+
+    <!-- Report Action -->
+    <record id="action_report_intent_record" model="ir.actions.report">
+        <field name="name">Intent Record Report</field>
+        <field name="model">intent.record</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">homeo_doctor.report_intent_record_template</field>
+        <field name="binding_model_id" ref="homeo_doctor.model_intent_record"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

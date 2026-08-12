@@ -1,0 +1,654 @@
+<odoo>
+    <!-- Custom minimal layout -->
+    <template id="lab_minimal_layout">
+        <t t-call="web.basic_layout">
+            <div class="header">
+                <div style="flex-grow: 1; text-align: center;">
+                    <h1 style="font-size: 14px; margin: 0; font-weight: bold; color: #2c3e50;">
+                        SANTHWANA HOSPITAL
+                    </h1>
+
+
+                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                        N.C.C Road,Ambalamukku,Trivandrum-695005
+                    </p>
+                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                        Phone: 0471-2432121,4223131
+                    </p>
+                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                        Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                    </p>
+                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                        NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                    </p>
+
+                    <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                    <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                    <!--                                </h2>-->
+
+                </div>
+            </div>
+            <t t-raw="0"/>
+        </t>
+    </template>
+    <!-- Main invoice template -->
+    <template id="report_lab_invoice">
+        <t t-call="web.html_container">
+            <t t-if="not request.env.context.get('no_auto_print')">
+                <script type="text/javascript">
+                    window.onload = function() {
+                    setTimeout(function() {
+                    window.print();
+                    }, 1000); // 1000 ms = 1 second delay
+                    };
+                </script>
+
+            </t>
+            <t t-foreach="docs" t-as="o">
+                <!--                <t t-call="homeo_doctor.lab_minimal_layout">-->
+                <style>
+                    @media print {
+                    @page {
+                    <!--                    size: 130mm 297mm; /* width x height of the physical page */-->
+                    <!--                    margin: 5mm 7mm 5mm 7mm; /* top, right, bottom, left */-->
+                    }
+
+                    .page {
+                    width: 77%; /* keep your desired width */
+                    min-height: 18cm; /* keep your min-height */
+                    margin: 0 auto;
+                    padding: 5px; /* custom padding */
+                    box-sizing: border-box;
+                    margin-left: 5px;
+                    padding-right: 126px; /* keep your original layout */
+                    font-family: 'Times New Roman', Times, serif;
+                    }
+                    }
+
+
+                    <!--                    .page {-->
+                    <!--                    width: 130mm; /* same as page width */-->
+                    <!--                    height: 297mm; /* full A4 height */-->
+                    <!--                    padding: 10mm;-->
+                    <!--                    box-sizing: border-box;-->
+                    <!--                    }-->
+                </style>
+
+                <div class="page"
+                     style="width: 77%;min-height: 18cm;margin: 0 auto;padding: 5px;box-sizing: border-box;margin-left: 5px;padding-right: 126px;">
+                    <!-- Header Section -->
+                    <div style="max-width: 1000px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">
+                        <div style="flex: 0 0 120px; margin-right: 15px;">
+                            <img src="/web/binary/company_logo" alt="Logo"
+                                 style="max-height: 60px; border-radius: 50%;"/>
+                        </div>
+                        <!-- Text on the right, centered inside its block -->
+                        <div style="flex-grow: 1; text-align: center;">
+                            <h1 style="font-size: 32px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                SANTHWANA HOSPITAL
+                            </h1>
+                            <!--                                <h2 style="font-size: 24px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                            <!--                                    GST NO : 32AAKFD0959P1Z1-->
+                            <!--                                </h2>-->
+                            <!--                                <h3 style="font-size: 20px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                            <!--                                    DL NO : KL-TVM-108048, KL-TVM-108049-->
+                            <!--                                </h3>-->
+                            <p style="margin: 5px 0; font-size: 18px; color: #2c3e50;">
+                                NCC Rd, Samithy Nagar, Ambalamukku, Thiruvananthapuram, Kerala 695005
+                            </p>
+                            <p style="margin: 5px 0; font-size: 18px; color: #2c3e50;">
+                                Phone:91884 29198,
+                                <!--                                    <span style="color: #007bff;">dpmshospital@gmail.com</span>-->
+                            </p>
+                        </div>
+                    </div>
+
+                    <table class="table table-borderless mb-0"
+                           style="width: 100%; margin-bottom: 10px; font-size: 16px;">
+                        <tr>
+
+                            <td style="width: 33.33%; text-align: left; vertical-align: middle;">
+                                <strong>DEPARTMENT:</strong>
+                                <strong>LAB</strong>
+                            </td>
+
+
+                            <td style="width: 33.33%; text-align: center; vertical-align: middle;">
+                                <t t-if="o.payment_method_split">
+                                    <t t-if="o.cash_amount &gt; 0">CASH</t>
+                                    <t t-if="o.upi_amount &gt; 0">
+                                        <t t-if="o.cash_amount &gt; 0">/</t>
+                                        UPI
+                                    </t>
+                                    <t t-if="o.card_amount &gt; 0">
+                                        <t t-if="o.cash_amount &gt; 0 or o.upi_amount &gt; 0">/</t>
+                                        CARD
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <span t-field="o.mode_of_payment"/>
+                                </t>
+                                <strong>Bill</strong>
+                            </td>
+
+
+                            <td style="width: 33.33%; text-align: right; vertical-align: middle;">
+                                <strong>Bill No:</strong>
+                                <span t-field="o.report_reference"/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="row" style=" font-size: 16px;"> <!-- Increased base font size -->
+                        <div class="col-12">
+                            <div class="p-3" style="border: 2px solid #999; border-radius: 8px;">
+                                <table class="table table-borderless mb-0"
+                                       style="width: 100%;  font-size: 16px;"> <!-- font-size applied to table too -->
+                                    <!-- Row 1 -->
+                                    <tr style="line-height: 1;">
+                                        <td>
+                                            <strong>UHID:</strong>
+                                        </td>
+                                        <td>
+                                            <span t-field="o.user_ide"/>
+                                        </td>
+
+                                        <td>
+                                            <strong>Name:</strong>
+                                        </td>
+                                        <td>
+                                            <t t-if="o.user_ide and o.user_ide.patient_id and o.user_ide.patient_id">
+                                                <span t-esc="o.user_ide.patient_id"/>
+                                            </t>
+                                            <t t-else="">
+                                                <span t-esc="o.patient_name"/>
+                                            </t>
+
+
+                                        </td>
+
+                                        <td>
+                                            <strong>Age/Gender:</strong>
+                                        </td>
+                                        <td>
+                                            <span t-field="o.age"/>
+                                            /
+                                            <span t-field="o.gender"/>
+                                        </td>
+
+                                        <td>
+                                            <strong>Date:</strong>
+                                        </td>
+                                        <td>
+                                            <span t-field="o.date"/>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Row 2 -->
+                                    <tr style="line-height: 1;">
+                                        <td>
+                                            <strong>Doctor:</strong>
+                                        </td>
+                                        <td>
+                                            <span>
+                                                <t t-esc="o.doctor_id.display_name"/>
+
+                                                <t t-if="o.doctor_id and o.doctor_id.department_id">
+                                                    (
+                                                    <t t-esc="o.doctor_id.department_id.display_name"/>
+                                                    )
+                                                </t>
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <!--                                            <strong>Mobile:</strong>-->
+                                        </td>
+                                        <td>
+                                            <!--                                            <span t-esc="o.user_ide.phone_number if o.user_ide else o.patient_phone"/>-->
+
+                                        </td>
+
+                                        <td>
+                                            <strong>Mode of Payment:</strong>
+                                        </td>
+                                        <td>
+                                            <t t-if="o.payment_method_split">
+                                                <span>
+                                                    <t t-if="o.cash_amount &gt; 0">CASH</t>
+                                                    <t t-if="o.upi_amount &gt; 0">
+                                                        <t t-if="o.cash_amount &gt; 0">/</t>
+                                                        UPI
+                                                    </t>
+                                                    <t t-if="o.card_amount &gt; 0">
+                                                        <t t-if="o.cash_amount &gt; 0 or o.upi_amount &gt; 0">/</t>
+                                                        CARD
+                                                    </t>
+                                                </span>
+                                            </t>
+                                            <t t-else="">
+                                                <span t-field="o.mode_of_payment"/>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Scan Details Table -->
+                    <div class="mt-4">
+                        <table class="table table-bordered"
+                               style="width: 100%; font-size: 16px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2; height: 40px;">
+                                    <th class="text-center" style="width: 5%;">SL No.</th>
+                                    <th style="width: 65%;">PARTICULARS</th>
+                                    <th class="text-right" style="width: 30%;">Amount (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="counter" t-value="1"/>
+                                <tr t-foreach="o.lab_billing_ids" t-as="line" style="line-height: 1.5;">
+                                    <td class="text-center">
+                                        <span t-esc="counter"/>
+                                        <t t-set="counter" t-value="counter + 1"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="line.lab_type_id"/>
+                                    </td>
+                                    <td class="text-right">
+                                        ₹
+                                        <span t-field="line.rate_id"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                </tr>
+                                <tr style="font-size: 16px; font-weight: bold;">
+                                    <td></td>
+                                    <td></td>
+
+                                    <td colspan="3"
+                                        style="text-align: right; vertical-align: middle; padding: 8px;">
+                                        <t t-if="o.payment_method_split">
+                                            <div style="text-align: right;">
+                                                <strong>Cash:</strong>
+                                                ₹ <span t-esc="'%.2f' % (o.cash_amount or 0.0)"/>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <strong>UPI:</strong>
+                                                ₹ <span t-esc="'%.2f' % (o.upi_amount or 0.0)"/>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <strong>Card:</strong>
+                                                ₹ <span t-esc="'%.2f' % (o.card_amount or 0.0)"/>
+                                            </div>
+                                        </t>
+                                        <strong>Total Amount:</strong>
+                                        ₹
+                                        <span t-esc="'%.2f' % sum(o.lab_billing_ids.mapped('total_amount'))"/>
+                                    </td>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td colspan="3"
+                                            style="text-align: right; vertical-align: middle; padding: 8px;">
+                                            <strong>Discount:</strong>
+                                            ₹
+                                            <strong>
+                                                <span t-esc="o.discount"/>
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="text-align: left; vertical-align: middle; padding: 8px;">
+                                            <strong>Amount in Words:</strong>
+                                            <span t-esc="o.amount_to_text_indian()"
+                                                  style="text-transform: capitalize;"/>
+                                        </td>
+                                        <td colspan="3"
+                                            style="text-align: right; vertical-align: middle; padding: 8px;">
+                                            <strong>Net Amount:</strong>
+                                            ₹
+                                            <strong>
+                                                <span t-esc="'%.2f' % ((sum(o.lab_billing_ids.mapped('total_amount')) or 0.0) - (o.discount or 0.0))"/>
+                                            </strong>
+
+                                        </td>
+                                    </tr>
+
+                                </tr>
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    <div class="row mt-5" style="font-size: 16px">
+                        <div class="col-6 text-left">
+                            <strong>Prepared By:</strong>
+                            <span t-field="o.staff_name"/>
+                        </div>
+                        <div class="col-6 text-right">
+                            <strong>Checked By:</strong>
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+            <!--            </t>-->
+        </t>
+    </template>
+    <template id="report_lab_A4_invoice">
+        <t t-call="web.html_container">
+            <t t-if="not request.env.context.get('no_auto_print')">
+                <script type="text/javascript">
+                    window.onload = function() {
+                    setTimeout(function() {
+                    window.print();
+                    }, 1000); // 1000 ms = 1 second delay
+                    };
+                </script>
+
+            </t>
+            <t t-foreach="docs" t-as="o">
+                <!--                <t t-call="homeo_doctor.lab_minimal_layout">-->
+                <style>
+                    @media print {
+                    @page {
+                    <!--                    size: 130mm 297mm; /* width x height of the physical page */-->
+                    <!--                    margin: 5mm 7mm 5mm 7mm; /* top, right, bottom, left */-->
+                    }
+
+                    .page {
+                    width: 77%; /* keep your desired width */
+                    min-height: 18cm; /* keep your min-height */
+                    margin: 0 auto;
+                    padding: 5px; /* custom padding */
+                    box-sizing: border-box;
+                    margin-left: 5px;
+                    padding-right: 126px; /* keep your original layout */
+                    font-family: 'Times New Roman', Times, serif;
+                    }
+                    }
+
+
+                    <!--                    .page {-->
+                    <!--                    width: 130mm; /* same as page width */-->
+                    <!--                    height: 297mm; /* full A4 height */-->
+                    <!--                    padding: 10mm;-->
+                    <!--                    box-sizing: border-box;-->
+                    <!--                    }-->
+                </style>
+
+                <div class="page"
+                     style="width: 100%;min-height: 18cm;margin: 0 auto;padding: 5px;box-sizing: border-box;margin-left: 5px;padding-right: 5px;">
+                    <!-- Header Section -->
+                    <div style="max-width: 1000px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">
+                         <div style="flex: 0 0 60px; margin-right: 10px;">
+                            <img src="/web/binary/company_logo" alt="Logo"
+                                 style="max-height: 100px; max-width:100px; border-radius: 50%;"/>
+                        </div>
+
+
+                        <div style="flex-grow: 1; text-align: center;">
+                            <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                SANTHWANA HOSPITAL
+                            </h1>
+
+
+                            <p style="margin: 2px 0; font-size: 22px; color: #555;">
+                                N.C.C Road,Ambalamukku,Trivandrum-695005
+                            </p>
+                            <p style="margin: 2px 0; font-size: 22px; color: #555;">
+                                Phone: 0471-2432121,Mob:9188429198
+                            </p>
+                            <p style="margin: 2px 0; font-size:22px; color: #555;">
+                                Email: santhwanatvpm@gmail.com
+                            </p>
+                            <p style="margin: 2px 0; font-size: 22px; color: #555;">
+                                NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                            </p>
+                        </div>
+                    </div>
+
+                    <table class="table table-borderless mb-0"
+                           style="width: 100%; margin-bottom: 10px; font-size: 16px;">
+                        <tr>
+
+                            <td style="width: 33.33%; text-align: left; vertical-align: middle;">
+                                <strong>DEPARTMENT:</strong>
+                                <strong>LAB</strong>
+                            </td>
+
+
+                            <td style="width: 33.33%; text-align: center; vertical-align: middle;">
+                                <t t-if="o.payment_method_split">
+                                    <t t-if="o.cash_amount &gt; 0">CASH</t>
+                                    <t t-if="o.upi_amount &gt; 0">
+                                        <t t-if="o.cash_amount &gt; 0">/</t>
+                                        UPI
+                                    </t>
+                                    <t t-if="o.card_amount &gt; 0">
+                                        <t t-if="o.cash_amount &gt; 0 or o.upi_amount &gt; 0">/</t>
+                                        CARD
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <span t-field="o.mode_of_payment"/>
+                                </t>
+                                <strong>Bill</strong>
+                            </td>
+
+
+                            <td style="width: 33.33%; text-align: right; vertical-align: middle;">
+                                <strong>Bill No:</strong>
+                                <span t-field="o.report_reference"/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="row" style=" font-size: 16px;"> <!-- Increased base font size -->
+                        <div class="col-12">
+                            <div class="p-3" style="border: 2px solid #999; border-radius: 8px;">
+                                <table class="table table-borderless mb-0"
+                                       style="width: 100%;  font-size: 16px;"> <!-- font-size applied to table too -->
+                                    <!-- Row 1 -->
+                                    <tr style="line-height: 1;">
+                                        <td>
+                                            <strong>UHID:</strong>
+                                        </td>
+                                        <td>
+                                            <span t-field="o.user_ide"/>
+                                        </td>
+
+                                        <td>
+                                            <strong>Name:</strong>
+                                        </td>
+                                        <td>
+                                            <t t-if="o.user_ide and o.user_ide.patient_id and o.user_ide.patient_id">
+                                                <span t-esc="o.user_ide.patient_id"/>
+                                            </t>
+                                            <t t-else="">
+                                                <span t-esc="o.patient_name"/>
+                                            </t>
+
+
+                                        </td>
+
+                                        <td>
+                                            <strong>Age/Gender:</strong>
+                                        </td>
+                                        <td>
+                                            <span t-field="o.age"/>
+                                            /
+                                            <span t-field="o.gender"/>
+                                        </td>
+
+                                        <td>
+                                            <strong>Date:</strong>
+                                        </td>
+                                        <td>
+                                            <span t-field="o.date"/>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Row 2 -->
+                                    <tr style="line-height: 1;">
+                                        <td>
+                                            <strong>Doctor:</strong>
+                                        </td>
+                                        <td>
+                                            <span>
+                                                <t t-esc="o.doctor_id.display_name"/>
+
+                                                <t t-if="o.doctor_id and o.doctor_id.department_id">
+                                                    (
+                                                    <t t-esc="o.doctor_id.department_id.display_name"/>
+                                                    )
+                                                </t>
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <!--                                            <strong>Mobile:</strong>-->
+                                        </td>
+                                        <td>
+                                            <!--                                            <span t-esc="o.user_ide.phone_number if o.user_ide else o.patient_phone"/>-->
+
+                                        </td>
+
+                                        <td>
+                                            <strong>Mode of Payment:</strong>
+                                        </td>
+                                        <td>
+                                            <t t-if="o.payment_method_split">
+                                                <span>
+                                                    <t t-if="o.cash_amount &gt; 0">CASH</t>
+                                                    <t t-if="o.upi_amount &gt; 0">
+                                                        <t t-if="o.cash_amount &gt; 0">/</t>
+                                                        UPI
+                                                    </t>
+                                                    <t t-if="o.card_amount &gt; 0">
+                                                        <t t-if="o.cash_amount &gt; 0 or o.upi_amount &gt; 0">/</t>
+                                                        CARD
+                                                    </t>
+                                                </span>
+                                            </t>
+                                            <t t-else="">
+                                                <span t-field="o.mode_of_payment"/>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Scan Details Table -->
+                    <div class="mt-4">
+                        <table class="table table-bordered"
+                               style="width: 100%; font-size: 16px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2; height: 40px;">
+                                    <th class="text-center" style="width: 5%;">SL No.</th>
+                                    <th style="width: 65%;">PARTICULARS</th>
+                                    <th class="text-right" style="width: 30%;">Amount (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="counter" t-value="1"/>
+                                <tr t-foreach="o.lab_billing_ids" t-as="line" style="line-height: 1.5;">
+                                    <td class="text-center">
+                                        <span t-esc="counter"/>
+                                        <t t-set="counter" t-value="counter + 1"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="line.lab_type_id"/>
+                                    </td>
+                                    <td class="text-right">
+                                        ₹
+                                        <span t-field="line.rate_id"
+                                              t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                </tr>
+                                <tr style="font-size: 16px; font-weight: bold;">
+                                    <td></td>
+                                    <td></td>
+
+                                    <td colspan="3"
+                                        style="text-align: right; vertical-align: middle; padding: 8px;">
+                                        <t t-if="o.payment_method_split">
+                                            <div style="text-align: right;">
+                                                <strong>Cash:</strong>
+                                                ₹ <span t-esc="'%.2f' % (o.cash_amount or 0.0)"/>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <strong>UPI:</strong>
+                                                ₹ <span t-esc="'%.2f' % (o.upi_amount or 0.0)"/>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <strong>Card:</strong>
+                                                ₹ <span t-esc="'%.2f' % (o.card_amount or 0.0)"/>
+                                            </div>
+                                        </t>
+                                        <strong>Total Amount:</strong>
+                                        ₹
+                                        <span t-esc="'%.2f' % sum(o.lab_billing_ids.mapped('total_amount'))"/>
+                                    </td>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td colspan="3"
+                                            style="text-align: right; vertical-align: middle; padding: 8px;">
+                                            <strong>Discount:</strong>
+                                            ₹
+                                            <strong>
+                                                <span t-esc="o.discount"/>
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="text-align: left; vertical-align: middle; padding: 8px;">
+                                            <strong>Amount in Words:</strong>
+                                            <span t-esc="o.amount_to_text_indian()"
+                                                  style="text-transform: capitalize;"/>
+                                        </td>
+                                        <td colspan="3"
+                                            style="text-align: right; vertical-align: middle; padding: 8px;">
+                                            <strong>Net Amount:</strong>
+                                            ₹
+                                            <strong>
+                                                <span t-esc="'%.2f' % ((sum(o.lab_billing_ids.mapped('total_amount')) or 0.0) - (o.discount or 0.0))"/>
+                                            </strong>
+
+                                        </td>
+                                    </tr>
+
+                                </tr>
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    <div class="row mt-5" style="font-size: 16px">
+                        <div class="col-6 text-left">
+                            <strong>Prepared By:</strong>
+                            <span t-field="o.staff_name"/>
+                        </div>
+                        <div class="col-6 text-right">
+                            <strong>Checked By:</strong>
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+            <!--            </t>-->
+        </t>
+    </template>
+
+</odoo>

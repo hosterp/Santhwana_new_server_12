@@ -1,0 +1,193 @@
+<odoo>
+    <data>
+
+        <template id="patient_pdf_template">
+            <t t-call="web.basic_layout">
+
+                <!--                    <t t-set="report_data" t-value="data['report_data']"/>-->
+                <!--                    <t t-set="date_from" t-value="data['date_from']"/>-->
+                <!--                    <t t-set="date_to" t-value="data['date_to']"/>-->
+
+                <div class="page">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                        <img t-att-src="'/web/binary/company_logo'"
+                             style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+
+                        <div style="flex-grow: 1; text-align: center;">
+                            <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                SANTHWANA HOSPITAL
+                            </h1>
+
+
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                N.C.C Road,Ambalamukku,Trivandrum-695005
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Phone: 0471-2432121,4223131
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                            </p>
+
+                            <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                            <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                            <!--                                </h2>-->
+
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h4 style="margin: 0; font-size: 22px;">Patient Report</h4>
+                        <p style="margin: 5px 0;">From:
+                            <t t-esc="date_from"/>
+                        </p>
+                        <p style="margin: 5px 0;">To:
+                            <t t-esc="date_to"/>
+                        </p>
+                    </div>
+
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Sl No</th>
+                                <th>Bill Number</th>
+                                <th>UHID</th>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Mobile</th>
+                                <th>Doctor</th>
+                                <th>Total</th>
+                                <!--                                    <th>Diagnosis</th>-->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="sl" t-value="1"/>
+                            <t t-foreach="report_data['report_data']" t-as="patient">
+                                <tr>
+                                    <td>
+                                        <t t-esc="sl"/>
+                                        <t t-set="sl" t-value="sl + 1"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="patient['bill_number'] "/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="patient['reference_no'] "/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="patient['date'] "/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="patient['patient_name'] "/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="patient['age'] "/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="patient['gender'] "/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="patient['phone'] "/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="patient['doctor_name'] "/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="patient['consultation_fee'] "/>
+                                    </td>
+                                    <!--                                        <td>-->
+                                    <!--                                            <t t-esc="patient['diagnosis'] or 'N/A'"/>-->
+                                    <!--                                        </td>-->
+                                </tr>
+
+
+                            </t>
+                            <tr>
+                                <td colspan="9" style="text-align: right; font-weight: bold;">
+                                    Total:
+                                </td>
+                                <td style="font-weight: bold;">
+                                    <span t-esc="total_fee"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </template>
+
+        <record id="consultation_billing_paperformat" model="report.paperformat">
+            <field name="name">consultation Billing PDF Format</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="orientation">Portrait</field>
+            <field name="header_line" eval="False"/>
+        </record>
+
+        <!-- QWeb Report Action -->
+        <report
+                id="patient_pdf_report_action"
+                model="patient.report.wizard"
+                string="Patient Report PDF"
+                report_type="qweb-pdf"
+                name="homeo_doctor.patient_pdf_template"
+                file="homeo_doctor.patient_pdf_template"
+                menu="False"
+                paperformat="consultation_billing_paperformat"/>
+
+        <!-- Wizard Form View -->
+        <record id="view_patient_report_wizard" model="ir.ui.view">
+            <field name="name">patient.report.wizard.form</field>
+            <field name="model">patient.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Patient Report Wizard">
+                    <group col="4">
+                        <group>
+                            <field name="date_from"/>
+                        </group>
+                        <group>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="doctor_id"/>
+                        </group>
+                        <group>
+
+                            <field name="department_id"/>
+
+                        </group>
+
+                    </group>
+                    <footer>
+                        <button name="action_generate_report" string="Generate PDF" type="object" class="btn-primary"/>
+                        <button name="print_excel" string="Excel Report" type="object" class="btn-secondary"/>
+                        <button string="Cancel" class="btn-default" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_patient_report_wizard" model="ir.actions.act_window">
+            <field name="name">Patient Report</field>
+            <field name="res_model">patient.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_patient_report_wizard"/>
+            <field name="target">new</field>
+        </record>
+
+
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_auditing_root" name="Auditing Reports" parent="menu_homeo_head" sequence="22"/>
+        <menuitem id="menu_consultation_report" name="OP Report"
+                  parent="menu_auditing_root" action="action_patient_report_wizard" sequence="7"/>
+
+    </data>
+</odoo>

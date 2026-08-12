@@ -1,0 +1,237 @@
+<odoo>
+    <data>
+        <record id="view_lab_result_form" model="ir.ui.view">
+            <field name="name">doctor.lab.result.form</field>
+            <field name="model">lab.result.page</field>
+            <field name="arch" type="xml">
+                <form string="Lab Result Form" class="lab_form">
+                    <header>
+                        <field name="result_status" widget="statusbar"/>
+                        <field name="sample_status" widget="statusbar"/>
+                        <field name="status" widget="statusbar"/>
+                        <button name="action_sample_collected" type="object" string="Sample Collected"
+                                class="btn-primary"/>
+                        <button name="action_result_ready" type="object" string="Result Ready" class="btn-primary"/>
+                    </header>
+                    <sheet>
+                        <div class="row custom_lab_result ">
+                            <div class="col-md-3">
+                                <div class="form-group row">
+                                    <label for="from_date" class="col-md-4 col-form-label">From Date</label>
+                                    <div class="col-md-8 field-container">
+                                        <field name="from_date"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group row">
+                                    <label for="to_date" class="col-md-4 col-form-label">To Date</label>
+                                    <div class="col-md-8 field-container">
+                                        <field name="to_date"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 custom_lab_result_second">
+                            <div class="sub_details revisit_details">
+
+                                <!-- First Row: Bill Number, Patient ID, Patient Name, Internal Doctor -->
+                                <div class="row mx-n1">
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="bill_number"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Bill Number
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="bill_number"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="patient_id"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Patient ID
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="patient_id"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="patient_name"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Patient Name
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="patient_name"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="internal_doctor"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Internal
+                                                Doctor
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="internal_doctor"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Second Row: Doctor, Sample Collected, Lab Incharge, Lab Collection -->
+                                <div class="row mx-n1">
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="doctor" class="col-md-5 col-form-label py-0 text-nowrap">
+                                                Doctor
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="doctor"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="sample_collected"
+                                                   class="col-md-5 col-form-label py-0 text-nowrap">Sample Collected
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="sample_collected"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="lab_incharge" class="col-md-5 col-form-label py-0 text-nowrap">
+                                                Lab Incharge
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="lab_incharge"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="lab_collection"
+                                                   class="col-md-5 col-form-label py-0 text-nowrap">Lab Collection
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="lab_collection"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Third Row: Test On, Lab Technician -->
+                                <div class="row mx-n1">
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="test_on" class="col-md-5 col-form-label py-0 small text-nowrap">
+                                                Test On
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="test_on"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="lab_technician"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Lab Technician
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="lab_technician"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%; border:none;box-shadow:none;">
+                                        <!-- Empty column for consistent layout -->
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;border:none;box-shadow:none;">
+                                        <!-- Empty column for consistent layout -->
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                        <notebook>
+                            <page string="Lab Details" name="lab_details">
+                                <field name="lab_line_ids"
+                                       widget="one2many_list"
+                                       mode="tree">
+                                    <tree string="Lab Tests" editable="bottom" create="true" delete="true">
+                                        <field name="lab_department" invisible="1"/>
+                                        <field name="lab_type_id" string='Particulars' invisible="1"/>
+                                        <field name="lab_test_name"/>
+                                        <field name="lab_result" string="Result"/>
+                                        <field name="unit" readonly="0"/>
+                                        <field name="lab_reference_range"/>
+                                        <field name="lab_result" string="Result" invisible="1"/>
+                                        <field name="rate_id" string="Rate" invisible="1"/>
+                                        <field name="total_amount" sum="Total Amount" invisible="1"/>
+                                        <field name="include_in_report"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="view_lab_result_tree" model="ir.ui.view">
+            <field name="name">doctor.lab.result.tree</field>
+            <field name="model">lab.result.page</field>
+            <field name="arch" type="xml">
+                <tree string="Doctor Lab Reports">
+                    <field name="bill_number"/>
+                    <field name="patient_id"/>
+                    <field name="patient_name"/>
+                    <field name="patient_phone"/>
+                    <field name="test_on"/>
+                    <field name="lab_incharge" string="Lab Incharge"/>
+                    <field name="status" string="Payment Status"/>
+                    <field name="sample_status" string="Sample Collected Status"/>
+                    <field name="result_status" string="Result Status"/>
+                </tree>
+            </field>
+        </record>
+        <record id="view_lab_result_search" model="ir.ui.view">
+            <field name="name">doctor.lab.result.search</field>
+            <field name="model">lab.result.page</field>
+            <field name="arch" type="xml">
+                <search string="Search Lab Results">
+                    <field name="bill_number"/>
+                    <field name="patient_id"/>
+                    <field name="patient_name"/>
+                    <field name="patient_phone"/>
+
+                    <separator/>
+
+                    <!--                    <filter name="pending_result" string="Pending Results"-->
+                    <!--                            domain="[('result_status', '=', 'pending')]"/>-->
+                    <!--                    <filter name="completed_result" string="Completed Results"-->
+                    <!--                            domain="[('result_status', '=', 'completed')]"/>-->
+
+                    <!--                    <group expand="0" string="Group By">-->
+                    <!--                        <filter name="group_by_incharge" string="Lab Incharge" context="{'group_by': 'lab_incharge'}"/>-->
+                    <!--                        <filter name="group_by_test_on" string="Test On" context="{'group_by': 'test_on'}"/>-->
+                    <!--                    </group>-->
+                </search>
+            </field>
+        </record>
+
+        <record id="action_lab_result_page" model="ir.actions.act_window">
+            <field name="name">Lab Result</field>
+            <field name="res_model">lab.result.page</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_lab_result_tree"/>
+            <field name="search_view_id" ref="view_lab_result_search"/>
+        </record>
+        <menuitem id="menu_lab_result_page" name="Lab Result" parent="menu_lab_reports" action="action_lab_result_page"
+                  sequence="2"/>
+    </data>
+</odoo>

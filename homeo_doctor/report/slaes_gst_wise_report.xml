@@ -1,0 +1,272 @@
+<odoo>
+    <data>
+        <template id="report_bill_gst_template">
+            <t t-call="web.basic_layout">
+                <div class="page">
+                    <div style="padding-top: 2mm; margin-bottom: 10px;">
+                        <!-- Hospital Header Block -->
+                        <div style="display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif;">
+                            <img t-att-src="'/web/binary/company_logo'"
+                                 style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+                            <div style="flex-grow: 1; text-align: center;">
+                                <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                    SANTHWANA HOSPITAL
+                                </h1>
+
+
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    N.C.C Road,Ambalamukku,Trivandrum-695005
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Phone: 0471-2432121,4223131
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                </p>
+
+                                <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                <!--                                </h2>-->
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <p style="text-align: center; font-size: 16px; font-weight: bold;">
+                        <t t-esc="docs.from_date"/>
+                        to
+                        <t t-esc="docs.to_date"/>
+                        <t t-if="docs.op_category">(
+                            <t t-if="docs.op_category == 'op'">OP</t>
+                            <t t-if="docs.op_category == 'ip'">IP</t>
+                            <t t-if="docs.op_category == 'others'">OTHERS</t>
+                            Patients
+                        </t>
+                        <t t-if="docs.payment_method">
+                            -
+                            <t t-if="docs.payment_method == 'cash'">Cash</t>
+                            <t t-if="docs.payment_method == 'card'">Card</t>
+                            <t t-if="docs.payment_method == 'upi'">UPI</t>
+                            <t t-if="docs.payment_method == 'credit'">Credit</t>
+                        </t>
+                        )
+                    </p>
+
+
+                     <t t-set="domain" t-value="[
+                        ('date', '&gt;=', docs.from_date),
+                        ('date', '&lt;=', docs.to_date)
+                    ]"/>
+
+                    <t t-if="docs.op_category == 'admitted'">
+                        <t t-set="domain" t-value="domain + [('op_category', '=', 'admitted')]"/>
+                    </t>
+
+                    <t t-if="docs.op_category != 'admitted'">
+                        <t t-set="domain" t-value="domain + [('op_category', '!=', 'admitted')]"/>
+                    </t>
+
+                    <t t-if="docs.payment_method">
+                        <t t-set="domain" t-value="domain + [('payment_mathod', '=', docs.payment_method)]"/>
+                    </t>
+
+                    <t t-set="bills" t-value="env['pharmacy.description'].search(domain)"/>
+
+                    <t t-set="bills" t-value="env['pharmacy.description'].search(domain)"/>
+
+                    <table class="table table-sm table-bordered" style="width:100%; font-size:14px;">
+                        <thead>
+                            <tr>
+                                <th>Sl No</th>
+                                <th>Bill No</th>
+                                <th>Bill Date</th>
+                                <th>Patient</th>
+                                <th>Non Taxable</th>
+                                <th>GST 5%</th>
+                                <th>CGST 2.5%</th>
+                                <th>SGST 2.5%</th>
+                                <th>GST 12%</th>
+                                <th>CGST 6%</th>
+                                <th>SGST 6%</th>
+                                <th>GST 18%</th>
+                                <th>CGST 9%</th>
+                                <th>SGST 9%</th>
+                                <th>Payment Method</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="total_non_taxable" t-value="0"/>
+                            <t t-set="total_gst_5" t-value="0"/>
+                            <t t-set="total_cgst_2_5" t-value="0"/>
+                            <t t-set="total_sgst_2_5" t-value="0"/>
+                            <t t-set="total_gst_12" t-value="0"/>
+                            <t t-set="total_cgst_6" t-value="0"/>
+                            <t t-set="total_sgst_6" t-value="0"/>
+                            <t t-set="total_gst_18" t-value="0"/>
+                            <t t-set="total_cgst_9" t-value="0"/>
+                            <t t-set="total_sgst_9" t-value="0"/>
+                            <t t-set="total_amount" t-value="0"/>
+                            <t t-set="counter" t-value="0"/>
+
+                            <t t-foreach="bills" t-as="bill">
+                                <t t-set="counter" t-value="counter + 1"/>
+                                <tr>
+                                    <td>
+                                        <t t-esc="counter"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="bill.bill_number"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="bill.date"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="bill.name"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="round(sum(line.rate for line in bill.prescription_line_ids if not line.gst), 2)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="sum(line.rate for line in bill.prescription_line_ids if line.gst == 5)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="round(sum(line.rate * 0.025 for line in bill.prescription_line_ids if line.gst == 5), 2)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="round(sum(line.rate * 0.025 for line in bill.prescription_line_ids if line.gst == 5), 2)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="sum(line.rate for line in bill.prescription_line_ids if line.gst == 12)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="round(sum(line.rate * 0.06 for line in bill.prescription_line_ids if line.gst == 12), 2)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="round(sum(line.rate * 0.06 for line in bill.prescription_line_ids if line.gst == 12), 2)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="sum(line.rate for line in bill.prescription_line_ids if line.gst == 18)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="round(sum(line.rate * 0.09 for line in bill.prescription_line_ids if line.gst == 18), 2)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="round(sum(line.rate * 0.09 for line in bill.prescription_line_ids if line.gst == 18), 2)"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="bill.payment_mathod"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="bill.total_amount"/>
+                                    </td>
+
+                                    <!-- Totals -->
+                                    <t t-set="total_non_taxable"
+                                       t-value="total_non_taxable + sum(line.rate for line in bill.prescription_line_ids if not line.gst)"/>
+                                    <t t-set="total_gst_5"
+                                       t-value="total_gst_5 + sum(line.rate for line in bill.prescription_line_ids if line.gst == 5)"/>
+                                    <t t-set="total_cgst_2_5"
+                                       t-value="total_cgst_2_5 + sum(line.rate * 0.025 for line in bill.prescription_line_ids if line.gst == 5)"/>
+                                    <t t-set="total_sgst_2_5"
+                                       t-value="total_sgst_2_5 + sum(line.rate * 0.025 for line in bill.prescription_line_ids if line.gst == 5)"/>
+                                    <t t-set="total_gst_12"
+                                       t-value="total_gst_12 + sum(line.rate for line in bill.prescription_line_ids if line.gst == 12)"/>
+                                    <t t-set="total_cgst_6"
+                                       t-value="total_cgst_6 + sum(line.rate * 0.06 for line in bill.prescription_line_ids if line.gst == 12)"/>
+                                    <t t-set="total_sgst_6"
+                                       t-value="total_sgst_6 + sum(line.rate * 0.06 for line in bill.prescription_line_ids if line.gst == 12)"/>
+                                    <t t-set="total_gst_18"
+                                       t-value="total_gst_18 + sum(line.rate for line in bill.prescription_line_ids if line.gst == 18)"/>
+                                    <t t-set="total_cgst_9"
+                                       t-value="total_cgst_9 + sum(line.rate * 0.09 for line in bill.prescription_line_ids if line.gst == 18)"/>
+                                    <t t-set="total_sgst_9"
+                                       t-value="total_sgst_9 + sum(line.rate * 0.09 for line in bill.prescription_line_ids if line.gst == 18)"/>
+                                    <t t-set="total_amount" t-value="total_amount + bill.total_amount"/>
+                                </tr>
+                            </t>
+
+                            <tr style="font-weight:bold; background-color:#f0f0f0;">
+                                <td colspan="4" style="text-align:right;">Total</td>
+                                <td>
+                                    <t t-esc="round(total_non_taxable, 2)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="round(total_gst_5, 2)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="round(total_cgst_2_5, 2)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="round(total_sgst_2_5, 2)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="round(total_gst_12, 2)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="round(total_cgst_6, 2)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="round(total_sgst_6, 2)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="round(total_gst_18, 2)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="round(total_cgst_9, 2)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="round(total_sgst_9, 2)"/>
+                                </td>
+                                <td>
+
+                                </td>
+                                <td>
+                                    <t t-esc="round(total_amount, 2)"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </template>
+        <record id="sales_gst_paperformat" model="report.paperformat">
+            <field name="name">Sales GST PDF Format</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="orientation">Portrait</field>
+            <field name="header_line" eval="False"/>
+        </record>
+        <record id="action_report_bill_gst" model="ir.actions.report">
+            <field name="name">Bill GST Report</field>
+            <field name="model">pharmacy.bill.gst.report</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">homeo_doctor.report_bill_gst_template</field>
+            <field name="paperformat_id" ref="sales_gst_paperformat"/>
+        </record>
+        <!--        <record id="action_report_bill_gst_excel" model="ir.actions.server">-->
+        <!--            <field name="name">Bill GST Excel</field>-->
+        <!--            <field name="model_id" ref="model_pharmacy_bill_gst_report"/>-->
+        <!--            <field name="binding_model_id" ref="model_pharmacy_bill_gst_report"/>-->
+        <!--            <field name="state">code</field>-->
+        <!--            <field name="code">-->
+        <!--                action = {-->
+        <!--                'type': 'ir.actions.act_url',-->
+        <!--                'url': '/report/generate/bill_gst_excel?from_date=' + record.from_date.isoformat() + '&amp;to_date=' +-->
+        <!--                record.to_date.isoformat(),-->
+        <!--                'target': 'new',-->
+        <!--                }-->
+
+        <!--            </field>-->
+        <!--        </record>-->
+
+
+    </data>
+</odoo>

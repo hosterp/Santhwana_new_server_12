@@ -1,0 +1,199 @@
+<odoo>
+    <data>
+        <template id="doctor_billing_pdf_template">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div style="padding-top: 2mm; margin-bottom: 10px;">
+                            <!-- Hospital Header Block -->
+                            <div style="display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif;">
+                                <img t-att-src="'/web/binary/company_logo'"
+                                     style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+                                <div style="flex-grow: 1; text-align: center;">
+                                    <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                        SANTHWANA HOSPITAL
+                                    </h1>
+
+
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        N.C.C Road,Ambalamukku,Trivandrum-695005
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        Phone: 0471-2432121,4223131
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                    </p>
+
+                                    <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                    <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                    <!--                                </h2>-->
+
+                                </div>
+                            </div>
+                        </div>
+                        <h2 style="text-align:center;">Doctor-wise Billing Report</h2>
+
+                        <p style="text-align:center;">
+                            <strong>From:</strong>
+                            <t t-esc="data['from_date']"/> &#160;&#160;
+                            <strong>To:</strong>
+                            <t t-esc="data['to_date']"/>
+                        </p>
+
+                        <t t-set="total" t-value="total_row or {}"/>
+
+                        <table class="table table-bordered table-sm" style="width:100%; border:1px solid #000; font-size: 8px; table-layout: fixed;">
+                            <thead>
+                                <tr style="font-weight:bold; background:#f0f0f0;">
+                                    <th style="width: 12%;">Doctor</th>
+                                    <th class="text-right" style="width: 7%;">OP</th>
+                                    <th class="text-right" style="width: 7%;">OP Reg. Fee</th>
+                                    <th class="text-right" style="width: 7%;">Casualty</th>
+                                    <th class="text-right" style="width: 7%;">Revisit</th>
+                                    <th class="text-right" style="width: 7%;">General</th>
+                                    <th class="text-right" style="width: 7%;">Pharmacy</th>
+                                    <th class="text-right" style="width: 7%;">Lab</th>
+                                    <th class="text-right" style="width: 7%;">Xray</th>
+                                    <th class="text-right" style="width: 7%;">Audio</th>
+                                    <th class="text-right" style="width: 8%;">Discharge</th>
+                                    <th class="text-right" style="width: 7%;">OT</th>
+                                    <th class="text-right" style="width: 10%;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- ✅ Loop over each doctor's data and compute row total -->
+                                <t t-foreach="report_data.items()" t-as="line">
+                                    <t t-set="row_total"
+                                       t-value="(line[1].get('consultation_amount', 0.0) or 0.0)
+                + (line[1].get('registration_fee', 0.0) or 0.0)
+                + (line[1].get('revisit_amount', 0.0) or 0.0)
+                + (line[1].get('general_amount', 0.0) or 0.0)
+                + (line[1].get('lab_amount', 0.0) or 0.0)
+                + (line[1].get('pharmacy_amount', 0.0) or 0.0)
+                + (line[1].get('ip_part_amount', 0.0) or 0.0)
+                + (line[1].get('xray_amount', 0.0) or 0.0)
+                + (line[1].get('audiology_amount', 0.0) or 0.0)
+                + (line[1].get('ot_amount', 0.0) or 0.0)
+                + (line[1].get('casuality_amount', 0.0) or 0.0)"/>
+
+                                    <tr>
+                                        <td>
+                                            <t t-esc="line[0]"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('consultation_amount', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('registration_fee', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('casuality_amount', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('revisit_amount', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('general_amount', 0.0)"/>
+                                        </td>
+
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('pharmacy_amount', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('lab_amount', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('xray_amount', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('audiology_amount', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('ip_part_amount', 0.0)"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-esc="'%.2f' % line[1].get('ot_amount', 0.0)"/>
+                                        </td>
+                                        <td class="text-right" style="font-weight:bold;">
+                                            <t t-esc="'%.2f' % row_total"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- ✅ Final Column-Wise Totals Row -->
+                                <tr style="font-weight:bold; border-top:2px solid #000; background:#f9f9f9;">
+                                    <td>Grand Total</td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('consultation_amount', 0.0)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('registration_fee', 0.0)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('casuality_amount', 0.0)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('revisit_amount', 0.0)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('general_amount', 0.0)"/>
+                                    </td>
+
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('pharmacy_amount', 0.0)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('lab_amount', 0.0)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('xray_amount', 0.0)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('audiology_amount', 0.0)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('ip_part_amount', 0.0)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('ot_amount', 0.0)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="'%.2f' % total.get('row_total', 0.0)"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </template>
+        <record id="doctor_billing_paperformat" model="report.paperformat">
+            <field name="name">Doctor Billing PDF Format</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="margin_top">7</field>
+            <field name="margin_bottom">7</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="orientation">Portrait</field>
+            <field name="header_line" eval="False"/>
+        </record>
+
+        <report
+                id="action_doctor_billing_pdf_report"
+                string="Doctor Billing Report"
+                model="doctor.billing.report.wizard"
+                report_type="qweb-pdf"
+                name="homeo_doctor.doctor_billing_pdf_template"
+                file="homeo_doctor.doctor_billing_pdf_template"
+                print_report_name="'Doctor Billing Report'"
+                paperformat="doctor_billing_paperformat"
+        />
+
+    </data>
+</odoo>

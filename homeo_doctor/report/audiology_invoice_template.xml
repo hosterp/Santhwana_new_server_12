@@ -1,0 +1,167 @@
+<odoo>
+    <!-- Custom minimal layout -->
+<template id="audiology_minimal_layout">
+        <t t-call="web.basic_layout">
+            <div class="header">
+                <div class="text-center">
+                    <h2 style="text-decoration: underline; margin-bottom: 10px;">Hospital Management</h2>
+                    <p>Trivandrum | Phone: 0471-2373004, Mobile No: 91884 29198 </p>
+                </div>
+            </div>
+            <t t-raw="0"/>
+        </t>
+    </template>
+    <!-- Main invoice template -->
+    <template id="report_audiology_invoice">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="homeo_doctor.audiology_minimal_layout">
+                    <div class="page">
+                        <!-- Header Section -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <h3 class="mt-2 mb-4">AUDIOLOGY THERAPY INVOICE</h3>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Information -->
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td class="pl-0"><strong>Invoice Date:</strong></td>
+                                        <td><span t-field="o.scan_registered_date"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pl-0"><strong>Report Date:</strong></td>
+                                        <td><span t-field="o.scan_report_date"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pl-0"><strong>Referral ID:</strong></td>
+                                        <td><span t-field="o.referral_id"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Patient and Doctor Information -->
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <div class="p-3" style="border: 1px solid #ddd; border-radius: 4px;">
+                                    <h5 class="mb-3">Patient Information</h5>
+                                    <table class="table table-borderless mb-0">
+                                         <tr>
+                                            <td class="pl-0"><strong>Patient ID:</strong></td>
+                                            <td><span t-field="o.user_ide"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="pl-0"><strong>Name:</strong></td>
+                                            <td><span t-field="o.user_ide.patient_id"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="pl-0"><strong>Age/Gender:</strong></td>
+                                            <td>
+                                                <span t-field="o.age"/> /
+                                                <span t-field="o.gender"/>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3" style="border: 1px solid #ddd; border-radius: 4px;">
+                                    <h5 class="mb-3">Doctor Information</h5>
+                                    <table class="table table-borderless mb-0">
+                                        <tr>
+                                            <td class="pl-0"><strong>Name:</strong></td>
+                                            <td><span t-field="o.doctor_id.name"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="pl-0"><strong>Department:</strong></td>
+                                            <td><span t-field="o.doctor_id.department_id"/></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scan Details Table -->
+                        <div class="mt-4">
+                            <h5>Therapy Details</h5>
+                            <table class="table table-bordered">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th class="text-center">No.</th>
+                                        <th>Service</th>
+                                        <th>Session</th>
+                                        <th class="text-right">Rate/Session (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-set="counter" t-value="1"/>
+                                    <t t-set="total" t-value="0"/>
+                                    <tr t-foreach="o.therapy_line_ids" t-as="line">
+                                        <td class="text-center" style="width: 5%;">
+                                            <span t-esc="counter"/>
+                                            <t t-set="counter" t-value="counter + 1"/>
+                                        </td>
+                                        <td style="width: 35%;"><span t-field="line.service_id.name"/></td>
+                                        <td style="width: 35%;"><span t-field="line.session_id.session"/></td>
+                                        <td class="text-right" style="width: 25%;">
+                                            ₹ <span t-field="line.rate_id.amount" t-options='{"widget": "float", "precision": 2}'/></td>
+                                        <t t-set="line_total" t-value="line.session_id.session * line.rate_id.amount"/>
+                                        <t t-set="total" t-value="total + line_total"/>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-right"><strong>Sub Total</strong></td>
+                                        <td class="text-right">
+                                            ₹ <span t-esc="'%.2f'% total"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-right"><strong>Total Amount</strong></td>
+                                        <td class="text-right">
+                                            <strong>
+                                             ₹ <span t-esc="'%.2f'% total"/>
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="p-3" style="border: 1px solid #ddd; border-radius: 4px;">
+                                    <h6>Investigation Details:</h6>
+                                    <p t-field="o.investigation"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terms and Signature -->
+                        <div class="row mt-5">
+                            <div class="col-8">
+                                <p class="text-muted small">
+                                    Terms &amp; Conditions:<br/>
+                                    1. Payment is due upon receipt of invoice<br/>
+                                    2. Please quote invoice number for all correspondences<br/>
+                                    3. This is a computer generated invoice
+                                </p>
+                            </div>
+                            <div class="col-4 text-center">
+                                <p class="mt-5">
+                                    _______________________<br/>
+                                    Authorized Signature
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,278 @@
+<odoo>
+    <data>
+        <record id="view_admitted_patient_tree" model="ir.ui.view">
+            <field name="name">admitted.patient.tree</field>
+            <field name="model">hospital.admitted.patient</field>
+            <field name="arch" type="xml">
+                <tree string="Admitted Patients" default_order="admission_date desc, id desc"   decoration-danger="status == 'discharged'">
+                    <field name="patient_id" string="UHID"/>
+                    <field name="name"/>
+                    <field name="admission_date"/>
+                    <field name="room_number"/>
+                    <field name="bed_id"/>
+                    <field name="admitting_department"/>
+                    <field name="attending_doctor"/>
+                    <field name="visited_doctor_ids" widget="many2many_tags" optional="show"/>
+                    <field name="admission_status" invisible="1"/>
+                    <field name="status"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_admitted_search" model="ir.ui.view">
+            <field name="name">hospital.admitted.patient.search</field>
+            <field name="model">hospital.admitted.patient</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="patient_id" string="UHID"/>
+                    <field name="name"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_admitted_patient_form" model="ir.ui.view">
+            <field name="name">admitted.patient.form</field>
+            <field name="model">hospital.admitted.patient</field>
+            <field name="arch" type="xml">
+                <form string="Admitted Patient Details">
+                    <header>
+                        <button name="action_print_patient_report" type="object" string="Print Patient Case Sheet"
+                                class="btn-primary" target="new"/>
+                        <button string="Proceed to Discharge"
+                                name="action_discharged"
+                                type="object"
+                                class="btn-primary"
+                                attrs="{'invisible': [('status', '=', 'discharged')]}"/>
+                        <button name="create_referral_lab" type="object" string="Lab Referral"
+                                class="btn-primary" target="new"/>
+                        <field name="admission_date" readonly="1" style="font-weight: bold;margin-left: 1000px;"/>
+                        <field name="status" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <group col="4">
+                            <group>
+                                <field name="patient_id" string="UHID"/>
+                                <field name="name"/>
+                                <field name="insurance_provider"/>
+                            </group>
+                            <group>
+                                <field name="dob"/>
+                                <field name="admission_date"/>
+                                <field name="admitting_department" required="0"/>
+                            </group>
+                            <group>
+                                <field name="room_number"/>
+                                <field name="bed_id"/>
+                                <field name="attending_doctor"/>
+                                <field name="visited_doctor_ids" widget="many2many_tags"/>
+                            </group>
+                            <group>
+                                <field name="room_category_new"/>
+                                <field name="room_id" invisible="1"/>
+                                <field name="advance_amount" invisible="1"/>
+                                <field name="admission_status"/>
+                            </group>
+
+                        </group>
+                        <group>
+                            <group>
+                                <field name="reason_for_admission"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+
+                            <page string="Prescription" groups="base.group_system,homeo_doctor.prescription">
+                                <field name="past_prescription_ids">
+                                    <tree editable="bottom">
+                                        <!--                                        <field name="id" invisible="1"/>-->
+                                        <!--                                        <field name="patient_id" invisible="1"/>-->
+                                        <!--                                        <field name="appointment_date" string="Date"/>-->
+                                        <field name="prescription_line_id" invisible="1"/>
+                                        <field name="date" readonly="1"/>
+                                        <field name="product_id"/>
+                                        <field name="morn"/>
+                                        <field name="noon"/>
+                                        <field name="night"/>
+                                        <field name="qty"/>
+                                        <field name="medicine_move" invisible="1"/>
+                                        <!--                                        <field name="age"/>-->
+                                        <!--                                        <field name="doctor_id"/>-->
+                                    </tree>
+                                </field>
+                                <footer>
+                                    <div style="text-align: right;">
+                                        <button name="action_move_to_pharmacy"
+                                                string="Move to Pharmacy"
+                                                type="object"
+                                                class="btn btn-primary"/>
+                                    </div>
+                                </footer>
+
+                            </page>
+                            <page string="Lab Test" groups="base.group_system,homeo_doctor.labtest">
+                                <field name="lab_report_test_ids">
+                                    <tree>
+                                        <!--                                        <field name="bill_number" invisible="1"/>-->
+                                        <field name="date" string="Date"/>
+                                        <!--                                        <field name="result_status"/>-->
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Lab Result" name="lab_reports" groups="base.group_system,homeo_doctor.labreports">
+                                <field name="lab_report_reg_admitted_ids">
+                                    <tree>
+                                        <!--                                        <field name="bill_number" invisible="1"/>-->
+                                        <field name="test_on"/>
+                                        <field name="result_status"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Treatment Plan" groups="base.group_system,homeo_doctor.treatment" >
+                                <field name="procedures_scheduled"/>
+                                <field name="treatment_description"/>
+                                <field name="daily_progress_notes"/>
+                                <field name="consultation_notes"/>
+                            </page>
+                            <page string="Medical History" groups="base.group_system,homeo_doctor.medical" >
+                                <!--                                <field name="previous_conditions"/>-->
+                                <field name="previous_consultation_ids">
+                                    <tree editable="bottom">
+                                        <field name="id" invisible="1"/>
+                                        <field name="patient_id" invisible="1"/>
+                                        <field name="appointment_date" string="Date"/>
+                                        <!--                                        <field name="patient_name"/>-->
+                                        <!--                                        <field name="age"/>-->
+                                        <field name="doctor_id"/>
+                                    </tree>
+                                </field>
+                                <!--                                <field name="current_diagnosis"/>-->
+                                <!--                                <field name="medications_prescribed"/>-->
+                                <!--                                <field name="allergies"/>-->
+                                <!--                                <field name="test_results"/>-->
+                            </page>
+
+
+                            <page string="Current Diagnosis" groups="base.group_system,homeo_doctor.current" >
+                                <field name="current_diagnosis"/>
+                            </page>
+                            <!--                            <page string="Medicines Prescribed">-->
+                            <!--                                <field name="past_prescription_ids">-->
+                            <!--                                    <tree editable="bottom">-->
+                            <!--                                        &lt;!&ndash;                                        <field name="id" invisible="1"/>&ndash;&gt;-->
+                            <!--                                        &lt;!&ndash;                                        <field name="patient_id" invisible="1"/>&ndash;&gt;-->
+                            <!--                                        &lt;!&ndash;                                        <field name="appointment_date" string="Date"/>&ndash;&gt;-->
+                            <!--                                        <field name="prescription_line_id" invisible="1"/>-->
+                            <!--                                        <field name="product_id"/>-->
+                            <!--                                        &lt;!&ndash;                                        <field name="age"/>&ndash;&gt;-->
+                            <!--                                        &lt;!&ndash;                                        <field name="doctor_id"/>&ndash;&gt;-->
+                            <!--                                    </tree>-->
+                            <!--                                </field>-->
+                            <!--                            </page>-->
+                            <page string="Allergies" groups="base.group_system,homeo_doctor.allergy" >
+                                <field name="allergies"/>
+                            </page>
+
+                            <page string="Billing Information" groups="base.group_system,homeo_doctor.billing" >
+                                <field name="insurance_provider"/>
+                                <field name="insurance_policy_number"/>
+                                <field name="advance_payment"/>
+                                <field name="billing_summary"/>
+                            </page>
+
+                            <page string="Discharge Details" groups="base.group_system,homeo_doctor.dischargedetails">
+                                <field name="discharge_date"/>
+                                <field name="final_diagnosis"/>
+                                <field name="discharge_prescriptions"/>
+                                <field name="follow_up_instructions"/>
+                                <field name="summary_report"/>
+                            </page>
+
+                            <page string="Discharge Summary" groups="base.group_system,homeo_doctor.summary">
+                                <!-- Row 1 -->
+                                <group col="2" >
+                                    <group>
+                                        <field name="surgery_date" style="width:25%"/>
+                                    </group>
+                                    <group>
+                                        <field name="discharge_date" style="width:25%"/>
+                                    </group>
+                                </group>
+
+                                <group col="2" style="width: 50%;">
+
+                                    <!-- Row 2 -->
+                                    <field name="final_diagnosis" placeholder="Enter diagnosis here..."
+                                           style="height:60px;"/>
+                                     <field name="surgery" style="height:150px;"/>
+                                    <field name="history" placeholder="Enter history here..." style="height:60px;"/>
+
+                                    <!-- Row 3 -->
+
+                                    <field name="clinical_findings" style="height:150px;"/>
+                                    <field name="relevant_investigation" style="height:150px;"/>
+
+                                    <!-- Row 4 -->
+                                    <field name="surgery_detail" style="height:150px;"/>
+                                    <field name="course_of_hospital" style="height:150px;"/>
+
+                                    <!-- Row 5 -->
+                                    <field name="advice_on_discharge" style="height:150px;"/>
+                                    <field name="next_visit" style="height:25px;"/>
+
+                                    <!-- Row 6 -->
+                                    <field name="Emergency_no" style="height:25px;"/>
+
+                                </group>
+                            </page>
+
+
+                        </notebook>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="action_admitted_patient" model="ir.actions.act_window">
+            <field name="name">Admitted Patients</field>
+            <field name="res_model">hospital.admitted.patient</field>
+            <field name="view_mode">tree,form</field>
+              <field name="domain">[('status','=','admitted')]</field>
+        </record>
+        <record id="action_admitted_patient_list" model="ir.actions.act_window">
+            <field name="name">Admitted Patients List</field>
+            <field name="res_model">hospital.admitted.patient</field>
+            <field name="view_mode">tree,form</field>
+<!--              <field name="domain">[('status','=','admitted')]</field>-->
+        </record>
+        <record id="action_discharge_patient" model="ir.actions.act_window">
+            <field name="name">Discharged Patients</field>
+            <field name="res_model">hospital.admitted.patient</field>
+            <field name="view_mode">tree,form</field>
+              <field name="domain">[('status','in',['discharged','proceed_discharge'])]</field>
+        </record>
+        <menuitem id="menu_hospital_root" name="Hospital Management" sequence="8"/>
+
+        <menuitem id="menu_admitted_patient"
+                  name="IP History"
+                  parent="menu_homeo_head"
+                  action="action_admitted_patient"
+                  sequence="6"/>
+        <menuitem id="menu_admitted_patient_list_main"
+                  name="Patient List"
+                  parent="menu_admitted_patient"
+                  action="action_admitted_patient_list"
+                  sequence="1"/>
+        <menuitem id="menu_admitted_patient_list"
+                  name="Admitted"
+                  parent="menu_admitted_patient"
+                  action="action_admitted_patient"
+                  sequence="2"/>
+        <menuitem id="menu_discharge_patient_list"
+                  name="Discharged"
+                  parent="menu_admitted_patient"
+                  action="action_discharge_patient"
+                  sequence="3"/>
+
+    </data>
+</odoo>

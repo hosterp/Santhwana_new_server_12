@@ -1,0 +1,124 @@
+<odoo>
+    <data>
+        <record id="view_scanning_mri_tree" model="ir.ui.view">
+            <field name="name">scanning.mri.tree</field>
+            <field name="model">scanning.mri</field>
+            <field name="arch" type="xml">
+                <tree string="MRI Scan">
+                    <header>
+                        <button name="action_walk_in_patient"
+                                string="Walk-in Patient"
+                                type="object"
+                                class="oe_highlight"/>
+                    </header>
+                    <field name="patient_name"/>
+                    <field name="user_ide" string="Patient ID"/>
+                    <field name="age"/>
+                    <field name="gender"/>
+                    <field name="doctor_id"/>
+                    <field name="register_visible" invisible="1"/>
+                </tree>
+            </field>
+        </record>
+        <record id="view_MRI_walk_in_tree" model="ir.ui.view">
+            <field name="name">MRI.ref.walk.tree</field>
+            <field name="model">scanning.mri</field>
+            <field name="arch" type="xml">
+                <tree string="Audiology">
+                    <field name="register_patient_name" string="Patient Name"/>
+                    <field name="register_age" string="Age"/>
+                    <field name="register_phone_number" string="Mobile"/>
+<!--                    <field name="registration_fee" string="Fee"/>-->
+                    <field name="register_visible" invisible="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_patient_ct_walk_in" model="ir.actions.act_window">
+            <field name="name">Walk-in Patients</field>
+            <field name="res_model">scanning.mri</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_MRI_walk_in_tree"/>
+            <field name="domain">[('register_visible', '=', True)]</field>
+            <field name="target">current</field>
+        </record>
+
+        <!-- MRI Scan Form View -->
+        <record id="view_scanning_mri_form" model="ir.ui.view">
+            <field name="name">scanning.mri.form</field>
+            <field name="model">scanning.mri</field>
+            <field name="arch" type="xml">
+                <form string="MRI Scan">
+                    <header>
+                        <button name="print_invoice" string="Print Invoice" type="object" class="oe_highlight"/>
+                    </header>
+                    <sheet>
+
+                        <group>
+                            <group>
+                                <field name="register_visible" invisible="1"/>
+                                <field name="user_ide" string="Patient ID"
+                                       attrs="{'invisible': [('register_visible', '=', True)]}"/>
+                                <field name="patient_name" attrs="{'invisible': [('register_visible', '=', True)]}"/>
+                                <field name="patient_id" invisible="1"/>
+                                <field name="reference_no" invisible="1"/>
+                                <field name="age" attrs="{'invisible': [('register_visible', '=', True)]}"/>
+                                <field name="gender" attrs="{'invisible': [('register_visible', '=', True)]}"/>
+                                <field name="bill_type" attrs="{'invisible': [('register_visible', '=', True)]}"/>
+                                <field name="admission" attrs="{'invisible': [('register_visible', '=', True)]}"/>
+                                <field name="doctor_id" attrs="{'invisible': [('register_visible', '=', True)]}"/>
+                                <field name="referral_id" invisible="1"/>
+                                <field name="scan_registered_date"
+                                       attrs="{'invisible': [('register_visible', '=', True)]}"/>
+                                <field name="scan_report_date"
+                                       attrs="{'invisible': [('register_visible', '=', True)]}"/>
+                                <field name="register_patient_name"
+                                       attrs="{'invisible': [('register_visible', '=', False)]}"/>
+                                <field name="register_address"
+                                       attrs="{'invisible': [('register_visible', '=', False)]}"/>
+                                <field name="register_age" attrs="{'invisible': [('register_visible', '=', False)]}"/>
+                                <field name="register_phone_number"
+                                       attrs="{'invisible': [('register_visible', '=', False)]}"/>
+                                <field name="register_email" attrs="{'invisible': [('register_visible', '=', False)]}"/>
+<!--                                <field name="registration_fee"-->
+<!--                                       attrs="{'invisible': [('register_visible', '=', False)]}"/>-->
+                            </group>
+                            <group>
+                                <field name="file_report" filename="file_report_name"/>
+                                <field name="investigation"/>
+                                <field name="details"/>
+                                <field name="report_details"/>
+                                <field name="impression"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Scan Details">
+                                <field name="scan_line_ids">
+                                    <tree editable="bottom">
+                                        <field name="scan_type_id"/>
+                                        <field name="body_part_id"/>
+                                        <field name="rate_id"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- MRI Scan Action -->
+        <record id="action_mri_scan" model="ir.actions.act_window">
+            <field name="name">MRI Scan</field>
+            <field name="res_model">scanning.mri</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_scanning_mri_tree"/>
+            <field name="domain">[('register_visible', '!=', True)]</field>
+        </record>
+
+        <!-- Menu Item -->
+        <menuitem id="menu_scanning_root" name="Scanning" parent="menu_hospital_root" sequence="7"/>
+        <menuitem id="menu_scanning_mri" name="MRI Billing" parent="menu_lab_reports_root_billing" action="action_mri_scan"
+                  sequence="4"/>
+    </data>
+</odoo>

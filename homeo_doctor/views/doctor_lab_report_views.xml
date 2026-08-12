@@ -1,0 +1,478 @@
+<odoo>
+    <data>
+        <record id="view_lab_report_tree" model="ir.ui.view">
+            <field name="name">doctor.lab.report.tree</field>
+            <field name="model">doctor.lab.report</field>
+            <field name="arch" type="xml">
+                <tree string="Doctor Lab Reports">
+                    <header>
+                        <button name="action_walk_in_patient"
+                                string="Walk-in Patient"
+                                type="object"
+                                class="oe_highlight"/>
+                    </header>
+                    <field name="patient_id" invisible="1"/>
+                    <field name="report_reference" string="Bill Number"/>
+                    <field name="patient_name"/>
+                    <field name="patient_phone"/>
+                    <field name="user_ide" string="Patient ID"/>
+                    <field name="report_reference" invisible="1"/>
+                    <field name="date" string="Bill Date"/>
+                    <field name="doctor_id" string="Doctor Name"/>
+                    <field name="staff_name"/>
+                    <field name="vssc_check" string="VSSC"/>
+                    <field name="mode_of_payment"/>
+                    <field name="register_visible" invisible="1"/>
+                    <field name="total_bill_amount"/>
+                    <field name="status" string="Payment Status"/>
+                    <field name="sample_status" string="Sample Collected Status"/>
+                    <field name="result_status" string="Lab Result Status"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_lab_report_search" model="ir.ui.view">
+            <field name="name">doctor.lab.report.search</field>
+            <field name="model">doctor.lab.report</field>
+            <field name="arch" type="xml">
+                <search string="Search Lab Reports">
+                    <field name="report_reference" string="Bill Number"/>
+                    <field name="patient_name"/>
+                    <field name="user_ide"/>
+                    <field name="patient_phone"/>
+                    <field name="doctor_id"/>
+                    <field name="date" filter_domain="[('date', '>=', self)]"/>
+                </search>
+            </field>
+        </record>
+        <record id="view_lab_walk_in_tree" model="ir.ui.view">
+            <field name="name">lab.ref.walk.tree</field>
+            <field name="model">doctor.lab.report</field>
+            <field name="arch" type="xml">
+                <tree string="Audiology">
+                    <field name="register_patient_name" string="Patient Name"/>
+                    <field name="register_age" string="Age"/>
+                    <field name="register_phone_number" string="Mobile"/>
+                    <!--                    <field name="registration_fee" string="Fee"/>-->
+                    <field name="register_visible" invisible="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_patient_lab_walk_in" model="ir.actions.act_window">
+            <field name="name">Walk-in Patients</field>
+            <field name="res_model">doctor.lab.report</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_lab_walk_in_tree"/>
+            <field name="domain">[('register_visible', '=', True)]</field>
+            <field name="target">current</field>
+        </record>
+        <!-- Lab Report Form View -->
+        <record id="view_lab_report_form" model="ir.ui.view">
+            <field name="name">doctor.lab.report.form</field>
+            <field name="model">doctor.lab.report</field>
+            <field name="arch" type="xml">
+                <form string="Lab Report" class="lab_form lab_doctor">
+                    <header>
+                        <field name="sample_status" widget="statusbar"/>
+                        <field name="result_status" widget="statusbar"/>
+                        <field name="status" widget="statusbar"/>
+                        <button name="action_confirm_payment" string="Print Invoice" type="object"
+                                class="btn-primary" groups="base.group_user" invisible="1"/>
+
+                        <button string="Unpaid" class="btn-primary"/>
+                        <button name="action_sample_collected" type="object" string="Sample Collected"
+                                class="btn-primary"/>
+                        <button name="action_cancel" type="object" string="Cancel"
+                                class="btn btn-danger"
+                                attrs="{'invisible': [('status', '=', 'cancelled')]}"/>
+                    </header>
+
+                    <sheet>
+                        <!-- Report Reference Section -->
+                        <div class="oe_title">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h1>
+                                        <field name="report_reference" readonly="1" placeholder="Report Reference"/>
+                                    </h1>
+                                </div>
+                                <div class="col-md-12" invisible="1"
+                                     style="display: flex; gap: 10px; justify-content: flex-start; margin-top: 10px;">
+                                    <button string="Lab" class="oe_highlight"/>
+                                    <button string="MRI" class="oe_highlight"/>
+                                    <button string="X RAY" class="oe_highlight"/>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Investigation Filter Buttons -->
+                        <!--                <div class="row mb-3">-->
+                        <!--                    <div class="col-12">-->
+                        <!--                        <field name="active_investigation_type" invisible="1"/>-->
+                        <!--                        <button name="filter_xray_investigations" string="X-Ray Only" type="object"-->
+                        <!--                                class="btn btn-secondary" attrs="{'invisible': [('active_investigation_type', '=', 'xray')]}"/>-->
+                        <!--                        <button name="filter_mri_investigations" string="MRI Only" type="object"-->
+                        <!--                                class="btn btn-secondary" attrs="{'invisible': [('active_investigation_type', '=', 'mri')]}"/>-->
+                        <!--                        <button name="filter_lab_investigations" string="Lab Only" type="object"-->
+                        <!--                                class="btn btn-secondary" attrs="{'invisible': [('active_investigation_type', '=', 'lab')]}"/>-->
+                        <!--                    </div>-->
+                        <!--                </div>-->
+
+
+                        <!-- Main Content Container -->
+                        <div class="form-section">
+                            <field name="register_visible" invisible="1"/>
+                            <field name="patient_id" invisible="1"/>
+                            <field name="bill_amount" invisible="1"/>
+                            <field name="register_address" invisible="1"/>
+                            <field name="register_age" invisible="1"/>
+                            <field name="register_email" invisible="1"/>
+
+                            <!-- Row 1: Bill Type, UHID, Bill Date -->
+                            <div class="lab_billing_class">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <div class="form-group row">
+                                            <label for="bill_type" class="col-md-4 col-form-label">Bill Type</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="bill_type"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group row">
+                                            <label for="user_ide" class="col-md-4 col-form-label">UHID</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="user_ide" options="{'no_create': True, 'no_edit': True}"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group row">
+                                            <label for="date" class="col-md-4 col-form-label">Bill Date</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="date" string="Bill Date" required="1"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group row">
+                                            <label for="doctor_id" class="col-md-4 col-form-label">Doctor</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="doctor_id" options="{'no_create': True, 'no_edit': True}"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-1" attrs="{'invisible': [('vssc_check', '!=', True)]}"
+                                         style="background-color:rgb(220, 53, 69);">
+                                        <div class="form-group row">
+                                            <label for="vssc_check" class="col-md-4 col-form-label">VSSC</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="vssc_check" style="width: 20px;"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="form-group row">
+                                            <label for="c_o" class="col-md-4 col-form-label">VSSC</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="c_o" style="width: 20px;"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="form-group row">
+                                            <label for="b_o" class="col-md-4 col-form-label">VSSC</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="b_o" style="width: 20px;"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Row 2: Patient Name, Age, Gender -->
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <!-- Patient Name (Registered) -->
+                                        <div class="form-group row"
+                                             attrs="{'invisible': [('register_visible', '=', False)]}">
+                                            <label for="register_patient_name" class="col-md-4 col-form-label">Patient
+                                            </label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="register_patient_name"
+                                                       attrs="{'required': [('register_visible', '=', True)]}"/>
+                                            </div>
+                                        </div>
+
+                                        <!-- Patient Name (Non-Registered) -->
+                                        <div class="form-group row"
+                                             attrs="{'invisible': [('register_visible', '=', True)]}">
+                                            <label for="patient_name" class="col-md-4 col-form-label">Patient</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="patient_name"
+                                                       attrs="{'required': [('register_visible', '=', False)]}"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group row">
+                                            <label for="age" class="col-md-4 col-form-label">Age</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="age" widget="float_no_default" style="width: 50px;"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group row">
+                                            <label for="gender" class="col-md-4 col-form-label">Gender</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="gender" style="width: 120px;"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2" attrs="{'invisible': [('register_visible', '=', False)]}">
+                                        <!-- Mobile Number (Registered) -->
+                                        <div class="form-group row">
+                                            <label for="register_phone_number" class="col-md-4 col-form-label">Mobile
+                                            </label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="register_phone_number"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2" attrs="{'invisible': [('register_visible', '=', True)]}">
+                                        <!-- Mobile Number (Registered) -->
+                                        <div class="form-group row">
+                                            <label for="patient_phone" class="col-md-4 col-form-label">Mobile</label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="patient_phone"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2" invisible="1">
+                                        <div class="form-group row">
+                                            <label for="alternate_phone" class="col-md-4 col-form-label">Alt. Mobile
+                                            </label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="alternate_phone"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group row">
+                                            <label for="insurance_name" class="col-md-4 col-form-label">Insurance
+                                            </label>
+                                            <div class="col-md-8 field-container">
+                                                <field name="insurance_name"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Lab Billing Details Section -->
+                        <div class="row">
+                            <div class="custom_notebook">
+                                <notebook>
+                                    <page>
+                                        <field name="lab_billing_ids" widget="one2many_list" mode="tree">
+                                            <tree string="Lab Billing Details" editable="bottom" create="true"
+                                                  delete="true" class="o_list_view table table-bordered">
+                                                <field name="test_code" string='Test Code' width="15%"/>
+                                                <field name="lab_type_id" string='Test Name' width="65%"/>
+                                                <field name="rate_id" invisible="1"/>
+                                                <field name="total_amount" string="Amount" sum="Total Amount"
+                                                       width="20%"/>
+                                            </tree>
+                                        </field>
+                                    </page>
+                                </notebook>
+                                <div class="row" style="margin-top: 15px; margin-left: 0px;">
+                                    <div class="col-md-6">
+                                        <div attrs="{'invisible': [('payment_method_split', '=', False)]}" style="margin-top: 5px;">
+                                            <table class="table table-bordered table-sm" style="width: 100%; border: 1px solid #dee2e6; box-shadow: -1px 1px 5px #53aade; border-radius: 8px; overflow: hidden;">
+                                                <thead style="background-color: #387298; color: white;">
+                                                    <tr style="height: 25px;">
+                                                        <th style="text-align: center; border: 1px solid #dee2e6; width: 50%; padding: 2px;">Method</th>
+                                                        <th style="text-align: center; border: 1px solid #dee2e6; width: 50%; padding: 2px;">Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr style="height: 25px;">
+                                                        <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">Cash</td>
+                                                        <td style="border: 1px solid #dee2e6; padding: 2px;"><field name="cash_amount" nolabel="1"/></td>
+                                                    </tr>
+                                                    <tr style="height: 25px;">
+                                                        <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">UPI</td>
+                                                        <td style="border: 1px solid #dee2e6; padding: 2px;"><field name="upi_amount" nolabel="1"/></td>
+                                                    </tr>
+                                                    <tr style="height: 25px;">
+                                                        <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">Card</td>
+                                                        <td style="border: 1px solid #dee2e6; padding: 2px;"><field name="card_amount" nolabel="1"/></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="custom_lab_row" style="margin-left: 10px; display: flex !important; flex-direction: column !important;">
+                                <style>
+                                    .lab_summary_grid {
+                                        display: grid;
+                                        grid-template-columns: 1fr 1fr;
+                                        gap: 10px;
+                                        width: 100%;
+                                    }
+                                    .lab_card {
+                                        border: 1px solid black;
+                                        border-radius: 10px;
+                                        padding: 6px;
+                                        text-align: center;
+                                        background-color: #fff;
+                                        min-height: 65px;
+                                        display: flex;
+                                        flex-direction: column;
+                                        justify-content: center;
+                                        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                                    }
+                                    .lab_card_label {
+                                        font-size: 15px;
+                                        color: #333;
+                                        margin-bottom: 3px;
+                                        font-weight: bold;
+                                    }
+                                    .lab_card_value {
+                                        font-weight: bold;
+                                        font-size: 18px;
+                                        color: #333;
+                                    }
+                                    .pay_button_container {
+                                        border: 1px solid black;
+                                        border-radius: 10px;
+                                        overflow: hidden;
+                                        height: 65px;
+                                        align-self: end;
+                                    }
+                                    .pay_now_btn {
+                                        width: 100%;
+                                        height: 100%;
+                                        background-color: #387298 !important;
+                                        color: white !important;
+                                        font-weight: bold !important;
+                                        font-size: 18px !important;
+                                        border: none !important;
+                                        transition: background-color 0.3s;
+                                    }
+                                    .pay_now_btn:hover {
+                                        background-color: #2c5a78 !important;
+                                    }
+                                </style>
+                                <!-- Grid Section -->
+                                <div class="lab_summary_grid">
+                                    <div class="lab_card">
+                                        <div class="lab_card_label">Total Amount</div>
+                                        <div class="lab_card_value"><field name="total_bill_amount" nolabel="1" readonly="1"/></div>
+                                    </div>
+                                    <div class="lab_card">
+                                        <div class="lab_card_label">Payment Method</div>
+                                        <div class="lab_card_value"><field name="mode_of_payment" nolabel="1"/></div>
+                                    </div>
+                                    <div class="lab_card">
+                                        <div class="lab_card_label">Discount</div>
+                                        <div class="lab_card_value"><field name="discount" nolabel="1"/></div>
+                                    </div>
+                                    <div class="lab_card">
+                                        <div class="lab_card_label">Balance</div>
+                                        <div class="lab_card_value" style="color: #d9534f;"><field name="balance" nolabel="1"/></div>
+                                    </div>
+                                    <div class="lab_card">
+                                        <div class="lab_card_label">Staff Name</div>
+                                        <div class="lab_card_value" style="color: #387298;"><field name="staff_name" nolabel="1" readonly="1"/></div>
+                                    </div>
+                                    <div class="lab_card">
+                                        <div class="lab_card_label">Staff Password</div>
+                                        <div style="position:relative; width:100%;">
+                                            <field name="staff_pwd" password="True" nolabel="1" style="width: 100%; border: none; text-align: center;"/>
+                                            <span style="position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-size: 12px;" onclick="togglePwd(this)">
+                                                <i class="fa fa-eye" title="Show Password" />
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="lab_card">
+                                        <div class="lab_card_label">Payment Split</div>
+                                        <div class="lab_card_value"><field name="payment_method_split" nolabel="1"/></div>
+                                    </div>
+                                    <div class="pay_button_container">
+                                        <button name='action_confirm_payment' type="object" string="Pay" class="pay_now_btn"/>
+                                    </div>
+                                </div>
+                                <!-- Remarks Section below Grid -->
+                                <div style="margin-top: 10px; width: 100%;">
+                                     <div class="lab_card" style="min-height: 40px; text-align: left; padding: 5px 15px;">
+                                        <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+                                            <div class="lab_card_label" style="margin-bottom: 0; min-width: 70px;">Remarks</div>
+                                            <div class="lab_card_value" style="flex: 1;"><field name="remarks" nolabel="1" placeholder="Add notes here..."/></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <notebook>
+                            <page string="Lab Details" name="lab_details" invisible="1">
+                                <field name="lab_line_ids"
+                                       widget="one2many_list"
+                                       mode="tree">
+                                    <tree string="Lab Tests" editable="bottom" create="true" delete="true">
+                                        <field name="lab_department" invisible="1"/>
+                                        <field name="lab_type_id" string='Particulars' invisible="1"/>
+                                        <field name="lab_test_name"/>
+                                        <field name="lab_result" string="Observed Value"/>
+                                        <field name="unit"/>
+                                        <field name="lab_reference_range"/>
+                                        <field name="lab_result" string="Result" invisible="1"/>
+                                        <field name="rate_id" string="Rate" invisible="1"/>
+                                        <field name="total_amount" sum="Total Amount" invisible="1"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <script type="text/javascript">
+                        function togglePwd(el) {
+                        var input = el.closest('div').querySelector('input');
+                        var icon = el.querySelector('i');
+                        if (!input) return;
+                        if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.className = 'fa fa-eye-slash';
+                        } else {
+                        input.type = 'password';
+                        icon.className = 'fa fa-eye';
+                        }
+                        }
+                    </script>
+                </form>
+            </field>
+        </record>
+        <!-- Lab Report Action -->
+        <record id="action_lab_report" model="ir.actions.act_window">
+            <field name="name">Lab Billing</field>
+            <field name="res_model">doctor.lab.report</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_lab_report_tree"/>
+            <field name="domain">[('register_visible', '!=', True)]</field>
+        </record>
+
+        <!-- Menu Item -->
+        <menuitem id="menu_lab_reports_root" name="Test Results" parent="menu_homeo_head" sequence="4"/>
+        <menuitem id="menu_lab_reports_root_billing" name="Billing" parent="menu_homeo_head" sequence="0"/>
+        <menuitem id="menu_lab_reports" name="Lab" parent="menu_lab_reports_root" sequence="1"/>
+        <menuitem id="menu_lab_reports_billing" name="Lab Billing" parent="menu_lab_reports_root_billing"
+                  action="action_lab_report"
+                  sequence="1"/>
+    </data>
+</odoo>

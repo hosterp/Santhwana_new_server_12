@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ip_billing_paperformat" model="report.paperformat">
+        <field name="name">Ip Billing PDF Format</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="margin_top">7</field>
+        <field name="margin_bottom">7</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="orientation">Portrait</field>
+        <field name="header_line" eval="False"/>
+    </record>
+    <report
+            id="action_report_ip_billing"
+            model="ip.part.billing"
+            string="IP Billing Report"
+            report_type="qweb-pdf"
+            name="homeo_doctor.report_ip_billing_pdf"
+            file="homeo_doctor.report_ip_billing_pdf"
+            print_report_name="'IP Billing Report'"
+            paperformat="ip_billing_paperformat"
+    />
+
+    <!-- Discharge Billing Report -->
+    <report
+            id="action_report_discharge_billing"
+            model="discharged.patient.record"
+            string="Discharge Billing Report"
+            report_type="qweb-pdf"
+            name="homeo_doctor.report_discharge_billing_pdf"
+            file="homeo_doctor.report_discharge_billing_pdf"
+            print_report_name="'Discharge Billing Report'"
+            paperformat="ip_billing_paperformat"
+    />
+
+    <!-- Template for IP Part Billing -->
+    <template id="report_ip_billing_pdf">
+        <t t-name="homeo_doctor.report_ip_billing_pdf">
+            <t t-call="web.basic_layout">
+                <div class="page">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                        <img t-att-src="'/web/binary/company_logo'"
+                             style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+                        <div style="flex-grow: 1; text-align: center;">
+                            <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                SANTHWANA HOSPITAL
+                            </h1>
+
+
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                N.C.C Road,Ambalamukku,Trivandrum-695005
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Phone: 0471-2432121,4223131
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                            </p>
+
+                            <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                            <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                            <!--                                </h2>-->
+
+                        </div>
+                    </div>
+                    <h3 style="text-align:center;">IP Part Billing Report</h3>
+                    <p style="text-align:center;">
+                        From
+                        <t t-esc="data.get('from_date')"/>
+                        to
+                        <t t-esc="data.get('to_date')"/>
+                    </p>
+
+
+                    <t t-if="not docs">
+                        <p>No records found.</p>
+                    </t>
+
+                    <t t-set="total_amt" t-value="0"/>
+                    <t t-foreach="range(0, len(docs), 500)" t-as="start">
+                        <div class="page">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Bill No</th>
+                                        <th>Patient</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="docs[start:start+500]" t-as="rec">
+                                        <tr>
+                                            <td>
+                                                <t t-esc="rec.bill_number or rec.id"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="rec.patient_name"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="rec.bill_date"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="rec.net_amount or 0"/>
+                                                <t t-set="total_amt" t-value="total_amt + (rec.net_amount or 0)"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <!-- Total Row -->
+                                    <tr>
+                                        <td colspan="3" style="text-align:right; font-weight:bold;">Total</td>
+                                        <td>
+                                            <t t-esc="total_amt"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Template for Discharge Billing -->
+    <template id="report_discharge_billing_pdf">
+        <t t-name="homeo_doctor.report_discharge_billing_pdf">
+            <t t-call="web.basic_layout">
+                <div class="page">
+                    <div style="padding-top: 2mm; margin-bottom: 10px;">
+                        <!-- Hospital Header Block -->
+                        <div style="display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif;">
+                            <img t-att-src="'/web/binary/company_logo'"
+                                 style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+                            <div style="text-align: center;">
+                                <h1 style="font-size: 25px; margin: 0; font-weight: bold; color: #2c3e50;">SANTHWANA
+                                    HOSPITAL
+                                </h1>
+                                <p style="margin: 5px 0; font-size: 16px; color: #555;">EANIKKARA, KARAKULAM PO,
+                                    THIRUVANANTHAPURAM -695 564
+                                </p>
+                                <p style="margin: 5px 0; font-size: 16px; color: #555;">Phone:
+                                    91884 29198
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <h2 style="text-align:center;">Discharge Billing Report</h2>
+                    <p style="text-align:center;">
+                        From
+                        <t t-esc="data.get('from_date')"/>
+                        to
+                        <t t-esc="data.get('to_date')"/>
+                    </p>
+
+                    <t t-if="not docs">
+                        <p>No records found.</p>
+                    </t>
+
+                    <t t-set="total_amt" t-value="0"/>
+                    <t t-foreach="range(0, len(docs), 500)" t-as="start">
+                        <div class="page">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Bill No</th>
+                                        <th>Patient</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="docs[start:start+500]" t-as="rec">
+                                        <tr>
+                                            <td>
+                                                <t t-esc="rec.patient_id or rec.id"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="rec.name"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="rec.discharge_date"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="rec.total_amount or 0"/>
+                                                <t t-set="total_amt" t-value="total_amt + (rec.total_amount or 0)"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <!-- Total Row -->
+                                    <tr>
+                                        <td colspan="3" style="text-align:right; font-weight:bold;">Total</td>
+                                        <td>
+                                            <t t-esc="total_amt"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

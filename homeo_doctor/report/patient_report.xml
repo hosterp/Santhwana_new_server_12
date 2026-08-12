@@ -1,0 +1,182 @@
+<odoo>
+    <data>
+        <template id="patient_report_template">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="web.external_layout">
+                        <div class="page" style="padding: 20px;">
+
+
+                            <div style="max-width: 700px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">
+                                <!-- Logo on the left -->
+                                <div style="flex: 0 0 60px; margin-right: 10px;">
+                                    <img src="/web/binary/company_logo" alt="Logo"
+                                         style="max-height: 100px; max-width: 100px; border-radius: 50%;"/>
+                                </div>
+
+
+                                <div style="flex-grow: 1; text-align: center;">
+                                    <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                        SANTHWANA HOSPITAL
+                                    </h1>
+
+
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        N.C.C Road,Ambalamukku,Trivandrum-695005
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        Phone: 0471-2432121,Mob:9188429198
+                                    </p>
+                                    <!--                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">-->
+                                    <!--                                        Email:info@santhwanahospital.com / Website:www.santhwanahospital.com-->
+                                    <!--                                    </p>-->
+                                    <!--                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">-->
+                                    <!--                                        NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED-->
+                                    <!--                                    </p>-->
+                                    <!--                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">-->
+                                    <!--                                        D.L. NOS:1-378/20-2002,1-379/21-2002-->
+                                    <!--                                    </p>-->
+
+                                    <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                    <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                    <!--                                </h2>-->
+
+                                </div>
+                            </div>
+                            <hr style="border: 1px solid black; margin-bottom: 10px;"/>
+                            <div>
+                                <h1 style="text-align: center;">
+                                    PRESCRIPTION FORM
+                                </h1>
+                            </div>
+
+                            <!-- Patient Details -->
+                            <div style="margin-top: 20px; width: 100%;">
+                                <!-- First row -->
+                                <div style="display: flex; justify-content: space-between; width: 100%;">
+                                    <div style="text-align: left;">
+                                        <strong>Patient Name:</strong>
+                                        <span t-field="o.patient_name" style="font-size: 18px; font-weight: bold;"/>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <strong>UHID:</strong>
+                                        <span t-field="o.patient_id"/>
+                                    </div>
+                                    <div style="text-align: right; margin-left: 20px;">
+                                        <strong>Doctor:</strong>
+                                        <span t-field="o.doctor"/>
+                                    </div>
+                                </div>
+
+                                <!-- Second row -->
+                                <div style="display: flex; justify-content: space-between; width: 100%; margin-top: 10px;">
+                                    <div style="text-align: left;">
+                                        <strong>Age:</strong>
+                                        <span t-field="o.age"/>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <strong>Gender:</strong>
+                                        <span t-field="o.gender"/>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <strong>Date:</strong>
+                                        <span t-field="o.appointment_date"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr style="border: 1px solid black; margin-bottom: 10px;"/>
+                            <table style="margin-top: 20px; border-collapse: collapse; width: 100%; font-size: 16px;">
+                                <thead>
+                                    <tr>
+                                        <th style="padding: 6px; text-align: left;">Sl. No.</th>
+                                        <th style="padding: 6px; text-align: left;">Category</th>
+                                        <th style="padding: 6px; text-align: left;">Medicine</th>
+                                        <th style="padding: 6px; text-align: left;">Generic</th>
+                                        <th style="padding: 6px; text-align: left;">Dosage</th>
+                                        <th style="padding: 6px; text-align: left;">Duration</th>
+                                        <th style="padding: 6px; text-align: left;">Remarks</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <t t-foreach="enumerate(o.med_ids)" t-as="data">
+                                        <tr>
+                                            <td style="padding: 6px;">
+                                                <t t-esc="data[0] + 1"/>
+                                            </td>
+                                            <td style="padding: 6px;">
+                                                <t t-esc="data[1].category.display_name"/>
+                                            </td>
+                                            <td style="padding: 6px;">
+                                                <t t-esc="data[1].products_id.display_name"/>
+                                            </td>
+                                            <td style="padding: 6px;">
+                                                <t t-esc="data[1].generic.display_name"/>
+                                            </td>
+                                            <td style="padding: 6px;">
+                                                <t t-esc="data[1].reg_time.display_name"/>
+                                            </td>
+                                            <td style="padding: 6px;">
+                                                <t t-esc="data[1].duration.display_name"/>
+                                            </td>
+                                            <td style="padding: 6px;">
+                                                <t t-esc="data[1].remarks.display_name"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+
+                            <!-- Footer -->
+                        </div>
+                        <div>
+                            <p>
+                                <strong>Review Date:</strong>
+                                <span t-field="o.review_date"/>
+                            </p>
+                            <p>
+                                <strong>Provisional Diagnosis &amp; Treatment Plan:</strong>
+                                <span t-field="o.professional_diagnosis" />
+                            </p>
+                        </div>
+
+                        <!--                        <div style="text-align: center; border-top: 2px solid #2c3e50; padding-top: 10px; margin-top: 20px; font-size: 12px; color: #555;">-->
+                        <!--                            <p>-->
+                        <!--                                <strong>PH:</strong>-->
+                        <!--                                0471-2432121, 9188429198 | <strong>Email:</strong>-->
+                        <!--                                <a href="mailto:santhwanatvpm@gmail.com" style="color: #007bff; text-decoration: none;">-->
+                        <!--                                    santhwanatvpm@gmail.com-->
+                        <!--                                </a>-->
+                        <!--                            </p>-->
+                        <!--                        </div>-->
+                    </t>
+                </t>
+            </t>
+        </template>
+        <record id="paperformat_a4_portrait_custom" model="report.paperformat">
+            <field name="name">A4 Portrait Custom</field>
+            <field name="format">A4</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">10</field>       <!-- Top margin in mm -->
+            <field name="margin_bottom">10</field>    <!-- Bottom margin -->
+            <field name="margin_left">5</field>      <!-- Left margin -->
+            <field name="margin_right">5</field>     <!-- Right margin -->
+            <field name="header_line" eval="False"/>  <!-- Remove header line -->
+            <field name="header_spacing">5</field>    <!-- Space between header and content -->
+            <field name="dpi">90</field>              <!-- DPI for PDF rendering -->
+        </record>
+
+        <!-- Report Action -->
+        <record id="action_patient_report" model="ir.actions.report">
+            <field name="name">Patient Report</field>
+            <field name="model">patient.registration</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">homeo_doctor.patient_report_template</field>
+            <field name="report_file">homeo_doctor.patient_report_template</field>
+            <field name="print_report_name">'Patient Report'</field>
+            <field name="binding_model_id" ref="model_patient_registration"/>
+            <field name="paperformat_id" ref="homeo_doctor.paperformat_a4_portrait_custom"/>
+        </record>
+    </data>
+</odoo>

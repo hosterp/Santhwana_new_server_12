@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Report Template -->
+        <template id="in_invoice_pdf_template">
+            <t t-call="web.html_container">
+                <t t-call="web.internal_layout">
+                    <div class="page">
+                        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                            <img t-att-src="'/web/binary/company_logo'"
+                                 style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+
+                            <div style="flex-grow: 1; text-align: center;">
+                                <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                    SANTHWANA HOSPITAL
+                                </h1>
+
+
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    N.C.C Road,Ambalamukku,Trivandrum-695005
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Phone: 0471-2432121,4223131
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                </p>
+
+                                <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                <!--                                </h2>-->
+
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <h5>Supplier Bill Report</h5>
+                            <p>
+                                <strong>From:</strong>
+                                <t t-esc="data['from_date']"/>
+                                <strong>To:</strong>
+                                <t t-esc="data['to_date']"/>
+                            </p>
+                        </div>
+
+                        <table class="table table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>Supplier Name</th>
+                                    <th>Invoice No</th>
+                                    <th>Phone No</th>
+                                    <th>Email Id</th>
+                                    <th>GST No</th>
+                                    <th>DL/REG No</th>
+                                    <th>Bill Date</th>
+                                    <th>PO Number</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="data['bills']" t-as="bill">
+                                    <tr>
+                                        <td>
+                                            <t t-esc="bill['supplier_name']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['supplier_invoice']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['supplier_phone']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['supplier_email']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['supplier_gst']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['supplier_dl']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['bill_date']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['po_number']"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </template>
+
+        <record id="supplier_billing_paperformat" model="report.paperformat">
+            <field name="name">supplier Billing PDF Format</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="orientation">Portrait</field>
+            <field name="header_line" eval="False"/>
+        </record>
+        <report
+                id="in_invoice_pdf_report_action"
+                model="in.invoice.report.wizard"
+                string="Vendor Bill PDF"
+                report_type="qweb-pdf"
+                name="homeo_doctor.in_invoice_pdf_template"
+                file="homeo_doctor.in_invoice_pdf_template"
+                print_report_name="'Vendor_Bill_Report'"
+                paperformat="supplier_billing_paperformat"
+        />
+
+        <!-- Wizard View -->
+        <record id="view_in_invoice_report_wizard" model="ir.ui.view">
+            <field name="name">In Invoice Report Wizard</field>
+            <field name="model">in.invoice.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Generate Vendor Bill Report">
+                    <group col="3">
+                        <group>
+                            <field name="from_date"/>
+                        </group>
+                        <group>
+                            <field name="to_date"/>
+                        </group>
+                        <group>
+                            <field name="mode_pay"/>
+                        </group>
+
+                    </group>
+                    <footer>
+                        <button name="action_print_pdf" type="object" string="PDF Report" class="btn-primary"/>
+                        <button name="action_print_excel" type="object" string="Excel Report" class="btn-secondary"/>
+                        <button string="Cancel" special="cancel" class="btn-link"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Wizard Action -->
+        <act_window
+                id="action_in_invoice_report_wizard"
+                name="Supplier Bill Report"
+                res_model="in.invoice.report.wizard"
+                view_mode="form"
+                target="new"
+        />
+
+        <!-- Menu Items -->
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_reports_root" name="Reports" parent="menu_homeo_head" sequence="21"/>
+        <menuitem
+                id="menu_in_invoice_report"
+                name="Supplier Bill Report"
+                parent="menu_reports_root"
+                action="action_in_invoice_report_wizard"
+                sequence="5"
+        />
+
+    </data>
+</odoo>

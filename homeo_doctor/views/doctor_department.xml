@@ -1,0 +1,77 @@
+<odoo>
+    <record id="view_doctor_department_form" model="ir.ui.view">
+        <field name="name">doctor.department.form</field>
+        <field name="model">doctor.department</field>
+        <field name="arch" type="xml">
+            <form string="Department">
+                <group col="3">
+                    <group>
+                        <field name="department"/>
+                    </group>
+                    <group>
+                        <field name="code"/>
+                    </group>
+                    <group>
+                        <field name="validity"/>
+                    </group>
+                </group>
+            </form>
+        </field>
+    </record>
+    <record id="view_doctor_department_kanban" model="ir.ui.view">
+        <field name="name">doctor.department.kanban</field>
+        <field name="model">doctor.department</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="department"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card">
+                            <div style="text-align: center; margin-top: 10px;">
+                                <strong>
+                                    <field name="department"/>
+                                </strong>
+                            </div>
+                            <div style="text-align: center; margin-top: 10px;">
+                                <button name="action_show_doctors" type="object" string="View Doctors"
+                                        class="btn btn-primary">View Doctors
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_doctor_department_tree" model="ir.ui.view">
+        <field name="name">doctor.department.tree</field>
+        <field name="model">doctor.department</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="department"/>
+                <field name="code"/>
+                <field name="validity"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_doctor_departments" model="ir.actions.act_window">
+        <field name="name">Doctor Departments</field>
+        <field name="res_model">doctor.department</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="target">current</field>
+    </record>
+    <record id="action_show_doctors" model="ir.actions.act_window">
+        <field name="name">Doctors</field>
+        <field name="res_model">doctor.profile</field>
+        <field name="view_mode">tree,form</field>
+        <field name="target">current</field>
+    </record>
+    <menuitem id="medical_department" name="Medical Department" sequence="3" parent="menu_lab_root"/>
+    <menuitem id="menu_doctor_departments"
+              name="Departments"
+              parent="medical_department"
+              action="action_doctor_departments"
+              sequence="2"/>
+
+</odoo>

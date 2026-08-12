@@ -1,0 +1,109 @@
+<odoo>
+    <template id="combined_report_template">
+        <t t-name="homeo_doctor.combined_report_template">
+            <t t-call="web.external_layout">
+                <main>
+                    <div class="page">
+                        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                            <img t-att-src="'/web/binary/company_logo'"
+                                 style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+
+                            <div style="flex-grow: 1; text-align: center;">
+                                <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                    SANTHWANA HOSPITAL
+                                </h1>
+
+
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    N.C.C Road,Ambalamukku,Trivandrum-695005
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Phone: 0471-2432121,4223131
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                </p>
+
+                                <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                <!--                                </h2>-->
+
+                            </div>
+                        </div>
+                        <div class="page text-center">
+                            <h2>All-in-One Report</h2>
+                            <p>
+                                From:
+                                <t t-esc="data['from_date']"/>
+                                To:
+                                <t t-esc="data['to_date']"/>
+                            </p>
+                        </div>
+
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <t t-foreach="data['payment_labels']" t-as="label">
+                                        <th>
+                                            <t t-esc="label"/>
+                                        </th>
+                                    </t>
+                                    <th>Total</th> <!-- Row-wise total -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Table Body: Department Rows -->
+                                <t t-foreach="data['departments'].items()" t-as="dept_line">
+                                    <tr>
+                                        <td>
+                                            <t t-esc="dept_line[0]"/>
+                                        </td>
+                                        <t t-set="row_total" t-value="0"/>
+                                        <t t-foreach="data['payment_codes']" t-as="code">
+                                            <t t-set="amount" t-value="dept_line[1].get(code, 0.0)"/>
+                                            <td>
+                                                <t t-esc="amount"/>
+                                            </td>
+                                            <t t-set="row_total" t-value="row_total + amount"/>
+                                        </t>
+                                        <td>
+                                            <t t-esc="row_total"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <!-- Grand Total Row -->
+                                <tr>
+                                    <th>Grand Total</th>
+                                    <t t-foreach="data['payment_codes']" t-as="code">
+                                        <t t-set="col_total" t-value="0"/>
+                                        <t t-foreach="data['departments'].values()" t-as="dept_data">
+                                            <t t-set="col_total" t-value="col_total + dept_data.get(code, 0.0)"/>
+                                        </t>
+                                        <td>
+                                            <t t-esc="col_total"/>
+                                        </td>
+                                    </t>
+                                    <!-- Grand Grand Total -->
+                                    <t t-set="grand_total" t-value="0"/>
+                                    <t t-foreach="data['departments'].values()" t-as="dept_data">
+                                        <t t-foreach="data['payment_codes']" t-as="code">
+                                            <t t-set="grand_total" t-value="grand_total + dept_data.get(code, 0.0)"/>
+                                        </t>
+                                    </t>
+                                    <td>
+                                        <t t-esc="grand_total"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </main>
+            </t>
+        </t>
+    </template>
+</odoo>

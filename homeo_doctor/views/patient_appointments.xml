@@ -1,0 +1,426 @@
+<odoo>
+    <record id="view_patient_appointment_tree" model="ir.ui.view">
+        <field name="name">patient.appointment.tree</field>
+        <field name="model">patient.appointment</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="appointment_reference" invisible="1"/>
+                <field name="appointment_date" string="Revisit Date"/>
+                <field name="patient_id" string="UHID"/>
+                <field name="token_no" invisible="1"/>
+                <field name="patient_name"/>
+                <field name="differance_appointment_days"/>
+                <field name="departments" widget="many2many_tags"/>
+                <field name="doctor_ids" widget="many2many_tags"/>
+                <field name="register_mode_payment"/>
+                <field name="register_total_amount"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_patient_appointment_form" model="ir.ui.view">
+        <field name="name">patient.appointment.form</field>
+        <field name="model">patient.appointment</field>
+        <field name="arch" type="xml">
+            <!--            <header>-->
+            <!--                <field name="status" widget="statusbar" options="{'clickable': 'true'}"/>-->
+            <!--            </header>-->
+            <header>
+                <button name="cancel_appointment"
+                        string="Cancel Appointment"
+                        type="object"
+                        attrs="{'invisible': [('status', 'in', ['cancelled'])]}"
+                        class="btn btn-sm btn-primary"
+                />
+                <button name='patient_challan_new' string="Patient Challan/DMP" type="object" class="oe_highlight"
+                        style="text-align: center;"/>
+                <button name='patient_challan_new_normal' string="Patient Challan " type="object" class="oe_highlight"
+                        style="text-align: center;"/>
+                <button name="action_confirm_payment"
+                        string="Pay"
+                        type="object"
+                        class="oe_highlight"
+                        invisible="1"
+                        title="Pay"/>
+                <field name="status" widget="statusbar"/>
+            </header>
+
+            <form>
+                <sheet>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="sub_details revisit_details">
+
+                                <div class="row mx-n1">
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="patient_id"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">UHID
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="patient_id"
+                                                       options="{'no_create': True, 'no_open': True}"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="patient_name"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Name
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="patient_name"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="gender" class="col-md-5 col-form-label py-0 small text-nowrap">
+                                                Gender
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="gender"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="age" class="col-md-5 col-form-label py-0 small text-nowrap">
+                                                Age
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="age"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+
+                                <div class="row mx-n1">
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="address" class="col-md-5 col-form-label py-0 text-nowrap">
+                                                Address
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="address"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="phone_number" class="col-md-5 col-form-label py-0 text-nowrap">
+                                                Phone Number
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="phone_number"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="departments" class="col-md-5 col-form-label py-0 text-nowrap">
+                                                Department
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="departments" widget="many2many_tags"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="doctor_ids"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Doctor
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="doctor_ids" widget="many2many_tags"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+
+                                <div class="row mx-n1">
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="appointment_date"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Appointment
+                                                Date
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="appointment_date"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="consultation_fee"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Consultation
+                                                Fee
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="consultation_fee"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="registration_fee"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Register Fee
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="registration_fee"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="reason"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap reason">reason
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="reason"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="row mx-n1">
+                                    <div class="col px-1" attrs="{'invisible': [('vssc_boolean', '!=', True)]}"
+                                         style="background-color:rgb(220, 53, 69);max-width: 14.28%;">
+                                        <div class="form-group row my-1">
+                                            <label for="vssc_boolean"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">
+                                                VSSC
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="vssc_boolean" class="vssc-checkbox"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <script type="text/javascript">
+                                        $(document).ready(function () {
+                                        const $checkbox = $('.vssc-checkbox input[type="checkbox"]');
+                                        const $container = $('.vssc-container');
+
+                                        function updateColor() {
+                                        if ($checkbox.is(':checked')) {
+                                        $container.css({
+                                        'background-color': '#dc3545',
+                                        'color': 'white',
+                                        'border-radius': '5px'
+                                        });
+                                        } else {
+                                        $container.css({
+                                        'background-color': '',
+                                        'color': ''
+                                        });
+                                        }
+                                        }
+
+                                        // Run once and attach listener safely
+                                        updateColor();
+                                        $checkbox.off('change.vssc').on('change.vssc', updateColor);
+                                        });
+                                    </script>
+                                    <div class="col px-1" style="max-width: 25%;">
+                                        <div class="form-group row my-1">
+                                            <label for="differance_appointment_days"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">No of Days
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="differance_appointment_days"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col px-1" style="max-width: 25%;" invisible="1">
+                                        <div class="form-group row my-1">
+                                            <label for="fee_applied"
+                                                   class="col-md-5 col-form-label py-0 small text-nowrap">Fee applied
+                                            </label>
+                                            <div class="col-md-9 field-container py-0">
+                                                <field name="fee_applied" invisible="1"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="custom_register_payment_row" style="font-size: 0.9rem;">
+                                <h4 style="text-align: center; width: 100%;text-decoration-line: underline;">Register
+                                    Payment
+                                </h4>
+                                <div class="row">
+                                    <!-- Left column of custom_register_payment_row -->
+                                    <div class="col-md-6 left_column" style="padding-left: 25px;margin-left: -12%;">
+                                        <div class="form-group row mb-1">
+                                            <label for="register_total_amount" class="col-md-5 col-form-label small">
+                                                Total Amount
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="register_total_amount"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1">
+                                            <label for="register_amount_paid" class="col-md-5 col-form-label small">
+                                                Amount Paid
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="register_amount_paid" attrs="{'readonly': [('payment_method_split', '=', True)]}"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1"
+                                             attrs="{'invisible': [('register_mode_payment', 'in', ['cash', 'cheque', 'upi'])]}">
+                                            <label for="register_card_no" class="col-md-5 col-form-label small">Card No
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="register_card_no"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1">
+                                            <label for="register_staff_name" class="col-md-5 col-form-label small">Staff Name
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="register_staff_name" readonly="1"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1">
+                                            <label for="register_staff_password" class="col-md-5 col-form-label small">Password</label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="register_staff_password" password="True"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1" attrs="{'invisible': [('payment_method_split', '=', False)]}">
+                                            <label for="register_balance" class="col-md-5 col-form-label small">Balance</label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="register_balance"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right column of custom_register_payment_row -->
+                                    <div class="col-md-6 right_column">
+                                        <div class="form-group row mb-1">
+                                            <label for="register_mode_payment" class="col-md-5 col-form-label small">
+                                                Payment Mode
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="register_mode_payment" attrs="{'invisible': [('payment_method_split', '=', True)]}"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1">
+                                            <label for="payment_method_split" class="col-md-5 col-form-label small">Split Payment</label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="payment_method_split"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1"
+                                             attrs="{'invisible': ['|', ('payment_method_split', '=', True), ('register_mode_payment', 'in', ['card','cheque','upi'])]}">
+                                            <label for="register_balance" class="col-md-5 col-form-label small">Balance
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="register_balance"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1" attrs="{'invisible': [('payment_method_split', '=', False)]}">
+                                            <label for="cash_amount" class="col-md-5 col-form-label small">Cash</label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="cash_amount"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1" attrs="{'invisible': [('payment_method_split', '=', False)]}">
+                                            <label for="upi_amount" class="col-md-5 col-form-label small">UPI</label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="upi_amount"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1" attrs="{'invisible': [('payment_method_split', '=', False)]}">
+                                            <label for="card_amount" class="col-md-5 col-form-label small">Card</label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="card_amount"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row mb-1"
+                                             attrs="{'invisible': [('register_mode_payment', 'in', ['cash', 'cheque', 'upi'])]}">
+                                            <label for="register_bank_name" class="col-md-5 col-form-label small">Bank
+                                            </label>
+                                            <div class="col-md-7 field-container py-0">
+                                                <field name="register_bank_name"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row pay_button_advance">
+                                        <div class="col-md-1">
+                                            <button name="action_confirm_payment"
+                                                    string="Pay"
+                                                    type="object"
+                                                    class="btn btn-sm btn-primary"
+                                                    attrs="{'invisible': [('status', 'not in', ['draft'])]}"
+                                                    title="Pay"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <notebook>
+                        <page string="Notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <script type="text/javascript">
+                        function togglePwd(el) {
+                        var input = el.closest('div').querySelector('input');
+                        var icon = el.querySelector('i');
+                        if (!input) return;
+                        if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.className = 'fa fa-eye-slash';
+                        } else {
+                        input.type = 'password';
+                        icon.className = 'fa fa-eye';
+                        }
+                        }
+                    </script>
+
+            </form>
+        </field>
+    </record>
+    <record id="view_patient_appointment_search" model="ir.ui.view">
+        <field name="name">patient.appointment.search</field>
+        <field name="model">patient.appointment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="patient_id"/>
+                <field name="patient_name"/>
+                <field name="appointment_date"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_patient_appointments" model="ir.actions.act_window">
+        <field name="name">Patient Revisits</field>
+        <field name="res_model">patient.appointment</field>
+        <field name="view_mode">tree,form</field>
+        <field name="target">current</field>
+        <field name="search_view_id" ref="view_patient_appointment_search"/>
+    </record>
+
+    <menuitem id="menu_patient_appointments" name="Revisit" action="action_patient_appointments"
+              parent="menu_my_patient_template_root"/>
+
+</odoo>
+
+

@@ -1,0 +1,1012 @@
+<odoo>
+    <data>
+        <!-- QWeb Template for Pharmacy Description Report -->
+        <template id="pharmacy_minimal_layout">
+            <t t-call="web.basic_layout">
+                <t t-if="not request.env.context.get('no_auto_print')">
+                    <script type="text/javascript">
+                        window.onload = function() {
+                        window.print();
+                        };
+                    </script>
+                </t>
+
+                <!--                                <div class="header" style="border-bottom: 2px solid #1a73e8; padding-bottom: 2px;">-->
+                <!--                                    <div class="row">-->
+                <!--                                        <div class="col-3">-->
+                <!--                                            <img src="/web/binary/company_logo" style="max-height: 70px;" alt="Logo"/>-->
+                <!--                                        </div>-->
+                <!--                                        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">-->
+
+
+                <!--                                            <div style="text-align: center;">-->
+                <!--                                                <h1 style="font-size: 25px; margin: 0; font-weight: bold; color: #2c3e50;">SANTHWANA HOSPITAL-->
+                <!--                                                </h1>-->
+                <!--                                                <p style="margin: 5px 0; font-size: 16px; color: #555;"> NCC Rd, Samithy Nagar, Ambalamukku, Thiruvananthapuram, Kerala 695005-->
+                <!--                                                </p>-->
+                <!--                                                <p style="margin: 5px 0; font-size: 16px; color: #555;">Phone: 8590203321-->
+                <!--                                                    dpmshospital@gmail.com-->
+                <!--                                                </p>-->
+                <!--                                &lt;!&ndash;                                        <p style="margin: 5px 0; font-size: 15px; color: #555;">&ndash;&gt;-->
+                <!--                                &lt;!&ndash;                                            <strong>PH:</strong>&ndash;&gt;-->
+                <!--                                &lt;!&ndash;                                            0471-2432121, 9188429198 |&ndash;&gt;-->
+                <!--                                &lt;!&ndash;                                            <strong>Email:</strong>&ndash;&gt;-->
+                <!--                                &lt;!&ndash;                                            <a href="mailto:santhwanatvpm@gmail.com"&ndash;&gt;-->
+                <!--                                &lt;!&ndash;                                               style="color: #007bff; text-decoration: none;">&ndash;&gt;-->
+                <!--                                &lt;!&ndash;                                                santhwanatvpm@gmail.com&ndash;&gt;-->
+                <!--                                &lt;!&ndash;                                            </a>&ndash;&gt;-->
+                <!--                &lt;!&ndash;                                &lt;!&ndash;                                        </p>&ndash;&gt;&ndash;&gt;-->
+                <!--                                            </div>-->
+                <!--                                        </div>-->
+                <!--                                    </div>-->
+                <!--                                </div>-->
+                <t t-raw="0"/>
+                <!--                <div class="footer" style="border-top: 1px solid #ddd; padding-top: 10px; font-size: 9pt; color: #777;">-->
+                <!--                    <div class="row">-->
+                <!--                        <div class="col-6 text-left">-->
+                <!--                            <span>Prescription #</span>-->
+                <!--                            <span t-esc="context.get('active_id', '')"/>-->
+                <!--                        </div>-->
+                <!--                        <div class="col-6 text-right">-->
+                <!--                            <span>Page:</span>-->
+                <!--                            <span class="page"/>-->
+                <!--                            /-->
+                <!--                            <span class="topage"/>-->
+                <!--                        </div>-->
+                <!--                    </div>-->
+                <!--                </div>-->
+            </t>
+        </template>
+
+        <template id="pharmacy_report_template">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="homeo_doctor.pharmacy_minimal_layout">
+                        <style>
+                            @media print {
+                            @page {
+                            size: A4 landscape;
+                            margin: 5mm 7mm 5mm 7mm; /* top, right, bottom, left */
+                            }
+                            }
+
+                            .page {
+                            width: 297mm; /* Landscape width */
+                            height: 210mm; /* Landscape height */
+                            padding: 10mm;
+                            box-sizing: border-box;
+                            }
+                            body, table {
+                            font-family: "Arial", "Helvetica", sans-serif;
+                            font-size: 11pt; /* Good balance for A4 landscape */
+                            }
+
+                            /* Report title */
+                            .report-title {
+                            font-size: 16pt;
+                            font-weight: bold;
+                            text-align: center;
+                            margin-bottom: 10px;
+                            }
+
+                            /* Section headings */
+                            .section-header {
+                            font-size: 13pt;
+                            font-weight: bold;
+                            margin-top: 8px;
+                            margin-bottom: 4px;
+                            }
+
+                            /* Table headers */
+                            th {
+                            font-size: 11pt;
+                            font-weight: bold;
+                            }
+
+                            /* Table cells */
+                            td {
+                            font-size: 10pt;
+                            padding: 3px 5px;
+                            }
+                            .footer {
+                            position: fixed; /* stays at the bottom of every page */
+                            bottom: 5mm; /* distance from bottom */
+                            left: 0; /* start from left edge */
+                            width: 100%; /* full width of page */
+                            text-align: left; /* align text to the left */
+                            font-size: 10pt;
+                            line-height: 1.2; /* adjust spacing if needed */
+                            }
+
+                        </style>
+
+
+                        <div class="page"
+                             style="width: 100%; min-height: 18cm; margin: 0 auto; padding: 5px; box-sizing: border-box;">
+
+
+                            <!-- Header: spacing minimized -->
+                            <div style="max-width: 700px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">
+                                <!-- Logo on the left -->
+                                <div style="flex: 0 0 60px; margin-right: 10px;">
+                                    <img src="/web/binary/company_logo" alt="Logo"
+                                         style="max-height: 100px; max-width: 100px; border-radius: 50%;"/>
+                                </div>
+
+
+                                <div style="flex-grow: 1; text-align: center;">
+                                    <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                        SANTHWANA HOSPITAL
+                                    </h1>
+
+
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        N.C.C Road,Ambalamukku,Trivandrum-695005
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        Phone: 0471-2432121,Mob:9188429198
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                        D/L NOS : RLF20KL2022000342 , RLF21KL2022000340
+                                    </p>
+                                    <!--                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">-->
+                                    <!--                                        Email:info@santhwanahospital.com / Website:www.santhwanahospital.com-->
+                                    <!--                                    </p>-->
+                                    <!--                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">-->
+                                    <!--                                        NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED-->
+                                    <!--                                    </p>-->
+                                    <!--                                    <p style="margin: 2px 0; font-size: 14px; color: #555;">-->
+                                    <!--                                        D.L. NOS:1-378/20-2002,1-379/21-2002-->
+                                    <!--                                    </p>-->
+
+                                    <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                    <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                    <!--                                </h2>-->
+
+                                </div>
+                            </div>
+
+
+                            <div class="row mb-4">
+                                <div class="col-12"
+                                     style="border: 1px solid #ddd; border-radius: 5px; overflow: hidden;">
+                                    <div style="background-color: #f5f5f5; padding: 8px 15px; border-bottom: 1px solid #ddd;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <strong style="color: #333; font-size: 14px;">DEPARTMENT : PHARMACY</strong>
+                                            <!--                                            <strong style="color: #333; font-size: 14px;">-->
+                                            <!--                                                <span t-field="o.payment_mathod"/>-->
+                                            <!--                                                Bill-->
+                                            <!--                                            </strong>-->
+                                            <strong style="color: #333; font-size: 14px;">
+                                                UHID:
+                                                <span t-field="o.uhid_id"/>
+                                            </strong>
+                                            <strong style="color: #333; font-size: 14px;">
+                                                Bill No:
+                                                <span t-field="o.bill_number"/>
+                                            </strong>
+                                        </div>
+                                    </div>
+
+                                    <tr>
+                                        <td colspan="12">
+                                            <div style="display: table; width: 100%; font-size: 14px;">
+                                                <!-- Row 1 -->
+                                                <div style="display: table-row;">
+                                                    <!-- Left -->
+                                                    <!--                                                    <div style="display: table-cell; width: 33.33%; text-align: left; padding: 4px 8px;">-->
+                                                    <!--                                                        <span style="color: #333;">UHID No:</span>-->
+                                                    <!--                                                        <span style="font-weight: bold; color: #333;"-->
+                                                    <!--                                                              t-field="o.uhid_id"/>-->
+                                                    <!--                                                    </div>-->
+                                                    <!-- Center -->
+                                                    <div style="display: table-cell; width: 33.33%; text-align: left; padding: 4px 8px;">
+                                                        <span style="color: #333;">Patient:</span>
+                                                        <span style="font-weight: bold; color: #333;" t-field="o.name"/>
+                                                    </div>
+                                                    <div style="display: table-cell; width: 33.33%; text-align: left; padding: 4px 8px;">
+                                                        <span style="color: #333;">Doctor:</span>
+                                                        <!--                                                        <span style="font-weight: bold; color: #333;"-->
+                                                        <!--                                                              t-field="o.doctor_name"/>-->
+                                                        <span style="font-weight: bold; color: #333;">
+                                                            <t t-esc="o.doctor_name.display_name"/>
+
+                                                            <t t-if="o.doctor_name and o.doctor_name.department_id">
+                                                                (
+                                                                <t t-esc="o.doctor_name.department_id.display_name"/>
+                                                                )
+                                                            </t>
+                                                        </span>
+                                                    </div>
+                                                    <div style="display: table-cell; width: 33.33%; text-align:left; padding: 4px 8px;">
+
+                                                        <span style="color: #333;">Mode of Payment:</span>
+
+                                                        <!-- Split Payment -->
+                                                        <t t-if="o.payment_method_split">
+
+                                                            <span style="font-weight: bold; color: #333;">
+
+                                                                <t t-if="o.cash_amount &gt; 0">CASH</t>
+
+                                                                <t t-if="o.upi_amount &gt; 0">
+                                                                    <t t-if="o.cash_amount &gt; 0">/</t>
+                                                                    UPI
+                                                                </t>
+
+                                                                <t t-if="o.card_amount &gt; 0">
+                                                                    <t t-if="o.cash_amount &gt; 0 or o.upi_amount &gt; 0">
+                                                                        /
+                                                                    </t>
+                                                                    CARD
+                                                                </t>
+
+                                                            </span>
+
+                                                        </t>
+
+                                                        <!-- Normal Payment Method -->
+                                                        <t t-else="">
+                                                            <span style="font-weight: bold; color: #333;"
+                                                                  t-field="o.payment_mathod"/>
+                                                        </t>
+
+                                                    </div>
+                                                    <!--                                                    <div style="display: table-cell; width: 33.33%; text-align:left; padding: 4px 8px;">-->
+                                                    <!--                                                        <span style="color: #333;">Mode of Payment:</span>-->
+                                                    <!--                                                        <span style="font-weight: bold; color: #333;"-->
+                                                    <!--                                                              t-field="o.payment_mathod"/>-->
+                                                    <!--                                                    </div>-->
+                                                    <div style="display: table-cell; width: 40%; text-align: left; padding: 4px 8px; white-space: nowrap;">
+                                                        <span style="color: #333; display: inline-block;">Date:</span>
+                                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 4px;">
+                                                            <t t-esc="o.date.strftime('%d/%m/%Y') if o.date else ''"/>
+                                                        </span>
+                                                    </div>
+
+
+                                                </div>
+
+                                                <!-- Row 2 -->
+                                                <!--                                                <div style="display: table-row;">-->
+                                                <!--                                                    <div style="display: table-cell; width: 33.33%; text-align: left; padding: 4px 8px;">-->
+                                                <!--                                                        <span style="color: #333;">Phone:</span>-->
+                                                <!--                                                        <span style="font-weight: bold; color: #333;"-->
+                                                <!--                                                              t-field="o.phone_number"/>-->
+                                                <!--                                                    </div>-->
+                                                <!--                                                    <div style="display: table-cell; width: 33.33%; text-align: center; padding: 4px 8px;">-->
+                                                <!--                                                        <span style="color: #333;">Doctor:</span>-->
+                                                <!--                                                        &lt;!&ndash;                                                        <span style="font-weight: bold; color: #333;"&ndash;&gt;-->
+                                                <!--                                                        &lt;!&ndash;                                                              t-field="o.doctor_name"/>&ndash;&gt;-->
+                                                <!--                                                        <span style="font-weight: bold; color: #333;">-->
+                                                <!--                                                            <t t-esc="o.doctor_name.display_name"/>-->
+
+                                                <!--                                                            <t t-if="o.doctor_name and o.doctor_name.department_id">-->
+                                                <!--                                                                (-->
+                                                <!--                                                                <t t-esc="o.doctor_name.department_id.display_name"/>-->
+                                                <!--                                                                )-->
+                                                <!--                                                            </t>-->
+                                                <!--                                                        </span>-->
+                                                <!--                                                    </div>-->
+                                                <!--                                                    <div style="display: table-cell; width: 33.33%; text-align: right; padding: 4px 40px 4px 8px;">-->
+                                                <!--                                                        <span style="color: #333;">Mode of Payment:</span>-->
+                                                <!--                                                        <span style="font-weight: bold; color: #333;"-->
+                                                <!--                                                              t-field="o.payment_mathod"/>-->
+                                                <!--                                                    </div>-->
+                                                <!--                                                </div>-->
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                </div>
+                            </div>
+
+                            <!-- Prescription Table -->
+                            <div class="mb-4">
+
+
+                                <table style="width: 100%;  border-collapse: collapse; font-size: 13px; table-layout: fixed;">
+                                    <colgroup>
+                                        <col style="width: 3%;"/>    <!-- Sl No -->
+                                        <col style="width: 18%;"/>   <!-- Particulars -->
+                                        <col style="width: 4%;"/>    <!-- Qty -->
+                                        <col style="width: 11%;"/>    <!-- Batch -->
+                                        <col style="width: 8%;"/>    <!-- Expiry -->
+                                        <col style="width: 11%;"/>   <!-- Manufacturer -->
+                                        <col style="width: 8%;;"/>   <!-- Manufacturer -->
+                                        <col style="width: 8%;"/>    <!-- MRP -->
+                                        <col style="width: 10%;"/>    <!-- Rate -->
+                                        <col style="width: 8%;"/>    <!-- GST -->
+                                        <col style="width: 8%;"/>    <!-- GST Amt -->
+                                        <!--                                        <col style="width: 5%;"/>    &lt;!&ndash; CGST Amt &ndash;&gt;-->
+                                        <!--                                        <col style="width: 5%;"/>    &lt;!&ndash; SGST Amt &ndash;&gt;-->
+                                        <col style="width: 10%;"/>   <!-- Total -->
+                                    </colgroup>
+
+
+                                    <thead style="background: #1a73e8; color: Black;">
+                                        <tr>
+                                            <th style="text-align: center; font-size: 14px; ">Sl
+                                                No
+                                            </th>
+                                            <th style="text-align: center; font-size: 14px; ">
+                                                Medicine
+                                            </th>
+                                            <th style="text-align: center;font-size: 14px; ">
+                                                Qty
+                                            </th>
+                                            <th style="text-align: center; font-size: 14px; ">
+                                                Batch
+                                            </th>
+                                            <th style="text-align: center;font-size: 14px; ">
+                                                Expiry
+                                            </th>
+
+                                            <th style="text-align: center; font-size: 14px; ">
+                                                HSN
+                                            </th>
+                                            <!--                                                                                 <th style="text-align: center; border: 1px solid black;">Batch</th>&ndash;&gt;-->
+
+                                            <th style="text-align: center; font-size: 14px; ">
+                                                MRP
+                                            </th>
+                                            <th style="text-align: center;font-size: 14px; ">
+                                                Rate
+                                            </th>
+                                            <th style="text-align: center; font-size: 14px; ">
+                                                MFR
+                                            </th>
+
+                                            <th style="text-align: center; font-size: 14px; ">
+                                                GST (%)
+                                            </th>
+                                            <th style="text-align: center; font-size: 14px; ">
+                                                GST (Amt)
+                                            </th>
+                                            <!--                                            <th style="text-align: center; font-size: 17px; ">-->
+                                            <!--                                                SGST (Amt)-->
+                                            <!--                                            </th>-->
+                                            <th style="text-align: center; font-size: 14px; ">
+                                                Amount
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tr>
+                                        <td colspan="14" style="border-top: 2px solid #000; padding: 0;"></td>
+                                    </tr>
+                                    <tbody>
+                                        <t t-set="counter" t-value="1"/>
+                                        <t t-foreach="o.prescription_line_ids" t-as="medicine">
+                                            <tr>
+                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                    <t t-esc="counter"/>
+                                                    <t t-set="counter" t-value="counter + 1"/>
+                                                </td>
+                                                <td style="padding: 8px;  font-size: 12px; ">
+                                                    <span t-esc="medicine.products_id.product_id.display_name if medicine.products_id and medicine.products_id.product_id else ''"/>
+
+                                                </td>
+                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                    <span t-field="medicine.qty"/>
+                                                </td>
+                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                    <span t-field="medicine.batch"/>
+                                                </td>
+                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                    <span t-field="medicine.exp_date"
+                                                          t-options='{"widget": "date", "format": "MM/yy"}'/>
+                                                </td>
+                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                    <span t-field="medicine.hsn"/>
+                                                </td>
+
+                                                <!--                                                <td style="text-align: center; padding: 8px; border: 1px solid black;">-->
+                                                <!--                                                    <span t-field="medicine.manf_date"-->
+                                                <!--                                                          t-options='{"widget": "date", "format": "MM/yy"}'/>-->
+                                                <!--                                                </td>-->
+                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                    <span t-field="medicine.per_ped"/>
+                                                </td>
+                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                    <span t-field="medicine.per_ped"/>
+                                                </td>
+                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                    <span t-field="medicine.mfc"/>
+                                                </td>
+
+                                                <!--                                                <td style="text-align: center; padding: 8px;font-size: 17px; ">-->
+                                                <!--                                                    <span t-field="medicine.per_ped"/>-->
+                                                <!--                                                </td>-->
+                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                    <span t-esc="medicine.gst"/>
+
+                                                </td>
+                                                <!--                                                <td style="text-align: center; padding: 8px; font-size: 17px; ">-->
+                                                <!--                                                    <span t-esc="medicine.gst / 2.0"/>-->
+
+                                                <!--                                                </td>-->
+                                                <t t-set="cgst_amt"
+                                                   t-value="medicine.rate * (medicine.gst / 2.0) / 100"/>
+                                                <t t-set="sgst_amt"
+                                                   t-value="medicine.rate * (medicine.gst / 2.0) / 100"/>
+                                                <td style="text-align: center; padding: 8px; font-size: 12px;">
+                                                    <t t-esc="'%.2f' % (cgst_amt + sgst_amt)"/>
+
+                                                </td>
+                                                <!--                                                <td style="text-align: center; padding: 8px; font-size: 17px;">-->
+                                                <!--                                                    <t t-esc="'%.2f' % sgst_amt"/>-->
+                                                <!--                                                </td>-->
+
+                                                <td style="text-align: right; padding: 8px;font-size: 12px; ">
+                                                    <span t-field="medicine.rate"
+                                                          t-options='{"widget": "monetary", "display_currency": user.company_id.currency_id}'/>
+                                                </td>
+                                            </tr>
+                                        </t>
+
+                                        <tr>
+                                            <td colspan="14" style="border-top: 2px solid #000; padding: 0;"></td>
+                                        </tr>
+                                        <tr>
+                                            <!-- colspan should equal the number of columns in your table (10 in your case) -->
+                                            <td colspan="14" style="padding: 0; border-top: 1px solid #bbb;">
+                                                <div style="display: flex; justify-content: space-between; align-items: flex-start;padding: 10px 0; font-size: 12px;">
+                                                    <!-- Left side -->
+                                                    <div>
+                                                        <strong>Amount in Words:</strong>
+                                                        <span t-esc="o.amount_to_text_indian()"
+                                                              style="text-transform: capitalize;"/>
+                                                    </div>
+                                                    <!-- Right side -->
+
+                                                    <div style="text-align: right;">
+                                                        <strong>Subtotal:</strong>
+                                                        <span t-esc="sum(o.prescription_line_ids.mapped('rate'))"
+                                                              t-options='{"widget": "monetary", "display_currency": user.company_id.currency_id}'/>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr style="page-break-inside: avoid;">
+                                            <td colspan="14" style="padding: 12px 8px 0; border-top: 1px solid #bbb;">
+                                                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                                                    <!-- Col 1: Prepared By -->
+                                                    <div style="flex: 1;">
+                                                        <p t-if="o.staff_name" style="margin: 0; font-weight: bold;">
+                                                            Prepared By:
+                                                            <span t-field="o.staff_name"/>
+                                                        </p>
+                                                    </div>
+                                                    <div style="flex: 1;">
+                                                        <p style="margin: 0;">
+                                                            Issued By:
+                                                            <span t-field="o.bill_by"/>
+                                                            <!--                                                            <span t-esc="sum(o.prescription_line_ids.mapped('qty'))"/>-->
+                                                        </p>
+                                                    </div>
+                                                    <!--                                                     Col 2: Total Items & Quantity -->
+                                                    <div style="flex: 1; text-align: center;">
+                                                        <!--                                                        <table class="table table-sm table-borderless mb-0"-->
+                                                        <!--                                                               style="width: auto; margin: 0 auto;">-->
+                                                        <!--                                                            <tr>-->
+                                                        <!--                                                                <td style="padding: 2px 6px;">Total Items:</td>-->
+                                                        <!--                                                                <td style="font-weight: bold; padding: 2px 6px;">-->
+                                                        <!--                                                                    <span t-esc="len(o.prescription_line_ids)"/>-->
+                                                        <!--                                                                </td>-->
+                                                        <!--                                                            </tr>-->
+                                                        <!--                                                        </table>-->
+                                                    </div>
+                                                    <!-- Col 3: Total Amount -->
+                                                    <div style="flex: 1; text-align: right;">
+                                                        <table class="table table-sm table-borderless mb-0"
+                                                               style="width: auto; margin: 0;">
+                                                            <tr t-if="o.payment_method_split">
+                                                                <div style="text-align: right;">
+                                                                    <strong>Cash:</strong>
+                                                                    <span t-esc="o.cash_amount or 0.0"
+                                                                          t-options='{"widget": "monetary", "display_currency": user.company_id.currency_id}'/>
+                                                                </div>
+                                                                <div style="text-align: right;">
+                                                                    <strong>UPI:</strong>
+                                                                    <span t-esc="o.upi_amount or 0.0"
+                                                                          t-options='{"widget": "monetary", "display_currency": user.company_id.currency_id}'/>
+                                                                </div>
+                                                                <div style="text-align: right;">
+                                                                    <strong>Card:</strong>
+                                                                    <span t-esc="o.card_amount or 0.0"
+                                                                          t-options='{"widget": "monetary", "display_currency": user.company_id.currency_id}'/>
+                                                                </div>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="padding: 2px 6px;">
+                                                                    <strong>Total Amount:</strong>
+                                                                </td>
+                                                                <td style="padding: 2px 6px; font-weight: bold;">
+                                                                    <strong>₹
+                                                                        <span t-field="o.total_amount"/>
+                                                                    </strong>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!--                            <div class="mt-4"-->
+                            <!--                                 style="border: 0.5px solid #ccc; border-radius: 2px; padding: 20px; font-size: 17px;-->
+                            <!--            page-break-inside: avoid; display: block;">-->
+
+                            <!--                                <div class="row">-->
+                            <!--                                    &lt;!&ndash; Column 1: Prepared By &ndash;&gt;-->
+                            <!--                                    <div class="col-4">-->
+                            <!--                                        <p t-if="o.staff_name" style="margin-bottom: 10px; font-weight: bold;">-->
+                            <!--                                            Prepared By:-->
+                            <!--                                            <span t-field="o.staff_name"/>-->
+                            <!--                                        </p>-->
+
+                            <!--                                    </div>-->
+
+                            <!--                                    &lt;!&ndash; Column 2: Summary Part 1 &ndash;&gt;-->
+                            <!--                                    <div class="col-4">-->
+                            <!--                                        <table class="table table-sm table-borderless mb-0" style="width: 100%;">-->
+                            <!--                                            <tr>-->
+                            <!--                                                <td style="color: black; padding: 6px 0;">Total Items:</td>-->
+                            <!--                                                <td class="text-right" style="font-weight: bold; padding: 6px 0;">-->
+                            <!--                                                    <span t-esc="len(o.prescription_line_ids)"/>-->
+                            <!--                                                </td>-->
+                            <!--                                            </tr>-->
+                            <!--                                            <tr>-->
+                            <!--                                                <td style="color: black; padding: 6px 0;">Total Quantity:</td>-->
+                            <!--                                                <td class="text-right" style="font-weight: bold; padding: 6px 0;">-->
+                            <!--                                                    <span t-esc="sum(o.prescription_line_ids.mapped('qty'))"/>-->
+                            <!--                                                </td>-->
+                            <!--                                            </tr>-->
+                            <!--                                        </table>-->
+                            <!--                                    </div>-->
+
+                            <!--                                    &lt;!&ndash; Column 3: Summary Part 2 &ndash;&gt;-->
+                            <!--                                    <div class="col-4">-->
+                            <!--                                        <table class="table table-sm table-borderless mb-0" style="width: 100%;">-->
+                            <!--                                            <tr>-->
+                            <!--                                                <td style="color: black; padding: 6px 0;">-->
+                            <!--                                                    <strong>Total Amount:</strong>-->
+                            <!--                                                </td>-->
+                            <!--                                                <td class="text-right" style="padding: 6px 0;">-->
+                            <!--                                                    <strong>₹-->
+                            <!--                                                        <span t-field="o.total_amount"/>-->
+                            <!--                                                    </strong>-->
+                            <!--                                                </td>-->
+                            <!--                                            </tr>-->
+                            <!--                                        </table>-->
+                            <!--                                    </div>-->
+                            <!--                                </div>-->
+                            <!--                            </div>-->
+                            <div class="footer"
+                                 style="white-space: nowrap; text-align: center; font-size: 12px; transform: scale(0.9); transform-origin: center;">
+                                Email: santhwanatvpm@gmail.com | NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                |
+                                D.L. NOS: 1-378/20-2002, 1-379/21-2002 | GSTIN: 32AAICS1884P1ZS | CIN:
+                                U85110KL1997PTC011813
+                            </div>
+
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <record id="paperformat_a4_landscape" model="report.paperformat">
+            <field name="name">A4 Landscape</field>
+            <field name="format">A4</field>
+            <field name="orientation">Landscape</field>
+            <field name="margin_top">5</field>
+            <field name="margin_bottom">5</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">10</field>
+            <field name="dpi">90</field>
+        </record>
+
+
+        <record id="action_pharmacy_report" model="ir.actions.report">
+            <field name="name">Pharmacy Prescription</field>
+            <field name="model">pharmacy.description</field>
+            <!--            <field name="report_type">qweb-pdf</field>-->
+            <field name="report_type">qweb-html</field>
+            <field name="report_name">homeo_doctor.pharmacy_report_template</field>
+            <field name="report_file">homeo_doctor.pharmacy_report_template</field>
+            <field name="print_report_name">'Prescription - ' + object.bill_number</field>
+            <field name="binding_model_id" ref="model_pharmacy_description"/>
+            <field name="binding_type">report</field>
+            <field name="paperformat_id" ref="homeo_doctor.paperformat_a4_landscape"/>
+        </record>
+        <record id="action_pharmacy_return_print_original_bill" model="ir.actions.server">
+            <field name="name">Print Original Bill</field>
+            <field name="model_id" ref="model_pharmacy_return"/>
+            <field name="binding_model_id" ref="model_pharmacy_return"/>
+            <field name="binding_type">report</field>
+            <field name="state">code</field>
+            <field name="code">
+                action = records.print_original_bill()
+            </field>
+        </record>
+
+        <!-- Form View -->
+        <record id="view_pharmacy_description_form" model="ir.ui.view">
+            <field name="name">pharmacy.description.form</field>
+            <field name="model">pharmacy.description</field>
+            <field name="arch" type="xml">
+                <form string="Pharmacy Description" class="pharmacy_description">
+
+                    <header>
+                        <field name="status" widget="statusbar"/>
+                        <button name="action_cancel" type="object" string="Cancel" class="btn-danger"
+                                attrs="{'invisible': [('status', '=', 'cancelled')]}"/>
+
+                    </header>
+                    <sheet>
+                        <group>
+                            <div class="oe_title"
+                                 style="border-bottom: 2px solid #007bff; padding: 15px 0; margin-bottom: 15px;">
+                                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 180px;">
+                                        <span class="o_form_label" style="font-weight: bold;">Bill Number:</span>
+                                        <field name="bill_number"/>
+                                    </div>
+                                    <div style="flex: 1; min-width: 180px;">
+                                        <span class="o_form_label" style="font-weight: bold;">UHID:</span>
+                                        <field name="uhid_id" options="{'no_create': True, 'no_open': True}"/>
+                                    </div>
+                                    <div style="flex: 1; min-width: 180px;">
+                                        <span class="o_form_label" style="font-weight: bold;">Patient Name:</span>
+                                        <field name="name"/>
+                                    </div>
+                                    <div style="flex: 1; min-width: 180px;">
+                                        <span class="o_form_label" style="font-weight: bold;">Phone Number:</span>
+                                        <field name="phone_number"/>
+                                    </div>
+                                    <div style="flex: 1; min-width: 180px;">
+                                        <span class="o_form_label" style="font-weight: bold;">Doctor:</span>
+                                        <field name="doctor_name"/>
+                                    </div>
+                                    <div style="flex: 1; min-width: 180px;">
+                                        <span class="o_form_label" style="font-weight: bold;">Date:</span>
+                                        <field name="date"/>
+                                    </div>
+                                    <div style="flex: 1; min-width: 180px; max-width:16%;">
+                                        <span class="o_form_label" style="font-weight: bold;">OP Category:</span>
+                                        <field name="op_category"/>
+                                    </div>
+                                    <div style="flex: 1; min-width: 180px; max-width:16%;">
+                                        <span class="o_form_label" style="font-weight: bold;">Admitted:</span>
+                                        <field name="admitted_boolean"/>
+                                    </div>
+                                    <div style="flex: 1; min-width: 180px; max-width:16%;" invisible="1">
+                                        <span class="o_form_label" style="font-weight: bold;">Insurance:</span>
+                                        <field name="insurance_name"/>
+                                    </div>
+                                    <div attrs="{'invisible': [('vssc_boolean', '!=', True)]}"
+                                         style="background-color:rgb(220, 53, 69);max-width: 14.28%;">
+                                        <span class="o_form_label" style="font-weight: bold;">VSSC:</span>
+                                        <field name="vssc_boolean"/>
+                                    </div>
+                                    <div style="flex: 1; min-width: 180px; max-width:16%;"
+                                         attrs="{'invisible': [('admitted_boolean', '!=', True)]}">
+                                        <span class="o_form_label" style="font-weight: bold;">Patient Type:</span>
+                                        <field name="patient_type"/>
+                                    </div>
+                                </div>
+                                <!-- <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+
+                                </div> -->
+
+                            </div>
+                        </group>
+
+                        <notebook>
+                            <page string="Prescriptions">
+                                <field name="prescription_line_ids">
+                                    <tree editable="bottom" class="prescription-tree-big-font">
+                                        <field name="category"/>
+                                        <field name="products_id"/>
+                                        <field name="total_med" invisible="1"/>
+                                        <field name="morn" invisible="1"/>
+                                        <field name="noon" invisible="1"/>
+                                        <field name="night" invisible="1"/>
+                                        <field name="hsn"/>
+                                        <field name="batch"/>
+                                        <field name="manf_date"/>
+                                        <!--                                        <field name="packing"/>-->
+                                        <field name="exp_date"/>
+                                        <field name="mfc"/>
+                                        <field name="qty"/>
+                                        <field name="supplier_rate" string="Rate"/>
+                                        <field name="per_ped" string="MRP"/>
+                                        <field name="gst"/>
+                                        <!--                                        <field name="discount"/>-->
+                                        <field name="stock_in_hand"/>
+                                        <field name="rate" sum="Total" string="Amount"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                        <group>
+                            <div class="pharmacy-card">
+                                <group col="4">
+                                    <group>
+                                        <field name="total_item"/>
+                                        <field name="total_qty"/>
+                                        <!--                                        <field name="total_amount"/>-->
+
+                                    </group>
+                                    <group>
+                                        <field name="payment_mathod"/>
+
+                                        <field name="remarks"/>
+                                    </group>
+                                    <group>
+                                        <field name="payment_method_split" nolabel="1"/>
+                                        <field name="balance"
+                                               attrs="{'invisible': [('payment_mathod', '=', 'credit')]}"/>
+                                    </group>
+                                    <!--                                      <group>-->
+                                    <!--                                       -->
+                                    <!--                                    </group>-->
+
+                                    <group>
+                                        <field name="total_amount"
+                                               attrs="{'invisible': [('payment_method_split', '=', True)]}"
+                                               style="font-weight: bold;"/>
+                                        <table class="table table-bordered table-sm"
+                                               style="width: 100%; border: 1px solid #dee2e6;"
+                                               attrs="{'invisible': ['|',('payment_mathod', '=', 'credit'),('payment_method_split', '=', False)]}">
+                                            <thead style="background-color: #f8f9fa;">
+                                                <tr style="height: 30px;">
+                                                    <th style="text-align: center; border: 1px solid #dee2e6; width: 50%;">
+                                                        Method
+                                                    </th>
+                                                    <th style="text-align: center; border: 1px solid #dee2e6; width: 50%;">
+                                                        Amount
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr style="height: 30px;">
+                                                    <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6;">
+                                                        Cash
+                                                    </td>
+                                                    <td style="border: 1px solid #dee2e6;">
+                                                        <field name="cash_amount" nolabel="1"/>
+                                                    </td>
+                                                </tr>
+                                                <tr style="height: 30px;">
+                                                    <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6;">
+                                                        UPI
+                                                    </td>
+                                                    <td style="border: 1px solid #dee2e6;">
+                                                        <field name="upi_amount" nolabel="1"/>
+                                                    </td>
+                                                </tr>
+                                                <tr style="height: 30px;">
+                                                    <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6;">
+                                                        Card
+                                                    </td>
+                                                    <td style="border: 1px solid #dee2e6;">
+                                                        <field name="card_amount" nolabel="1"/>
+                                                    </td>
+                                                </tr>
+                                                <tr style="height: 30px;">
+                                                    <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold;">
+                                                        TOTAL
+                                                    </td>
+                                                    <td style="border: 1px solid #dee2e6; font-weight: bold;">
+                                                        <field name="total_amount" nolabel="1"/>
+                                                    </td>
+                                                </tr>
+                                                <!--                                                <tr><field name="total_amount"/></tr>-->
+                                            </tbody>
+                                        </table>
+
+                                    </group>
+
+                                </group>
+                            </div>
+                        </group>
+
+
+                        <group col="4">
+                            <group>
+                                <field name="bill_by"/>
+                            </group>
+                            <group>
+                                <field name="staff_name" readonly="1" />
+                            </group>
+                            <group>
+                                <label for="staff_pwd" class="col-md-4 col-form-label">Staff Password</label>
+                                <div style="position:relative; display:inline-block; width:100%;">
+                                    <field name="staff_pwd" required="1" password="True"
+                                           style="padding-right:30px; width:100%;"/>
+                                    <span class="pwd_toggle_span"
+                                          style="position:absolute; right:8px; top:50%;
+                     transform:translateY(-50%); cursor:pointer; z-index:10;">
+                                        <i class="fa fa-eye" title="Show Password"/>
+                                    </span>
+                                </div>
+                            </group>
+                            <group>
+                                <field name="remarks"/>
+                            </group>
+                        </group>
+
+
+                        <footer>
+                            <div class="oe_right">
+                                <button name="action_register_payment" type="object" string="Pay" class="oe_highlight"
+                                        attrs="{'invisible': [('payment_mathod', '=', 'credit')]}"/>
+                            </div>
+                        </footer>
+
+                    </sheet>
+
+                    <script type="text/javascript">
+                        $(document).off('click', '.pwd_toggle_span').on('click', '.pwd_toggle_span', function(e) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        var input = $(this).parent().find('input')[0];
+                        var icon = $(this).find('i')[0];
+                        if (!input) return;
+                        if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.className = 'fa fa-eye-slash';
+                        } else {
+                        input.type = 'password';
+                        icon.className = 'fa fa-eye';
+                        }
+                        });
+                    </script>
+
+
+                </form>
+            </field>
+        </record>
+
+        <!-- Tree View -->
+        <record id="pharmacy_tree" model="ir.ui.view">
+            <field name="name">pharmacy.tree</field>
+            <field name="model">pharmacy.description</field>
+            <field name="arch" type="xml">
+                <tree string="Pharmacy Description">
+                    <field name="date"/>
+                    <field name="bill_number"/>
+                    <field name="uhid_id" string='UHID'/>
+                    <field name="name"/>
+                    <!--                    <field name="date" string="Appointment Date"/>-->
+                    <field name="phone_number"/>
+                    <field name="vssc_boolean"/>
+                    <field name="staff_name"/>
+                    <field name="doctor_name"/>
+                    <field name="total_amount"/>
+                    <field name="payment_mathod"/>
+                    <field name="status"/>
+                    <field name="status_admitted"/>
+                </tree>
+            </field>
+        </record>
+        <record id="view_pharmacy_description_search" model="ir.ui.view">
+            <field name="name">pharmacy.description.search</field>
+            <field name="model">pharmacy.description</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="uhid_id"/>
+                    <field name="phone_number"/>
+                    <field name="bill_number"/>
+                    <filter string="Today" name="filter_today" domain="[('date', '=', context_today())]"/>
+                    <filter string="This Week" name="filter_week"
+                            domain="[('date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())))]"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_pharmacy_description" model="ir.actions.act_window">
+            <field name="name">Pharmacy Description</field>
+            <field name="res_model">pharmacy.description</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_pharmacy_description_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No pharmacy descriptions yet.
+                </p>
+                <p>
+                    Create your first pharmacy description by clicking on the "Create" button.
+                </p>
+            </field>
+        </record>
+        <record id="view_account_payment_form_inherit" model="ir.ui.view">
+            <field name="name">account.payment.form.inherit</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_form"/>
+            <field name="arch" type="xml">
+
+                <!-- Hide Specific Fields -->
+                <field name="journal_id" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+
+                <field name="payment_method_id" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <field name="partner_type" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <field name="payment_type" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <field name="partner_bank_id" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <field name="destination_account_id" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <field name="ref" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <field name="is_internal_transfer" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <field name="partner_id" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <xpath expr="//header" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='date']" position="replace"/>
+                <xpath expr="//field[@name='amount']" position="replace"/>
+                <xpath expr="//label[@for='amount']" position="replace"/>  <!-- If a label exists -->
+                <xpath expr="//field[@name='partner_bank_id']" position="after">
+                    <field name="amount"/>
+                    <field name="paid_mount" attrs="{'invisible': [('pay_mode', '!=', 'cash')]}"/>
+                    <field name="balance" attrs="{'invisible': [('pay_mode', '!=', 'cash')]}"/>
+                </xpath>
+
+
+                <field name="payment_type" position="before">
+                    <field name="date"/>
+                    <field name="uhid"/>
+                    <field name="name"/>
+                    <field name="pay_mode"/>
+
+                </field>
+                <xpath expr="//form" position="inside">
+                    <footer>
+                        <button string="Pay" type="object" name="action_post" class="oe_highlight"/>
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </xpath>
+            </field>
+        </record>
+
+        <!--        &lt;!&ndash; Menu Items &ndash;&gt;-->
+        <menuitem id="menu_pharmacy_root" name="Pharmacy" sequence="5" parent="menu_homeo_head"/>
+
+        <menuitem id="menu_pharmacy_description"
+                  name="Pharmacy Description"
+                  parent="menu_pharmacy_root"
+                  action="action_pharmacy_description"
+                  sequence="0"/>
+        <menuitem id="menu_lab_root" name="Lab" sequence="1"/>
+
+        <menuitem id="menu_my_product_template"
+                  name="Medicines"
+                  parent="menu_lab_root"
+                  action="action_my_product_template"
+                  sequence="2"/>
+    </data>
+</odoo>

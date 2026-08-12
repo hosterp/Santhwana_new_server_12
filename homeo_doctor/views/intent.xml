@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Tree View -->
+        <record id="view_intent_record_tree" model="ir.ui.view">
+            <field name="name">intent.record.tree</field>
+            <field name="model">intent.record</field>
+            <field name="arch" type="xml">
+                <tree string="Intent Records">
+                    <field name="date"/>
+                    <field name="doctor_name"/>
+                    <field name="medicine"  widget="many2many_tags"/>
+                    <field name="quantity"/>
+                    <field name="current_stock"/>
+                    <field name="urgent"/>
+                    <field name="very_urgent"/>
+                    <field name="normal"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View -->
+        <record id="view_intent_record_form" model="ir.ui.view">
+            <field name="name">intent.record.form</field>
+            <field name="model">intent.record</field>
+            <field name="arch" type="xml">
+                <form string="Intent Record">
+                    <!--                    <header>-->
+                    <!--                        <button name="action_confirm" type="object" string="Confirm Intent"-->
+                    <!--                                class="btn-primary"/>-->
+                    <!--                    </header>-->
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="date"/>
+                                <field name="doctor_name"/>
+                                <field name="medicine" widget="many2many_tags"/>
+                                <field name="quantity"/>
+                            </group>
+                            <group>
+                                <field name="department"/>
+                                <field name="current_stock" invisible="1"/>
+                                <field name="stock_in_hand" invisible="1"/>
+                                <field name="stock_in_hand_display" string="Current Stock"/>
+                                <field name="urgent"/>
+                                <field name="very_urgent"/>
+                                <field name="normal"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_intent_record" model="ir.actions.act_window">
+            <field name="name">Intent Records</field>
+            <field name="res_model">intent.record</field>
+            <field name="view_mode">tree,form</field>
+            <field name="target">current</field>  <!-- Explicitly NOT a wizard -->
+        </record>
+
+        <!-- Create a top-level menu for your module -->
+        <menuitem id="menu_intent_management_root"
+                  name="Intent Management"
+                  sequence="10"/>
+
+        <!-- Create the submenu that references your action -->
+        <menuitem id="menu_intent_record"
+                  name="Intent Records"
+                  parent="purchase.menu_purchase_root"
+                  action="action_intent_record"
+                  sequence="8"/>
+    </data>
+</odoo>

@@ -1,0 +1,142 @@
+<odoo>
+    <data>
+        <template id="cancelled_bill_pdf_report">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="wizard">
+                    <div class="page">
+                        <div style="text-align: center;">
+                            <h2>Cancelled Bills Report</h2>
+                            <p>
+                                Date:
+                                <t t-esc="data['from_date']"/>
+                                to
+                                <t t-esc="data['to_date']"/>
+                            </p>
+                        </div>
+
+                        <table class="table table-condensed table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>SL No</th>
+                                    <th>Bill Number</th>
+                                    <th>Patient Name</th>
+                                    <th>Doctor</th>
+                                    <th>Department</th>
+                                    <th>Amount</th>
+                                    <th>Cancelled By</th>
+                                    <th>Remarks</th>
+                                    <th>Cancelled Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="data['bills']" t-as="bill">
+                                    <tr>
+                                        <td>
+                                            <t t-esc="bill['sl_no']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['bill_number']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['patient_name']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['doctor_name']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['department']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['amount']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['staff_name']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['remarks']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['cancelled_date']"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </template>
+
+        <!-- PDF Report Action -->
+        <report
+                id="cancelled_bill_pdf_report_action"
+                model="cancelled.bill.wizard"
+                string="Cancelled Bills Report"
+                report_type="qweb-pdf"
+                name="homeo_doctor.cancelled_bill_pdf_report"
+                file="homeo_doctor.cancelled_bill_pdf_report"
+                print_report_name="'Cancelled Bills Report - %s to %s' % (object.from_date, object.to_date)"
+        />
+        <report
+                id="cancelled_bill_pdf_report_action_html"
+                model="cancelled.bill.wizard"
+                string="Cancelled Bills Report"
+                report_type="qweb-html"
+                name="homeo_doctor.cancelled_bill_pdf_report"
+                file="homeo_doctor.cancelled_bill_pdf_report"
+                print_report_name="'Cancelled Bills Report - %s to %s' % (object.from_date, object.to_date)"
+        />
+        <!-- Wizard Form -->
+        <record id="view_cancelled_bill_wizard_form" model="ir.ui.view">
+            <field name="name">cancelled.bill.wizard.form</field>
+            <field name="model">cancelled.bill.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Cancelled Bills Report">
+                    <group>
+                        <field name="from_date"/>
+                        <field name="to_date"/>
+                        <field name="department"/>
+                    </group>
+                    <footer>
+                        <button string="View" type="object" name="action_generate_html" class="btn-primary"/>
+                        <button string="Generate PDF" type="object" name="action_generate_pdf" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <record id="view_cancelled_bill_report_tree" model="ir.ui.view">
+            <field name="name">cancelled.bill.wizard.tree</field>
+            <field name="model">cancelled.bill.wizard</field>
+            <field name="arch" type="xml">
+                <tree string="Cancelled Bills">
+                    <field name="bill_number"/>
+                    <field name="patient_name"/>
+                    <field name="doctor_name"/>
+                    <field name="department_name"/>
+                    <field name="amount"/>
+                    <field name="staff_name"/>
+                    <field name="remarks"/>
+                    <field name="cancelled_date"/>
+                    <field name="status"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Wizard Action -->
+        <record id="action_cancelled_bill_wizard" model="ir.actions.act_window">
+            <field name="name">Cancelled Bills Report</field>
+            <field name="res_model">cancelled.bill.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Menu Item -->
+        <menuitem id="menu_collection_root" name="Collection Report" parent="menu_homeo_head" sequence="23"/>
+        <menuitem id="menu_cancelled_bill_report"
+                  name="Cancelled Bills Report"
+                  parent="menu_collection_root"
+                  action="action_cancelled_bill_wizard"
+                  sequence="11"/>
+    </data>
+</odoo>

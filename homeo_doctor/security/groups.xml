@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Group to allow Edit button -->
+        <record id="group_allowed_edit" model="res.groups">
+            <field name="name">Allowed Edit</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+        <record id="group_admin_refund" model="res.groups">
+            <field name="name">Admin Refund</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+
+
+        <record id="prescription" model="res.groups">
+            <field name="name">prescription</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+        <record id="labtest" model="res.groups">
+            <field name="name">labtest</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+        <record id="labreports" model="res.groups">
+            <field name="name">labreports</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+
+
+        <record id="treatment" model="res.groups">
+            <field name="name">treatment</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+        <record id="medical" model="res.groups">
+            <field name="name">medical</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+        <record id="current" model="res.groups">
+            <field name="name">current</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+
+
+        <record id="allergy" model="res.groups">
+            <field name="name">allergy</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+        <record id="billing" model="res.groups">
+            <field name="name">billing</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+        <record id="dischargedetails" model="res.groups">
+            <field name="name">dischargedetails</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+
+
+        <record id="summary" model="res.groups">
+            <field name="name">summary</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+    </data>
+</odoo>

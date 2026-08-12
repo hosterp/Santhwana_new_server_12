@@ -1,0 +1,112 @@
+<odoo>
+    <!-- 1) MENU + ACTION -->
+    <record id="action_dead_stock_wizard" model="ir.actions.act_window">
+        <field name="name">Dead Stock</field>
+        <field name="res_model">dead.stock.medicine.form</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_reports_root" name="Reports" parent="menu_homeo_head" sequence="21"/>
+    <menuitem id="menu_dead_stock" name="Dead Stock"
+              parent="menu_reports_root"
+              action="action_dead_stock_wizard" sequence="12"/>
+
+    <!-- 2) WIZARD FORM VIEW -->
+    <record id="view_dead_stock_form" model="ir.ui.view">
+        <field name="name">dead.stock.medicine.form.view.form</field>
+        <field name="model">dead.stock.medicine.form</field>
+        <field name="arch" type="xml">
+            <form string="Dead Stock Report">
+                <group>
+<!--                    <field name="name" readonly="1"/>-->
+<!--                    <group><field name="from_date" required="1"/></group>-->
+<!--                    <group> <field name="to_date" required="1"/></group>-->
+
+
+
+                </group>
+
+                <footer>
+                    <button name="compute_dead_stock" type="object"
+                            string="Go" class="btn-primary"/>
+                    <button name="print_dead_stock_report" type="object"
+                            string="Print"
+                            attrs="{'invisible': [('line_ids','=',[])]}"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+
+                <separator string="Dead Stock Medicines"/>
+                <field name="line_ids">
+                    <tree string="Dead Stock" editable="false">
+                        <field name="date"/>
+                        <field name="stock_entry_id"/>
+                        <field name="quantity"/>
+                    </tree>
+                </field>
+            </form>
+        </field>
+    </record>
+
+    <!-- 3) REPORT ACTION -->
+    <record id="action_report_dead_stock" model="ir.actions.report">
+        <field name="name">Dead Stock Report</field>
+        <field name="model">dead.stock.medicine.form</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">homeo_doctor.report_dead_stock</field>
+        <field name="report_file">homeo_doctor.report_dead_stock</field>
+        <field name="print_report_name">'Dead Stock - %s' % (object.to_date)</field>
+    </record>
+
+    <template id="report_dead_stock">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <main class="o_report_layout_standard">
+                    <div class="page">
+                        <h2>Dead Stock Report</h2>
+                        <table class="table table-sm o_main_table"
+                               style="width:100%; border:1px solid #000; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="border:1px solid #000;">SL No</th>
+                                    <th style="border:1px solid #000;">Date</th>
+                                    <th style="border:1px solid #000;">Medicine</th>
+                                    <th style="border:1px solid #000;">Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="enumerate(o.line_ids)" t-as="line">
+                                    <tr>
+                                        <td style="border:1px solid #000; text-align:center;">
+                                            <t t-esc="line[0] + 1"/>
+                                        </td>
+                                        <td style="border:1px solid #000; text-align:center;">
+                                            <t t-esc="line[1].date or ''"/>
+                                        </td>
+                                        <td style="border:1px solid #000;">
+                                            <t t-esc="line[1].stock_entry_id.product_id.display_name"/>
+                                        </td>
+                                        <td style="border:1px solid #000; text-align:right;">
+                                            <t t-esc="line[1].quantity"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <t t-if="not o.line_ids">
+                                    <tr>
+                                        <td colspan="4" style="border:1px solid #000; text-align:center;">
+                                            No records.
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </main>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

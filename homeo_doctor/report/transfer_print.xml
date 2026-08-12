@@ -1,0 +1,182 @@
+<odoo>
+    <data>
+        <!-- Report Action -->
+        <record id="action_report_stock_transfer" model="ir.actions.report">
+            <field name="name">Stock Transfer Report</field>
+            <field name="model">stock.transfer</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">homeo_doctor.report_stock_transfer</field>
+            <field name="report_file">homeo_doctor.report_stock_transfer</field>
+            <field name="binding_model_id" ref="model_stock_transfer"/>
+            <field name="binding_type">report</field>
+        </record>
+
+        <!-- Report Template -->
+        <template id="report_stock_transfer">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="web.external_layout">
+                        <div class="page">
+                            <div class="oe_structure"/>
+
+                            <!-- Header -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <h2 class="text-center mb-4">
+                                        <strong>Stock Transfer Report</strong>
+                                    </h2>
+                                </div>
+                            </div>
+
+                            <!-- Transfer Details -->
+                            <div class="row mb-4">
+<!--                                <div class="col-4">-->
+<!--&lt;!&ndash;                                    <strong>Transfer No:</strong>&ndash;&gt;-->
+<!--&lt;!&ndash;                                    <br/>&ndash;&gt;-->
+<!--&lt;!&ndash;                                    <span t-field="o.name"/>&ndash;&gt;-->
+<!--                                </div>-->
+                                <div class="col-4">
+                                    <strong>Date:</strong>
+                                    <br/>
+                                    <span t-field="o.date"/>
+                                </div>
+                                <div class="col-4">
+                                    <strong>State:</strong>
+                                    <br/>
+                                    <span t-field="o.state" class="badge badge-info"/>
+                                </div>
+                            </div>
+
+                            <!-- Location Details -->
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <strong>From Location:</strong>
+                                    <br/>
+                                    <span t-field="o.location_from"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>To Location:</strong>
+                                    <br/>
+                                    <span t-field="o.location_to"/>
+                                </div>
+                            </div>
+
+                            <!-- Products Table -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <h4>Products</h4>
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Product</th>
+                                                <!--                                                <th>Addition</th>-->
+                                                <th>Quantity</th>
+                                                <th>Rate</th>
+                                                <th>MRP</th>
+                                                <th>Manf. Date</th>
+                                                <th>Exp. Date</th>
+                                                <th>HSN</th>
+                                                <th>Batch</th>
+                                                <th>MFC</th>
+                                                <th>Pack</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="o.line_ids" t-as="line">
+                                                <tr>
+                                                    <td>
+                                                        <span t-field="line.products_id"/>
+                                                    </td>
+                                                    <!--                                                    <td>-->
+                                                    <!--                                                        <t t-if="line.is_addition">-->
+                                                    <!--                                                            <i class="fa fa-check text-success"/>-->
+                                                    <!--                                                        </t>-->
+                                                    <!--                                                        <t t-else="">-->
+                                                    <!--                                                            <i class="fa fa-times text-danger"/>-->
+                                                    <!--                                                        </t>-->
+                                                    <!--                                                    </td>-->
+                                                    <td>
+                                                        <span t-field="line.quantity"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.rate"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.supplier_mrp"
+                                                              t-options='{"widget": "float", "precision": 2}'/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.manf_date"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.exp_date"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.hsn"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.batch"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.mfc"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.pack"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Notes Section -->
+                            <t t-if="o.notes">
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <h5>Notes:</h5>
+                                        <p t-field="o.notes"/>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Footer -->
+                            <div class="row mt-5">
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <hr style="width: 200px;"/>
+                                        <p>Prepared By</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <hr style="width: 200px;"/>
+                                        <p>Approved By</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="oe_structure"/>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <!-- Add Print Button to Form View -->
+        <record id="view_stock_transfer_form_print" model="ir.ui.view">
+            <field name="name">stock.transfer.form.print</field>
+            <field name="model">stock.transfer</field>
+            <field name="inherit_id" ref="view_stock_transfer_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button name="%(action_report_stock_transfer)d"
+                            string="Print"
+                            type="action"
+                            class="oe_highlight"
+                            groups="base.group_user"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

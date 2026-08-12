@@ -1,0 +1,74 @@
+<odoo>
+    <data>
+
+        <!-- Tree View -->
+        <record id="view_manage_insurance_tree" model="ir.ui.view">
+            <field name="name">manage.insurance.tree</field>
+            <field name="model">manage.insurance</field>
+            <field name="arch" type="xml">
+                <tree string="Manage Insurance" editable="bottom">
+                    <field name="company"/>
+                    <field name="category"/>
+                    <field name="percentage"/>
+                    <button name="action_open_subcategories"
+                            string="Manage Procedures"
+                            type="object"
+                            />
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_manage_insurance_form" model="ir.ui.view">
+            <field name="name">manage.insurance.form</field>
+            <field name="model">manage.insurance</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Company">
+                    <sheet>
+                        <group>
+                            <field name="company"/>
+                            <field name="category"/>
+                            <field name="percentage"/>
+                        </group>
+                        <!--                        <notebook>-->
+                        <!--                            <page>-->
+                        <!--                                <field name="category_ids">-->
+                        <!--                                    <tree editable="bottom">-->
+                        <!--                                        <field name="code"/>-->
+                        <!--                                        <field name="item"/>-->
+                        <!--                                        <field name="amount"/>-->
+                        <!--                                    </tree>-->
+                        <!--                                </field>-->
+                        <!--                            </page>-->
+                        <!--                        </notebook>-->
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="view_manage_insurance_category_tree" model="ir.ui.view">
+            <field name="name">manage.insurance.category.tree</field>
+            <field name="model">manage.insurance.category</field>
+            <field name="arch" type="xml">
+                <tree string="Insurance Categories" editable="bottom">
+                    <field name="company_id"/>
+                    <field name="code"/>
+                    <field name="item"/>
+                    <field name="amount"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Action to open the view -->
+        <record id="action_manage_insurance" model="ir.actions.act_window">
+            <field name="name">Manage Insurance</field>
+            <field name="res_model">manage.insurance</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_manage_insurance_main"
+                  name="Manage Insurance"
+                  parent="menu_lab_root"
+                  action="action_manage_insurance"
+                  sequence="15"/>
+    </data>
+</odoo>

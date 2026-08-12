@@ -1,0 +1,104 @@
+<odoo>
+    <template id="report_pharmacy_prescription_template">
+        <t t-call="web.html_container">
+            <t t-set="is_pdf" t-value="context.get('report_type') == 'qweb-pdf'"/>
+
+            <main class="page"
+                  t-attf-style="{{ 'margin: 0;' if is_pdf else 'margin: 10px;' }} font-family: Arial, sans-serif; font-size: 13px;">
+
+                <!-- Header -->
+                <div style="text-align: center; margin-bottom: 10px; margin-top:0px;">
+                    <img t-att-src="'/web/binary/company_logo'"
+                         style="width: 70px; height: 70px; border-radius: 50%; margin-bottom: 5px;"/>
+                    <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">SANTHWANA HOSPITAL</h1>
+                    <p style="margin: 2px 0;">N.C.C Road, Ambalamukku, Trivandrum-695005</p>
+                    <p style="margin: 2px 0;">Phone: 0471-2432121, 4223131</p>
+                    <p style="margin: 2px 0;">Email: info@santhwanahospital.com | Website: www.santhwanahospital.com</p>
+                    <p style="margin: 2px 0;">NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED</p>
+                </div>
+
+                <hr style="border: 1px solid #999; margin-bottom: 10px;"/>
+
+                <!-- Table -->
+                <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+                    <thead>
+                        <tr style="background-color: #f0f0f0; text-align: center;">
+                            <th style="border: 1px solid #000; padding: 5px;">Date</th>
+                            <th style="border: 1px solid #000; padding: 5px;">Bill No</th>
+                            <th style="border: 1px solid #000; padding: 5px;">UHID</th>
+                            <t t-if="docs.with_patient_name">
+                                <th style="border: 1px solid #000; padding: 5px;">Patient Name</th>
+                            </t>
+                            <th style="border: 1px solid #000; padding: 5px;">Medicine</th>
+                            <th style="border: 1px solid #000; padding: 5px;">Doctor</th>
+                            <th style="border: 1px solid #000; padding: 5px;">Qty</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <t t-set="total_qty" t-value="0"/>
+                        <t t-foreach="docs._get_prescription_lines()" t-as="line">
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                    <t t-esc="line.pharmacy_id.date"/>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                    <t t-esc="line.pharmacy_id.bill_number"/>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                    <t t-esc="line.pharmacy_id.uhid_id.display_name"/>
+                                </td>
+
+                                <t t-if="docs.with_patient_name">
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: left;">
+                                        <t t-esc="line.pharmacy_id.name"/>
+                                    </td>
+                                </t>
+                                <td style="border: 1px solid #000; padding: 5px; text-align: left;">
+                                    <t t-esc="line.products_id.display_name"/>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 5px; text-align: left;">
+                                    <t t-esc="line.pharmacy_id.doctor_name.display_name"/>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 5px; text-align: right;">
+                                    <t t-esc="line.qty"/>
+                                </td>
+                            </tr>
+                            <t t-set="total_qty" t-value="total_qty + (line.qty or 0)"/>
+                        </t>
+
+                        <tr style="font-weight: bold; background-color: #f9f9f9;">
+                            <td t-att-colspan="6 if docs.with_patient_name else 5"
+                                style="border: 1px solid #000; text-align: right; padding: 5px;">Total Quantity</td>
+                            <td style="border: 1px solid #000; text-align: right; padding: 5px;">
+                                <t t-esc="total_qty"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </main>
+        </t>
+    </template>
+
+    <record id="medicine_report_paperformat" model="report.paperformat">
+        <field name="name">Medicine Report PDF Format</field>
+        <field name="format">A4</field>
+        <field name="margin_top">0</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="orientation">Portrait</field>
+        <field name="header_line" eval="False"/>
+    </record>
+
+    <report
+        id="report_pharmacy_prescription"
+        string="Pharmacy Prescription Report"
+        model="pharmacy.prescription.report.wizard"
+        report_type="qweb-pdf"
+        name="homeo_doctor.report_pharmacy_prescription_template"
+        file="homeo_doctor.report_pharmacy_prescription_template"
+        print_report_name="'Pharmacy Prescription Report'"
+        paperformat="medicine_report_paperformat"
+    />
+</odoo>

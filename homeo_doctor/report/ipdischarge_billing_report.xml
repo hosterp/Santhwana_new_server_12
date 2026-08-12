@@ -1,0 +1,165 @@
+<odoo>
+    <data>
+
+        <!-- QWeb Template -->
+        <template id="ip_discharge_billing_report_template">
+            <!-- Use web.external_layout to ensure <main> exists for PDF -->
+            <t t-call="web.external_layout">
+                <main>
+                    <div class="page">
+
+                        <!-- Header Section -->
+                        <div style="max-width: 700px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">
+                            <!-- Logo on the left -->
+                            <div style="flex: 0 0 100px; margin-right: 10px;">
+                                <img src="/web/binary/company_logo" alt="Logo"
+                                     style="max-height: 100px; max-width: 100px; border-radius: 50%;"/>
+                            </div>
+
+                            <!-- Hospital Info -->
+                            <div style="flex-grow: 1; text-align: center;">
+                                <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                    SANTHWANA HOSPITAL
+                                </h1>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    N.C.C Road, Ambalamukku, Trivandrum-695005
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Phone: 0471-2432121, 4223131
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Email: info@santhwanahospital.com / Website: www.santhwanahospital.com
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Report Title -->
+                        <h2 style="text-align:center; margin-bottom: 10px;">IP Billing Report</h2>
+
+                        <!-- From and To Dates -->
+                        <t t-if="data">
+                            <p style="text-align:center; margin-bottom: 10px;">
+                                From:
+                                <strong>
+                                    <t t-esc="data.get('from_date', '')"/>
+                                </strong>
+                                To:
+                                <strong>
+                                    <t t-esc="data.get('to_date', '')"/>
+                                </strong>
+                            </p>
+                        </t>
+
+                        <!-- Report Table -->
+                        <table class="table table-bordered" style="width: 100%; border-collapse: collapse;" border="1">
+                            <thead>
+                                <tr style="background-color: #f2f2f2;">
+                                    <th>Sl No</th>
+                                    <th>Date</th>
+                                    <th>Bill No</th>
+                                    <th>MRD No</th>
+                                    <th>Patient</th>
+                                    <th>Mode of Payment</th>
+                                    <th>Doctor</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="data.get('report_data', [])" t-as="line">
+                                    <tr>
+                                        <td>
+                                            <t t-esc="line['id']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line['date']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line['bill_number']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line['mrd_no']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line['patient_name']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line['mode_pay']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line['doctor']"/>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <t t-esc="line['total_amount']"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="7" style="text-align:right; font-weight: bold;">Grand Total:</td>
+                                    <td style="text-align:right; font-weight: bold;">
+                                        <t t-esc="data.get('total_sum', 0.0)"/>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                    </div>
+                </main>
+            </t>
+        </template>
+
+
+        <!-- Report Action -->
+        <report
+                id="action_report_discharge_billing_pdf"
+                model="ip.discharge.billing.report.wizard"
+                string="IP Billing Report"
+                report_type="qweb-pdf"
+                name="homeo_doctor.ip_discharge_billing_report_template"
+                file="homeo_doctor.ip_discharge_billing_report_template"
+        />
+
+
+        <record id="view_ip_discharge_billing_report_wizard_form" model="ir.ui.view">
+            <field name="name">ip.discharge.billing.report.wizard.form</field>
+            <field name="model">ip.discharge.billing.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="IP Billing Report">
+                    <group>
+                        <field name="from_date"/>
+                        <field name="to_date"/>
+                    </group>
+                    <footer>
+                        <button name="action_generate_report"
+                                string="Print Report"
+                                type="object"
+                                class="btn-primary"/>
+                        <button name="action_download_excel"
+                                string="Download Excel"
+                                type="object"
+                                class="btn-success"/>
+                        <button string="Cancel"
+                                class="btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Wizard Action -->
+        <record id="action_ip_discharge_billing_report_wizard" model="ir.actions.act_window">
+            <field name="name">IP Billing Report</field>
+            <field name="res_model">ip.discharge.billing.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_auditing_root" name="Auditing Reports" parent="menu_homeo_head" sequence="22"/>
+        <menuitem id="menu_ip_discharge_billing_report"
+                  name="IP Collection Report"
+                  parent="menu_auditing_root"
+                  action="action_ip_discharge_billing_report_wizard"
+        />
+    </data>
+</odoo>

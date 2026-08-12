@@ -1,0 +1,51 @@
+<odoo>
+    <data>
+        <record id="view_ot_form" model="ir.ui.view">
+            <field name="name">hospital.ot.form</field>
+            <field name="model">hospital.ot</field>
+            <field name="arch" type="xml">
+                <form string="Operation Theatre Management">
+                    <sheet>
+                        <group class="ot_management">
+                            <field name="patient_id"/>
+                            <field name="operation_type"/>
+                            <field name="operation_date"/>
+                            <field name="doctor_name"/>
+                            <field name="status"/>
+                            <field name="remarks"/>
+                        </group>
+                        <notebook>
+                            <page string="Medical Records">
+                                <field name="medical_record_ids" context="{'default_medical_records': active_id, 'default_patient_id': patient_id}">
+                                    <tree>
+                                        <field name="previous_conditions"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="view_ot_tree" model="ir.ui.view">
+            <field name="name">hospital.ot.tree</field>
+            <field name="model">hospital.ot</field>
+            <field name="arch" type="xml">
+                <tree string="Operation Theatre Management">
+                    <field name="patient_id"/>
+                    <field name="operation_type"/>
+                    <field name="operation_date"/>
+                    <field name="doctor_name"/>
+                    <field name="status"/>
+                </tree>
+            </field>
+        </record>
+        <record id="action_ot_management" model="ir.actions.act_window">
+            <field name="name">OT Management</field>
+            <field name="res_model">hospital.ot</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <menuitem id="menu_ot_management" name="OT Management"
+                  parent="menu_homeo_head" action="action_ot_management" sequence="7"/>
+    </data>
+</odoo>

@@ -1,0 +1,46 @@
+<odoo>
+    <record id="view_hsn_report_wizard_form" model="ir.ui.view">
+        <field name="name">hsn.report.wizard.form</field>
+        <field name="model">hsn.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="HSN Wise Report">
+                <group col="3">
+                    <group>
+                        <field name="from_date"/>
+                    </group>
+                    <group>
+                        <field name="to_date"/>
+                    </group>
+                    <group>
+                        <field name="op_category"/>
+                    </group>
+                </group>
+                <group col="3">
+                    <group>
+                        <field name="payment_method"/>
+                    </group>
+                </group>
+                <footer>
+                    <button string="PDF Report" type="object" name="print_report" class="btn-primary"/>
+                    <button name="action_download_excel"
+                            type="object"
+                            string="Excel Report"
+                            class="btn btn-primary"/>
+
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_hsn_report_wizard" model="ir.actions.act_window">
+        <field name="name">HSN Wise Report</field>
+        <field name="res_model">hsn.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+   <menuitem id="menu_auditing_root" name="Auditing Reports" parent="menu_homeo_head" sequence="22"/>
+    <menuitem id="menu_hsn_report_wizard" name="Sales HSN Wise Report" parent="menu_auditing_root"
+              action="action_hsn_report_wizard"/>
+
+</odoo>

@@ -1,0 +1,310 @@
+<odoo>
+    <data>
+
+        <template id="report_fast_moving_pdf">
+            <t t-call="web.external_layout">
+                <t t-set="doc" t-value="docs[0]"/>
+                <main class="page">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                        <img t-att-src="'/web/binary/company_logo'"
+                             style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+
+
+                        <div style="flex-grow: 1; text-align: center;">
+                            <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                SANTHWANA HOSPITAL
+                            </h1>
+
+
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                N.C.C Road,Ambalamukku,Trivandrum-695005
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Phone: 0471-2432121,4223131
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                            </p>
+
+                            <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                            <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                            <!--                                </h2>-->
+
+                        </div>
+                    </div>
+                    <h2 style="text-align: center;">Fast Moving Medicines</h2>
+
+                    <div style="text-align: center;">
+                        <p>
+                            <strong>From:</strong>
+                            <t t-esc="doc.from_date"/>
+                            <br/>
+                            <strong>To:</strong>
+                            <t t-esc="doc.to_date"/>
+                        </p>
+                    </div>
+
+                    <table class="table table-condensed" style="width: 100%; border: 1px solid black;">
+                        <thead>
+                            <tr>
+                                <th>SL No</th>
+                                <th>Medicine Name</th>
+                                <th>Total Sale Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="counter" t-value="1"/>
+                            <t t-foreach="doc.line_ids" t-as="line">
+                                <tr>
+                                    <td>
+                                        <t t-esc="counter"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line.product_id.display_name"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="line.total_qty"/>
+                                    </td>
+                                </tr>
+                                <t t-set="counter" t-value="counter + 1"/>
+                            </t>
+                        </tbody>
+                    </table>
+                </main>
+            </t>
+        </template>
+
+        <template id="report_fast_moving_monthly_pdf">
+            <t t-call="web.external_layout">
+                <t t-set="doc" t-value="docs[0]"/>
+                <main class="page">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                        <img t-att-src="'/web/binary/company_logo'"
+                             style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+                        <div style="flex-grow: 1; text-align: center;">
+                            <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                SANTHWANA HOSPITAL
+                            </h1>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                N.C.C Road,Ambalamukku,Trivandrum-695005
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Phone: 0471-2432121,4223131
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                            </p>
+                        </div>
+                    </div>
+
+                    <h2 style="text-align: center;">Medicine Monthly Sales</h2>
+
+                    <div style="text-align: center;">
+                        <p>
+                            <strong>Medicine Name:</strong>
+                            <t t-esc="doc.monthly_product_id.display_name"/>
+                            <br/>
+                            <strong>Reference Date:</strong>
+                            <t t-esc="doc.reference_date"/>
+                        </p>
+                    </div>
+
+                    <table class="table table-condensed" style="width: 100%; border: 1px solid black;">
+                        <thead>
+                            <tr>
+                                <th>Medicine Name</th>
+                                <th style="text-align:center;"><t t-esc="doc.month_1_label"/></th>
+                                <th style="text-align:center;"><t t-esc="doc.month_2_label"/></th>
+                                <th style="text-align:center;"><t t-esc="doc.month_3_label"/></th>
+                                <th style="text-align:center;"><t t-esc="doc.month_4_label"/></th>
+                                <th style="text-align:center;"><t t-esc="doc.month_5_label"/></th>
+                                <th style="text-align:center;"><t t-esc="doc.month_6_label"/></th>
+                                <th style="text-align:center;">Total Sale Qty</th>
+                                <th style="text-align:center;">Average</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <t t-esc="doc.monthly_product_id.display_name"/>
+                                </td>
+                                <td style="text-align:center;">
+                                    <t t-esc="doc.month_1_qty"/>
+                                </td>
+                                <td style="text-align:center;">
+                                    <t t-esc="doc.month_2_qty"/>
+                                </td>
+                                <td style="text-align:center;">
+                                    <t t-esc="doc.month_3_qty"/>
+                                </td>
+                                <td style="text-align:center;">
+                                    <t t-esc="doc.month_4_qty"/>
+                                </td>
+                                <td style="text-align:center;">
+                                    <t t-esc="doc.month_5_qty"/>
+                                </td>
+                                <td style="text-align:center;">
+                                    <t t-esc="doc.month_6_qty"/>
+                                </td>
+                                <td style="text-align:center; font-weight:bold;">
+                                    <t t-esc="doc.total_sale_qty"/>
+                                </td>
+                                <td style="text-align:center; font-weight:bold;">
+                                    <t t-esc="'%.2f' % doc.average_sale_qty"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </main>
+            </t>
+        </template>
+
+        <template id="report_fast_moving_selected_monthly_pdf">
+            <t t-call="web.external_layout">
+                <t t-set="doc" t-value="docs[0]"/>
+                <main class="page">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                        <img t-att-src="'/web/binary/company_logo'"
+                             style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+                        <div style="flex-grow: 1; text-align: center;">
+                            <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                SANTHWANA HOSPITAL
+                            </h1>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                N.C.C Road,Ambalamukku,Trivandrum-695005
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Phone: 0471-2432121,4223131
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                            </p>
+                            <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                            </p>
+                        </div>
+                    </div>
+
+                    <h2 style="text-align: center;">Selected Medicine Monthly Sales</h2>
+
+                    <div style="text-align: center;">
+                        <p>
+                            <strong>Reference Date:</strong>
+                            <t t-esc="doc.reference_date"/>
+                        </p>
+                    </div>
+
+                    <table class="table table-condensed" style="width: 100%; border: 1px solid black;">
+                        <thead>
+                            <tr>
+                                <th>Medicine Name</th>
+                                <th style="text-align:center;"><t t-esc="doc.month_1_label"/></th>
+                                <th style="text-align:center;"><t t-esc="doc.month_2_label"/></th>
+                                <th style="text-align:center;"><t t-esc="doc.month_3_label"/></th>
+                                <th style="text-align:center;"><t t-esc="doc.month_4_label"/></th>
+                                <th style="text-align:center;"><t t-esc="doc.month_5_label"/></th>
+                                <th style="text-align:center;"><t t-esc="doc.month_6_label"/></th>
+                                <th style="text-align:center;">Total Sale Qty</th>
+                                <th style="text-align:center;">Average</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="doc.line_ids" t-as="line">
+                                <tr>
+                                    <td>
+                                        <t t-esc="line.product_id.display_name"/>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <t t-esc="line.month_1_qty"/>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <t t-esc="line.month_2_qty"/>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <t t-esc="line.month_3_qty"/>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <t t-esc="line.month_4_qty"/>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <t t-esc="line.month_5_qty"/>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <t t-esc="line.month_6_qty"/>
+                                    </td>
+                                    <td style="text-align:center; font-weight:bold;">
+                                        <t t-esc="line.total_qty"/>
+                                    </td>
+                                    <td style="text-align:center; font-weight:bold;">
+                                        <t t-esc="'%.2f' % (line.total_qty / 6.0)"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <tr>
+                                <td colspan="7">
+                                    <strong>Total</strong>
+                                </td>
+                                <td style="text-align:center;">
+                                    <strong><t t-esc="doc.total_sale_qty"/></strong>
+                                </td>
+                                <td style="text-align:center;">
+                                    <strong><t t-esc="'%.2f' % doc.average_sale_qty"/></strong>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </main>
+            </t>
+        </template>
+
+        <record id="fast_moving_medicine_paperformat" model="report.paperformat">
+            <field name="name">Fast Moving Medicine PDF Format</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="orientation">Portrait</field>
+            <field name="header_line" eval="False"/>
+        </record>
+        <report
+                id="action_report_fast_moving"
+                string="Fast Moving Medicines"
+                model="fast.moving.medicine.form"
+                report_type="qweb-pdf"
+                name="homeo_doctor.report_fast_moving_pdf"
+                file="homeo_doctor.report_fast_moving_pdf"
+                print_report_name="'Fast Moving Medicines'"
+                paperformat="fast_moving_medicine_paperformat"
+        />
+        <report
+                id="action_report_fast_moving_monthly"
+                string="Medicine Monthly Sales"
+                model="fast.moving.medicine.monthly.form"
+                report_type="qweb-pdf"
+                name="homeo_doctor.report_fast_moving_monthly_pdf"
+                file="homeo_doctor.report_fast_moving_monthly_pdf"
+                print_report_name="'Medicine Monthly Sales'"
+                paperformat="fast_moving_medicine_paperformat"
+        />
+        <report
+                id="action_report_fast_moving_selected_monthly"
+                string="Selected Medicine Monthly Sales"
+                model="fast.moving.medicine.selected.monthly.form"
+                report_type="qweb-pdf"
+                name="homeo_doctor.report_fast_moving_selected_monthly_pdf"
+                file="homeo_doctor.report_fast_moving_selected_monthly_pdf"
+                print_report_name="'Selected Medicine Monthly Sales'"
+                paperformat="fast_moving_medicine_paperformat"
+        />
+
+
+    </data>
+</odoo>

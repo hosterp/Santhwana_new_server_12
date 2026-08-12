@@ -1,0 +1,202 @@
+<odoo>
+    <record id="view_dashboard_model_kanban" model="ir.ui.view">
+        <field name="name">dashboard.model.kanban</field>
+        <field name="model">dashboard.model</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard">
+                <field name="name"/>
+                <field name="consultation_count"/>
+                <field name="sale_count"/>
+                <field name="discharge_count"/>
+                <field name="admit_count"/>
+                <field name="expired_count"/>
+                <field name="purchase_count"/>
+                <field name="consultation_amount"/>
+                <field name="sale_amount"/>
+                <field name="discharge_amount"/>
+                <!--                <field name="admit_amount"/>-->
+                <field name="purchase_amount"/>
+                <field name="lab_amount"/>
+                <field name="revisit_amount"/>
+                <field name="general_amount"/>
+                <field name="ip_part_amount"/>
+                <field name="credit_amount"/>
+                <field name="op_count"/>
+                <field name="ip_bills"/>
+                <field name="other_bills"/>
+                <field name="exp_30_count"/>
+                <field name="exp_60_count"/>
+                <field name="exp_90_count"/>
+                <field name="exp_120_count"/>
+                <field name="exp_total_count"/>
+                <field name="low_stock_count"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-style="width: 23%; margin: 1%; display: inline-block; vertical-align: top; color: black; border: 1px solid black;">
+
+                            <div class="oe_kanban_card"
+                                 style="background: #2196F3; padding: 15px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); text-align: center; min-height: 140px; display: flex; flex-direction: column; justify-content: space-between;">
+
+                                <!-- Card Title -->
+                                <div style="font-size: 20px; font-weight: bold; color: #2c3e50; margin-bottom: 10px;">
+                                    <t t-esc="record.name.value"/>
+                                </div>
+
+                                <!-- Card Content (Scroll Removed) -->
+                                <div style="font-size: 26px; color: #2c3e50; font-weight: bold; margin-bottom: 4px; flex-grow: 1;">
+                                    <t t-if="record.name.raw_value == 'Today OP Details'">
+                                        <t t-esc="record.consultation_amount.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Today Pharmacy Billing Details'">
+                                        <t t-esc="record.sale_amount.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Discharged Patient Details'">
+                                        <t t-esc="record.discharge_amount.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Admitted Patient Details'">
+                                        Count :
+                                        <t t-esc="record.admit_count.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Expired Medicines'">
+                                        Count :
+                                        <t t-esc="record.expired_count.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Item To Be Expire'">
+                                        Count :
+                                        <t t-esc="record.exp_total_count.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Low Stock Medicines'">
+                                        Count :
+                                        <t t-esc="record.low_stock_count.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Today Purchase Details'">
+                                        <t t-esc="record.purchase_amount.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Today Lab Billing'">
+                                        <t t-esc="record.lab_amount.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Today Revisit Details'">
+                                        <t t-esc="record.revisit_amount.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Today General Billing'">
+                                        <t t-esc="record.general_amount.value"/>
+                                        <br/>
+                                        <span style="font-size:16px;">
+                                            OP:
+                                            <t t-esc="record.op_count.value"/> &#160;
+                                            IP:
+                                            <t t-esc="record.ip_bills.value"/> &#160;
+                                            Others:
+                                            <t t-esc="record.other_bills.value"/>
+                                        </span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Today IP Part Billing'">
+                                        <t t-esc="record.ip_part_amount.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+                                    <t t-if="record.name.raw_value == 'Today Credit Billing'">
+                                        <t t-esc="record.credit_amount.value"/>
+                                        <br/>
+                                        <span style="visibility: hidden;">padding</span>
+                                    </t>
+
+                                </div>
+
+                                <!-- View Button -->
+                                <div style="margin-top: 4px;">
+                                    <button type="object"
+                                            name="open_card_action"
+                                            class="btn btn-primary"
+                                            style="padding: 5px 15px; border-radius: 6px; font-size: 14px;">
+                                        View
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+    <record id="view_today_sale_medicine_tree" model="ir.ui.view">
+        <field name="name">pharmacy.description.line.today.sale.tree</field>
+        <field name="model">pharmacy.prescription.line</field>
+        <field name="arch" type="xml">
+            <tree string="Today Sold Medicines">
+                <field name="products_id"/>
+                <field name="qty"/>
+                <field name="per_ped" string="MRP"/>
+                <field name="rate" string="Total Amount"/>
+                <field name="pharmacy_id" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+    <record id="view_collection_report_line_tree" model="ir.ui.view">
+        <field name="name">collection.report.line.tree</field>
+        <field name="model">collection.report.line</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="date"/>
+                <field name="department"/>
+                <field name="payment_method"/>
+                <field name="amount" sum="Total"/>
+            </tree>
+        </field>
+    </record>
+    <record id="view_credit_billing_report_tree" model="ir.ui.view">
+        <field name="name">credit.billing.report.tree</field>
+        <field name="model">credit.billing.report</field>
+        <field name="arch" type="xml">
+            <tree string="Combined Credit Billing">
+                <!--                <field name="bill_date"/>-->
+                <!--                <field name="patient_name"/>-->
+                <field name="bill_type"/>
+                <field name="amount"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_credit_billing_report" model="ir.actions.act_window">
+        <field name="name">Credit Billing Report</field>
+        <field name="res_model">credit.billing.report</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_credit_billing_report_tree"/>
+    </record>
+
+    <record id="action_dashboard_model_kanban" model="ir.actions.act_window">
+        <field name="name">Dashboard</field>
+        <field name="res_model">dashboard.model</field>
+        <field name="view_mode">kanban,form,tree</field>
+        <field name="view_id" ref="view_dashboard_model_kanban"/>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_lab_reports_root_billing" name="Billing" parent="menu_homeo_head" sequence="0"/>
+    <menuitem id="menu_dashboard_model"
+              name="Dashboard View"
+              parent="menu_lab_reports_root_billing"
+              action="action_dashboard_model_kanban" sequence="0"/>
+</odoo>

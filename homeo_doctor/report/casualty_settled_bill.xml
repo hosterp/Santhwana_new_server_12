@@ -1,0 +1,110 @@
+
+<odoo>
+    <data>
+        <template id="casualty_paid_pdf_report">
+            <t t-call="web.external_layout">
+                <t t-set="docs" t-value="docs.with_context(lang=user.lang)"/>
+                <div class="page">
+                    <!-- Main content wrapper - This is required for Odoo 14 -->
+                    <main>
+                        <div class="container">
+                            <h2 class="text-center mb-4">Paid Casualty Bills Report</h2>
+
+                            <p style="text-align: center; font-weight: bold; margin-bottom: 15px;">
+                                From Date:
+                                <span t-esc="data['from_date']"/>
+                                To Date:
+                                <span t-esc="data['to_date']"/>
+                            </p>
+
+
+                            <table class="table table-sm table-bordered">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th class="text-center">SL No</th>
+                                        <th>Bill Number</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Date</th>
+                                        <th>Staff Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="data['bills']" t-as="bill">
+                                        <tr>
+                                            <td class="text-center">
+                                                <span t-esc="bill['sl_no']"/>
+                                            </td>
+                                            <td>
+                                                <span t-esc="bill['bill_number']"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <span t-esc="bill['status']"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <span t-esc="bill['date']"/>
+                                            </td>
+                                            <td>
+                                                <span t-esc="bill['staff_name']"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+
+                            <!--                            <div class="mt-3">-->
+                            <!--                                <strong>Total Records:</strong>-->
+                            <!--                                <span t-esc="len(data['bills'])"/>-->
+                            <!--                            </div>-->
+                        </div>
+                    </main>
+                </div>
+            </t>
+        </template>
+        <report
+                id="casualty_paid_pdf_report_action"
+                model="casualty.paid.wizard"
+                string="Paid General Bills"
+                report_type="qweb-pdf"
+                name="homeo_doctor.casualty_paid_pdf_report"
+                file="homeo_doctor.casualty_paid_pdf_report"
+                print_report_name="'Casualty_paid_Bills'"
+        />
+        <record id="view_casualty_paid_wizard_form" model="ir.ui.view">
+            <field name="name">casualty.paid.wizard.form</field>
+            <field name="model">casualty.paid.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Casualty Paid Bills Report">
+                    <group  col="3">
+                        <group>
+                            <field name="from_date"/>
+                        </group>
+                        <group>
+                            <field name="to_date"/>
+                        </group>
+                        <group>
+                            <field name="staff_id"/>
+                        </group>
+
+                    </group>
+                    <footer>
+                        <button string="Generate PDF" type="object" name="action_generate_pdf" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <record id="action_casualty_paid_wizard" model="ir.actions.act_window">
+            <field name="name">Paid Casualty Bills</field>
+            <field name="res_model">casualty.paid.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        <menuitem id="menu_collection_root" name="Collection Report" parent="menu_homeo_head" sequence="23"/>
+        <menuitem id="menu_settled_collection_root" name="Settled Bills" parent="menu_collection_root"/>
+<!--        <menuitem id="menu_casualty_paid_wizard"-->
+<!--                  name="Casualty Bills"-->
+<!--                  parent="menu_settled_collection_root"-->
+<!--                  action="action_casualty_paid_wizard"/>-->
+
+    </data>
+</odoo>

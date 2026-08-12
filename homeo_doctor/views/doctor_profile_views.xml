@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Form View -->
+        <record id="view_doctor_profile_form" model="ir.ui.view">
+            <field name="name">doctor.profile.form</field>
+            <field name="model">doctor.profile</field>
+            <field name="arch" type="xml">
+                <form string="Doctor Profile">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="doctor_id" required="1"/>
+                                <field name="joining_date"/>
+                                <field name="name" required="1"/>
+                                <field name="age"/>
+                                <field name="specialization"/>
+                                <field name="department_id"/>
+                                <field name="available_hours"/>
+                            </group>
+                            <group>
+                                <field name="consultation_fee_doctor"/>
+                                <field name="consultation_fee_limit"/>
+                                <field name="phone" widget="phone" />
+                                <field name="email" widget="email"/>
+                                <field name="qualification"/>
+                                <field name="experience_years"/>
+                                <field name="list_one"/>
+                                <field name="list_two"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="available_days"/>
+                            <field name="bio"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="view_doctor_profile_tree" model="ir.ui.view">
+            <field name="name">doctor.profile.tree</field>
+            <field name="model">doctor.profile</field>
+            <field name="arch" type="xml">
+                <tree string="Doctor Profile">
+                    <field name="doctor_id"/>
+                    <field name="name"/>
+                    <field name="department_id"/>
+                    <field name="specialization"/>
+                    <field name="phone"/>
+                    <field name="email"/>
+                    <field name="joining_date"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_doctor_profile" model="ir.actions.act_window">
+            <field name="name">Doctor Profiles</field>
+            <field name="res_model">doctor.profile</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_doctor_management_root"
+                  name="Doctor Management"
+                  parent="menu_lab_root"
+                  sequence="5"/>
+
+        <menuitem id="menu_doctor_profile"
+                  name="Doctors"
+                  parent="menu_doctor_management_root"
+                  action="action_doctor_profile"
+                  sequence="1"/>
+    </data>
+</odoo>

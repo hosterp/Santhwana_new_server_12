@@ -1,0 +1,44 @@
+<odoo>
+    <data>
+
+        <!-- Tree View -->
+        <record id="view_hospital_block_tree" model="ir.ui.view">
+            <field name="name">hospital.block.tree</field>
+            <field name="model">hospital.block</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="block_name"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View -->
+        <record id="view_hospital_block_form" model="ir.ui.view">
+            <field name="name">hospital.block.form</field>
+            <field name="model">hospital.block</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="block_name"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_hospital_block" model="ir.actions.act_window">
+            <field name="name">Hospital Blocks</field>
+            <field name="res_model">hospital.block</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_hospital_block_tree"/>
+        </record>
+
+        <!-- Menus -->
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_hospital_config" name="Configuration" parent="menu_lab_root" sequence="20"/>
+        <menuitem id="menu_hospital_block" name="Manage Blocks" parent="menu_hospital_config" sequence="2" action="action_hospital_block"/>
+
+    </data>
+</odoo>

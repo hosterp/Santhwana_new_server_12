@@ -1,0 +1,225 @@
+<odoo>
+    <data>
+
+        <template id="lab_collection_report_template">
+            <t t-call="web.html_container">
+                <t t-call="web.internal_layout">
+                    <div class="page">
+                        <div style="max-width: 700px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">
+                            <!-- Logo on the left -->
+                            <div style="flex: 0 0 100px; margin-right: 10px;">
+                                <img src="/web/binary/company_logo" alt="Logo"
+                                     style="max-height: 100px; max-width: 100px; border-radius: 50%;"/>
+                            </div>
+
+
+                            <div style="flex-grow: 1; text-align: center;">
+                                <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                    SANTHWANA HOSPITAL
+                                </h1>
+
+
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    N.C.C Road,Ambalamukku,Trivandrum-695005
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Phone: 0471-2432121,4223131
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    D.L. NOS:1-378/20-2002,1-379/21-2002
+                                </p>
+
+                                <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                <!--                                </h2>-->
+
+                            </div>
+                        </div>
+
+                        <h2 style="text-align:center;">Lab Collection Report</h2>
+                        <strong>
+                            <p style="text-align:center;">
+                                From:
+                                <t t-esc="date_from"/>
+                                To:
+                                <t t-esc="date_to"/>
+                            </p>
+                        </strong>
+
+                        <t t-if="is_grouped">
+                            <h3>
+                                <t t-esc="doctor_name"/>
+                            </h3>
+                            <t t-foreach="bills" t-as="bill">
+                                <h4>
+                                    <t t-esc="bill['bill_name']"/>
+                                </h4>
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Patient</th>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="bill['patients']" t-as="pat">
+                                            <td>
+                                                <t t-esc="pat['patient']"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="pat['bill_date']"/>
+                                            </td>
+                                            <td class="text-right">
+                                                <t t-esc="pat['amount']"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">
+                                                <b>Subtotal</b>
+                                            </td>
+                                            <td class="text-right">
+                                                <b>
+                                                    <t t-esc="bill['subtotal']"/>
+                                                </b>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <h4 style="text-align: right;">Total:
+                                <t t-esc="total_amount"/>
+                            </h4>
+                        </t>
+
+                        <t t-else="">
+                            <table class="table table-sm" style="width:100%; border:1px solid black;">
+                                <thead>
+                                    <tr>
+                                        <th style="border:1px solid black;">Sl No</th>
+                                        <th style="border:1px solid black;">Doctor</th>
+                                        <th style="border:1px solid black;">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="doctors" t-as="d">
+                                        <td style="border:1px solid black;">
+                                            <t t-esc="d['sl']"/>
+                                        </td>
+                                        <td style="border:1px solid black;">
+                                            <t t-esc="d['doctor']"/>
+                                        </td>
+                                        <td style="border:1px solid black;">
+                                            <t t-esc="d['amount']"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+
+                    </div>
+                </t>
+            </t>
+        </template>
+
+        <record id="paperformat_lab_collection" model="report.paperformat">
+            <field name="name">Lab Collection Paperformat</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="orientation">Portrait</field>
+            <field name="header_line" eval="False"/>
+        </record>
+        <record id="action_lab_collection_report" model="ir.actions.report">
+            <field name="name">lab Collection Report</field>
+            <field name="model">doctor.collection.report.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">homeo_doctor.lab_collection_report_template</field>
+            <field name="report_file">homeo_doctor.lab_collection_report_template</field>
+            <field name="print_report_name">'Doctor Collection Report - %s' % (object.date_from)</field>
+            <field name="paperformat_id" ref="homeo_doctor.paperformat_lab_collection"/>
+
+        </record>
+        <record id="view_doctor_billing_line_tree" model="ir.ui.view">
+            <field name="name">doctor.billing.line.tree</field>
+            <field name="model">doctor.billing.line.wizard</field>
+            <field name="arch" type="xml">
+                <tree string="OT Billing Lines">
+                    <field name="doctor_name"/>
+                    <field name="mrd_no"/>
+                    <field name="bill_name"/>
+                    <field name="patient_name"/>
+                    <field name="bill_date"/>
+                    <field name="amount" sum="Total"/>
+                </tree>
+            </field>
+        </record>
+        <record id="view_doctor_billing_line_search" model="ir.ui.view">
+            <field name="name">doctor.billing.line.wizard.search</field>
+            <field name="model">doctor.billing.line.wizard</field>
+            <field name="arch" type="xml">
+                <search string="OT Billing Lines">
+                    <field name="doctor_name"/>
+                    <field name="bill_name"/>
+                    <field name="patient_name"/>
+                    <field name="bill_date"/>
+
+                    <!-- Default group by Doctor -->
+                    <group expand="0" string="Group By">
+                        <filter string="Doctor" name="group_doctor" context="{'group_by':'doctor_name'}"/>
+                        <filter string="Bill" name="group_bill" context="{'group_by':'bill_name'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        <record id="view_doctor_collection_report_wizard_form" model="ir.ui.view">
+            <field name="name">doctor.collection.report.wizard.form</field>
+            <field name="model">doctor.collection.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Lab Collection Report">
+                    <group col="3">
+                        <group>
+                            <field name="date_from"/>
+                        </group>
+                        <group>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="doctor_id"/>
+                        </group>
+
+                    </group>
+                    <footer>
+                        <button string="Show Report" type="object" name="action_show_report" class="btn-primary"/>
+                        <button string="Print Report" type="object" name="action_print_report" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_doctor_collection_report_wizard" model="ir.actions.act_window">
+            <field name="name">Lab Collection Report</field>
+            <field name="res_model">doctor.collection.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_collection_root" name="Collection Report" parent="menu_homeo_head" sequence="23"/>
+        <menuitem id="menu_doctor_collection_report"
+                  name="Lab Collection Report"
+                  parent="menu_collection_root"
+                  action="action_doctor_collection_report_wizard"/>
+
+
+    </data>
+</odoo>

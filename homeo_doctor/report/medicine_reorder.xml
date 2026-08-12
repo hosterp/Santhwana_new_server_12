@@ -1,0 +1,96 @@
+<odoo>
+    <data>
+        <template id="report_medicine_reorder">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <main class="o_report_layout_standard">
+                        <div class="page">
+                            <h2 style="text-align:center;">Medicine Reorder Report (Past 6 Months)</h2>
+                            <table class="table table-sm o_main_table"
+                                   style="width:100%; border:1px solid #000; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="border:1px solid #000;">SL No</th>
+                                        <th style="border:1px solid #000;">Medicine</th>
+                                        <th style="border:1px solid #000;">Usage Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="enumerate(o.line_ids)" t-as="line">
+                                        <tr>
+                                            <td style="border:1px solid #000; text-align:center;">
+                                                <t t-esc="line[0] + 1"/>
+                                            </td>
+                                            <td style="border:1px solid #000;">
+                                                <t t-esc="line[1].product_id.display_name"/>
+                                            </td>
+                                            <td style="border:1px solid #000; text-align:right;">
+                                                <t t-esc="line[1].usage_count"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-if="not o.line_ids">
+                                        <tr>
+                                            <td colspan="3" style="border:1px solid #000; text-align:center;">
+                                                No records.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </main>
+                </t>
+            </t>
+        </template>
+
+        <record id="action_report_medicine_reorder" model="ir.actions.report">
+            <field name="name">Medicine Reorder Report</field>
+            <field name="model">medicine.reorder.form</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">homeo_doctor.report_medicine_reorder</field>
+            <field name="report_file">homeo_doctor.report_medicine_reorder</field>
+        </record>
+        <record id="view_medicine_reorder_form" model="ir.ui.view">
+            <field name="name">medicine.reorder.form.view.form</field>
+            <field name="model">medicine.reorder.form</field>
+            <field name="arch" type="xml">
+                <form string="Medicine Reorder Report">
+                    <group>
+                        <field name="from_date"/>
+                        <field name="to_date"/>
+                    </group>
+                    <footer>
+                        <button name="compute_reorder_report" type="object" string="Go" class="btn-primary"/>
+                        <button name="print_reorder_report" type="object" string="Print"
+                                attrs="{'invisible': [('line_ids','=',[])]}"/>
+                        <button string="Close" class="btn-secondary" special="cancel"/>
+                    </footer>
+
+                    <separator string="Medicines Reorder (Past 6 Months)"/>
+                    <field name="line_ids">
+                        <tree string="Medicine Usage" editable="false">
+                            <field name="product_id"/>
+                            <field name="usage_count" string="Count"/>
+                        </tree>
+                    </field>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="action_medicine_reorder_wizard" model="ir.actions.act_window">
+            <field name="name">Medicine Reorder</field>
+            <field name="res_model">medicine.reorder.form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_reports_root" name="Reports" parent="menu_homeo_head" sequence="21"/>
+        <menuitem id="menu_medicine_reorder" name="Medicine Reorder (6 Months)"
+                  parent="menu_reports_root"
+                  action="action_medicine_reorder_wizard"/>
+
+    </data>
+
+</odoo>

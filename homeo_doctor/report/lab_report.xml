@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_a3_landscape" model="report.paperformat">
+        <field name="name">A3 Landscape</field>
+        <field name="default" eval="False"/>
+        <field name="format">A3</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">5</field>
+        <field name="margin_bottom">5</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">10</field>
+        <field name="dpi">90</field>
+    </record>
+
+
+    <record id="action_report_lab_invoice" model="ir.actions.report">
+        <field name="name">Lab Invoice</field>
+        <field name="model">doctor.lab.report</field>
+        <field name="report_type">qweb-html</field> <!-- use qweb-pdf for printing -->
+        <field name="report_name">homeo_doctor.report_lab_invoice</field>
+        <field name="report_file">homeo_doctor.report_lab_invoice</field>
+        <!--        <field name="paperformat_id" ref="homeo_doctor.paperformat_lab_invoice"/> -->
+        <!--        <field name="print_report_name">Lab Invoice</field>-->
+
+    </record>
+    <record id="action_report_lab_A4_invoice" model="ir.actions.report">
+        <field name="name">Lab Invoice A4</field>
+        <field name="model">doctor.lab.report</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">homeo_doctor.report_lab_A4_invoice</field>
+        <field name="report_file">homeo_doctor.report_lab_A4_invoice</field>
+
+        <!-- REQUIRED in Odoo 14 -->
+        <field name="binding_model_id" ref="model_doctor_lab_report"/>
+        <field name="binding_type">report</field>
+
+        <!-- Optional but nice -->
+        <field name="print_report_name">'Lab Invoice A4 - %s'</field>
+    </record>
+
+
+    <record id="paperformat_lab_invoice" model="report.paperformat">
+        <field name="name">Lab Invoice Format</field>
+        <field name="format">A3</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="header_line" eval="False"/>
+        <field name="dpi">90</field>
+        <field name="default" eval="False"/>
+    </record>
+
+    <!--    <record id="paperformat_lab_invoice" model="report.paperformat">-->
+    <!--        <field name="name">Lab Invoice 13cm Portrait</field>-->
+    <!--        <field name="default" eval="False"/>-->
+    <!--        <field name="format">Custom</field> &lt;!&ndash; Must be 'Custom' for custom size &ndash;&gt;-->
+    <!--        <field name="page_height">297</field> &lt;!&ndash; Height in mm (29.7cm) &ndash;&gt;-->
+    <!--        <field name="page_width">130</field> &lt;!&ndash; Width in mm (13cm) &ndash;&gt;-->
+    <!--        <field name="orientation">Portrait</field>-->
+    <!--        <field name="margin_top">5</field>-->
+    <!--        <field name="margin_bottom">5</field>-->
+    <!--        <field name="margin_left">5</field>-->
+    <!--        <field name="margin_right">5</field>-->
+    <!--        <field name="header_line" eval="False"/>-->
+    <!--        <field name="dpi">90</field>-->
+    <!--    </record>-->
+
+    <report
+            id="report_lab_result_report"
+            string="Lab Result"
+            model="lab.result.page"
+            report_type="qweb-html"
+            name="homeo_doctor.report_lab_result_report_template"
+            file="homeo_doctor.report_lab_result_report_template"
+            paperformat="homeo_doctor.paperformat_a3_portrait"
+    />
+    <!--    <record id="paperformat_a3_landscape" model="report.paperformat">-->
+    <!--        <field name="name">A3 Landscape</field>-->
+    <!--        <field name="default" eval="False"/>-->
+    <!--        <field name="format">A3</field>-->
+    <!--        <field name="orientation">Landscape</field>-->
+    <!--        <field name="margin_top">10</field>-->
+    <!--        <field name="margin_bottom">10</field>-->
+    <!--        <field name="margin_left">15</field>-->
+    <!--        <field name="margin_right">15</field>-->
+    <!--        <field name="header_line" eval="False"/>-->
+    <!--        <field name="header_spacing">10</field>-->
+    <!--        <field name="dpi">90</field>-->
+    <!--    </record>-->
+    <!--    <report-->
+    <!--            id="report_general_bill_report"-->
+    <!--            string="General Bill"-->
+    <!--            model="general.billing"-->
+    <!--            report_type="qweb-html"-->
+    <!--            name="homeo_doctor.report_general_Bill"-->
+    <!--            file="homeo_doctor.report_general_Bill"-->
+    <!--            paperformat="homeo_doctor.paperformat_a3_landscape"-->
+    <!--    />-->
+
+
+</odoo>

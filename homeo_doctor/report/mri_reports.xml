@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <report
+        id="action_report_mri_invoice"
+        string="MRI Scan Invoice"
+        model="scanning.mri"
+        report_type="qweb-pdf"
+        name="homeo_doctor.report_mri_invoice"
+        file="homeo_doctor.report_mri_invoice"
+    />
+</odoo>

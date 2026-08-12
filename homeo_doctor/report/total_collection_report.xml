@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+
+        <!-- Report Action -->
+        <report
+                id="staff_report_action"
+                string="Staff Wise Report"
+                model="staff.report.wizard"
+                report_type="qweb-pdf"
+                name="homeo_doctor.staff_report_template"
+                file="homeo_doctor.staff_report_template"
+        />
+
+        <!-- Report Template -->
+        <template id="staff_report_template">
+            <t t-call="web.html_container">
+                <div class="page">
+                    <!-- Print date header ONCE -->
+                    <h2>
+                        From
+                        <t t-esc="data.get('from_date')"/>
+                        to
+                        <t t-esc="data.get('to_date')"/>
+                    </h2>
+
+                    <table class="table table-sm table-bordered"
+                           style="width:100%; margin-top:10px; border-collapse: collapse; text-align:center;">
+                        <thead>
+                            <tr>
+                                <th style="width:20%;">Department</th>
+                                <th style="width:20%;">User</th>
+                                <t t-foreach="data.get('payment_labels')" t-as="label">
+                                    <th style="width:12%;">
+                                        <t t-esc="label"/>
+                                    </th>
+                                </t>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Loop staff & depts -->
+                            <t t-foreach="data.get('staff_totals', {}).items()" t-as="staff">
+                                <t t-foreach="staff[1].items()" t-as="dept">
+                                    <tr>
+                                        <td>
+                                            <t t-esc="dept[0]"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="staff[0]"/>
+                                        </td>
+                                        <t t-foreach="data.get('payment_codes')" t-as="code">
+                                            <td>
+                                                <t t-esc="dept[1].get(code, 0.0)"/>
+                                            </td>
+                                        </t>
+                                    </tr>
+                                </t>
+                            </t>
+                            <tr style="font-weight:bold; background:#f0f0f0;">
+                                <td colspan="2" style="text-align:right;">Grand Total</td>
+                                <t t-foreach="data.get('payment_codes')" t-as="code">
+                                    <td>
+                                        <t t-esc="data.get('grand_totals', {}).get(code, 0.0)"/>
+                                    </td>
+                                </t>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </t>
+        </template>
+
+
+        <record id="view_staff_report_wizard_form" model="ir.ui.view">
+            <field name="name">staff.report.wizard.form</field>
+            <field name="model">staff.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Staff Wise Report Wizard">
+                    <group>
+                        <field name="from_date"/>
+                        <field name="to_date"/>
+                        <field name="staff_id"/>
+                    </group>
+                    <footer>
+                        <button name="action_generate_staff_pdf"
+                                string="Print PDF"
+                                type="object"
+                                class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action to open the wizard -->
+        <record id="action_staff_report_wizard" model="ir.actions.act_window">
+            <field name="name">Staff Wise Report</field>
+            <field name="res_model">staff.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_collection_root" name="Collection Report" parent="menu_homeo_head" sequence="23"/>
+        <menuitem
+                id="menu_collection_report"
+                name="Total Collection Report"
+                parent="menu_collection_root"
+                action="action_staff_report_wizard"
+                sequence="10"/>
+
+        <!-- Alternative: Server Action for direct PDF generation -->
+
+    </data>
+</odoo>

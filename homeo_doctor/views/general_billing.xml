@@ -1,0 +1,432 @@
+<odoo>
+    <data>
+
+        <record id="view_general_billing_form" model="ir.ui.view">
+            <field name="name">general.billing.form</field>
+            <field name="model">general.billing</field>
+            <field name="arch" type="xml">
+                <form string="Patient Billing" class="lab_form general_form">
+                    <header>
+                        <field name="status" widget="statusbar"/>
+                        <!-- <button name="action_pay_button" type="object" attrs="{'invisible': [('mode_pay', '=', 'credit')]}" string="Pay" class="oe_highlight"/> -->
+                        <button name="action_create_admission" type="object" string="Admit" class="oe_highlight"/>
+                        <button name="action_observation" type="object" string="Observation" class="oe_highlight"/>
+                        <button name="action_observation_discharge" type="object" string="Discharge"
+                                class="oe_highlight"/>
+                        <button name="action_cancel" type="object" string="Cancel"
+                                class="btn btn-danger"
+                                attrs="{'invisible': [('status', '=', 'cancelled')]}"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title" style="display:none;">
+                            <h1>
+                                <field name="bill_number" readonly="1" class="oe_inline" style="font-size: 18px;"/>
+                            </h1>
+                        </div>
+                        <div class="genaral_billing_class">
+                            <div class="row mx-n1">
+                                <!-- First row with uniform column sizes (all fields same size as patient name) -->
+                                <div class="col-12">
+                                    <div class="row mx-n1">
+                                        <div class="col px-1" style="max-width: 14.28%;">
+                                            <div class="form-group row my-1">
+                                                <label for="bill_type" class="col-md-5 col-form-label py-0 small">Bill
+                                                    Type
+                                                </label>
+                                                <div class="col-md-7 field-container py-0">
+                                                    <field name="bill_type"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col px-1" style="max-width: 14.28%;">
+                                            <div class="form-group row my-1">
+                                                <label for="bill_date" class="col-md-5 col-form-label py-0 small">Bill
+                                                    Date
+                                                </label>
+                                                <div class="col-md-7 field-container py-0">
+                                                    <field name="bill_date"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col px-1" style="max-width: 14.28%;">
+                                            <div class="form-group row my-1">
+                                                <label for="mrd_no" class="col-md-5 col-form-label py-0 small">UHID
+                                                </label>
+                                                <div class="col-md-7 field-container py-0">
+                                                    <field name="mrd_no"
+                                                           options="{'no_create': True, 'no_edit': True}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col px-1" style="max-width: 14.28%;">
+                                            <div class="form-group row my-1">
+                                                <label for="patient_name" class="col-md-5 col-form-label py-0 small">
+                                                    Patient
+                                                </label>
+                                                <div class="col-md-7 field-container py-0">
+                                                    <field name="patient_name"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col px-1" style="max-width: 14.28%;">
+                                            <div class="form-group row my-1">
+                                                <label for="age" class="col-md-5 col-form-label py-0 small">Age</label>
+                                                <div class="col-md-7 field-container py-0">
+                                                    <field name="age"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col px-1" style="max-width: 14.28%;">
+                                            <div class="form-group row my-1">
+                                                <label for="gender" class="col-md-5 col-form-label py-0 small">Gender
+                                                </label>
+                                                <div class="col-md-7 field-container py-0">
+                                                    <field name="gender"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col px-1" style="max-width: 14.28%;">
+                                            <div class="form-group row my-1">
+                                                <label for="mobile" class="col-md-5 col-form-label py-0 small">Mobile
+                                                </label>
+                                                <div class="col-md-7 field-container py-0">
+                                                    <field name="mobile"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Second row - for remaining fields with reduced gaps -->
+                            <div class="row mx-n1 second_row_general">
+                                <div class="col px-1" style="max-width: 14.28%;">
+                                    <div class="form-group row my-1">
+                                        <label for="doctor" class="col-md-5 col-form-label py-0 small">Doctor</label>
+                                        <div class="col-md-7 field-container py-0">
+                                            <field name="doctor" options="{'no_create': True, 'no_edit': True}"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col px-1" style="max-width: 14.28%;">
+                                    <div class="form-group row my-1">
+                                        <label for="op_category" class="col-md-5 col-form-label py-0 small">OP Category
+                                        </label>
+                                        <div class="col-md-7 field-container py-0">
+                                            <field name="op_category"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col px-1" style="max-width: 14.28%;">
+                                    <div class="form-group row my-1">
+                                        <label for="department" class="col-md-5 col-form-label py-0 small">Department
+                                        </label>
+                                        <div class="col-md-7 field-container py-0">
+                                            <field name="department"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col px-1" style="max-width: 14.28%;">
+                                    <div class="form-group row my-1">
+                                        <label for="particulars" class="col-md-5 col-form-label py-0 small">Particulars
+                                        </label>
+                                        <div class="col-md-7 field-container py-0">
+                                            <field name="particulars"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col px-1" attrs="{'invisible': [('vssc_boolean', '!=', True)]}"
+                                     style="background-color:rgb(220, 53, 69);max-width: 14.28%;">
+                                    <div class="form-group row my-1">
+                                        <label for="vssc_boolean" class="col-md-5 col-form-label py-0 small">VSSC
+                                        </label>
+                                        <div class="col-md-7 field-container py-0">
+                                            <field name="vssc_boolean"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col px-1" attrs="{'invisible': [('observation', '=', False)]}"
+                                     style="max-width: 14.28%;">
+                                    <div class="form-group row my-1">
+                                        <label for="rent" class="col-md-5 col-form-label py-0 small">Rent
+                                        </label>
+                                        <div class="col-md-7 field-container py-0">
+                                            <field name="rent"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col px-1" style="max-width: 14.28%;" attrs="{'invisible': True}">
+                                    <div class="form-group row my-1">
+                                        <label for="observation" class="col-md-5 col-form-label py-0 small">
+                                            Observation
+                                        </label>
+                                        <div class="col-md-7 field-container py-0">
+                                            <field name="observation"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="custom_general_notebook">
+                                <notebook>
+                                    <page>
+                                        <field name="general_bill_line_ids">
+                                            <tree editable="bottom">
+                                                <field name="particulars"/>
+                                                <field name="rate"/>
+                                                <field name="tax" class="narrow_tax_column"/>
+                                                <field name="quantity"/>
+                                                <field name="total_amt" sum="total amt"/>
+                                            </tree>
+                                        </field>
+                                    </page>
+                                </notebook>
+                                <div attrs="{'invisible': [('payment_method_split', '=', False)]}" style="margin-top: 15px;">
+                                    <table class="table table-bordered table-sm" style="width: 45%; border: 1px solid #dee2e6; box-shadow: -1px 1px 5px #53aade; border-radius: 8px; overflow: hidden; font-size: 13px;">
+                                        <thead style="background-color: #387298; color: white;">
+                                            <tr style="height: 25px;">
+                                                <th style="text-align: center; border: 1px solid #dee2e6; width: 50%; padding: 2px;">Method</th>
+                                                <th style="text-align: center; border: 1px solid #dee2e6; width: 50%; padding: 2px;">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr style="height: 25px;">
+                                                <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">Cash</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 2px;"><field name="cash_amount" nolabel="1"/></td>
+                                            </tr>
+                                            <tr style="height: 25px;">
+                                                <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">UPI</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 2px;"><field name="upi_amount" nolabel="1"/></td>
+                                            </tr>
+                                            <tr style="height: 25px;">
+                                                <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">Card</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 2px;"><field name="card_amount" nolabel="1"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="custom_border" style="width: 35%;">
+                                <div class="row">
+                                    <!-- First column -->
+                                    <div class="row column_one" style="display:block; width: 33%;">
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label for="total_item" class="col-md-4 col-form-label">Total Item</label>
+                                                <div class="col-md-8 field-container">
+                                                    <field name="total_item"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label for="mode_pay" class="col-md-4 col-form-label">Payment Method</label>
+                                                <div class="col-md-8 field-container">
+                                                    <field name="mode_pay"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label for="payment_method_split" class="col-md-4 col-form-label pay_mode_style">Split Payment</label>
+                                                <div class="col-md-8 field-container">
+                                                    <field name="payment_method_split"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label for="discount" class="col-md-4 col-form-label">Discount</label>
+                                                <div class="col-md-8 field-container">
+                                                    <field name="discount"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Second column -->
+                                    <div class="row column_two" style="display:block; width: 33%;">
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label for="total_qty" class="col-md-4 col-form-label">Total Qty</label>
+                                                <div class="col-md-8 field-container">
+                                                    <field name="total_qty"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label for="amount_paid" class="col-md-4 col-form-label">Amount Paid</label>
+                                                <div class="col-md-8 field-container">
+                                                    <field name="amount_paid"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <div class="col-md-12 field-container pay_button_container">
+                                                    <button name="action_pay_button" type="object"
+                                                            attrs="{'invisible': [('mode_pay', '=', 'credit')]}"
+                                                            string="Pay" class="oe_highlight"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <!-- Spacer or other field -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Third column -->
+                                    <div class="row column_three" style="display:block; width: 33%;">
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label for="total_amount" class="col-md-4 col-form-label">Total Amount</label>
+                                                <div class="col-md-8 field-container">
+                                                    <field name="total_amount"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label for="net_amount" class="col-md-4 col-form-label">Net Amount</label>
+                                                <div class="col-md-8 field-container">
+                                                    <field name="net_amount"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label for="balance" class="col-md-4 col-form-label">Balance</label>
+                                                <div class="col-md-8 field-container">
+                                                    <field name="balance"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label for="reference" class="col-md-4 col-form-label">Reference</label>
+                                                <div class="col-md-8 field-container">
+                                                    <field name="reference"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div class="form-group row">
+                                    <label for="bill_by" class="col-md-4 col-form-label">Bill By</label>
+                                    <div class="col-md-8 field-container">
+                                        <field name="bill_by"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-2">
+                                <div class="form-group row">
+                                    <label for="staff_name" class="col-md-4 col-form-label">Staff Name</label>
+                                    <div class="col-md-8 field-container">
+                                        <field name="staff_name" readonly="1"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group row">
+                                    <label for="staff_pwd" class="col-md-4 col-form-label">Staff Password</label>
+                                    <div style="position:relative; display:inline-block; width:100%;">
+                                        <field name="staff_pwd" password="True"
+                                               style="padding-right:30px; width:60%;" />
+                                        <span style="position:absolute; right:112px; top:50%;
+                 transform:translateY(-50%); cursor:pointer; z-index:10;"
+                                              onclick="togglePwd(this)">
+                                            <i class="fa fa-eye" title="Show Password" />
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group row">
+                                    <label for="remarks" class="col-md-4 col-form-label">Remarks</label>
+                                    <div class="col-md-8 field-container">
+                                        <field name="remarks"/>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </sheet>
+                     <script type="text/javascript">
+                        function togglePwd(el) {
+                        var input = el.closest('div').querySelector('input');
+                        var icon = el.querySelector('i');
+                        if (!input) return;
+                        if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.className = 'fa fa-eye-slash';
+                        } else {
+                        input.type = 'password';
+                        icon.className = 'fa fa-eye';
+                        }
+                        }
+                    </script>
+
+                </form>
+            </field>
+        </record>
+        <record id="view_general_billing_search" model="ir.ui.view">
+            <field name="name">general.billing.search</field>
+            <field name="model">general.billing</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="bill_number"/>
+                    <field name="mrd_no" string="UHID"/>
+                    <field name="patient_name"/>
+                    <field name="doctor"/>
+                    <!--                    <field name="staff_name" string="Staff"/>-->
+
+                    <!-- Quick filters -->
+                    <filter name="today_bill" string="Today's Bills"
+                            domain="[('bill_date', '=', context_today())]"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_general_billing_tree" model="ir.ui.view">
+            <field name="name">general.billing.tree</field>
+            <field name="model">general.billing</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="bill_number"/>
+                    <field name="bill_date"/>
+                    <field name="bill_type" string="Type"/>
+                    <field name="department"/>
+                    <field name="op_category" string="Category"/>
+                    <field name="mrd_no"/>
+                    <field name="patient_name"/>
+                    <field name="gender"/>
+                    <field name="vssc_boolean"/>
+                    <field name="doctor"/>
+                    <field name="mode_pay"/>
+                    <field name="total_amount"/>
+                    <field name="status" string="Payment Status"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_general_billing" model="ir.actions.act_window">
+            <field name="name">General Billing</field>
+            <field name="res_model">general.billing</field>
+            <field name="search_view_id" ref="view_general_billing_search"/>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!--        <menuitem id="menu_general_billing_main_menu" name="General Billing" parent="menu_homeo_head" sequence="6"/>-->
+        <menuitem id="menu_general_billing_main" name="General Billing" parent="menu_lab_reports_root_billing"
+                  action="action_general_billing" sequence="1"/>
+    </data>
+</odoo>

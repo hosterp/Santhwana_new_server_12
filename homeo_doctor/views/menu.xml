@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="seq_ip_part_billing" model="ir.sequence">
+            <field name="name">IP Part Billing Sequence</field>
+            <field name="code">ip.part.billing</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+        <record id="seq_ip_discharge_billing" model="ir.sequence">
+            <field name="name">IP Discharge Billing Sequence</field>
+            <field name="code">discharge.billing</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+        <record id="seq_audiology_billing" model="ir.sequence">
+            <field name="name">Audiology Billing Sequence</field>
+            <field name="code">audiology.billing</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+        <record id="seq_xray_billing" model="ir.sequence">
+            <field name="name">XRAY Billing Sequence</field>
+            <field name="code">xray.billing</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+        <record id="seq_xray_billing" model="ir.sequence">
+            <field name="name">XRAY Billing Sequence</field>
+            <field name="code">xray.billing</field>
+            <field name="prefix"></field> <!-- Leave blank since you're adding suffix in Python -->
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+
+        </record>
+        <record id="seq_ot_billing" model="ir.sequence">
+            <field name="name">OT Billing Sequence</field>
+            <field name="code">ot.billing</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+        <record id="seq_casualty_billing" model="ir.sequence">
+            <field name="name">Casualty Billing Sequence</field>
+            <field name="code">casuality.billing</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+        <record id="seq_discharge_bill" model="ir.sequence">
+            <field name="name">Patient Discharge Bill Number</field>
+            <field name="code">discharge.bill</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="seq_appointment_recept_bill" model="ir.sequence">
+            <field name="name">Patient appointment Bill Number</field>
+            <field name="code">payment.receipt</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="seq_patient_bill" model="ir.sequence">
+            <field name="name">Patient Bill Number</field>
+            <field name="code">patient.bill</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="seq_patient_admitted_bill" model="ir.sequence">
+            <field name="name">Patient Admitted Bill Number</field>
+            <field name="code">admitted.bill</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <record id="seq_purchase_order_custom" model="ir.sequence">
+            <field name="name">Purchase Order Custom</field>
+            <field name="code">purchase.order.custom</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+
+        <record id="seq_supplier_invoice" model="ir.sequence">
+            <field name="name">Supplier Invoice</field>
+            <field name="code">account.move</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="seq_pharmacy_description" model="ir.sequence">
+            <field name="name">Pharmacy Bill Number</field>
+            <field name="code">pharmacy.description</field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="seq_patient_wallet_bill" model="ir.sequence">
+            <field name="name">Patient Wallet Bill</field>
+            <field name="code">patient.wallet</field>
+            <field name="prefix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="sequence_for_patient_reg" model="ir.sequence">
+            <field name="name">Patient Registrartion</field>
+            <field name="code">patient.registrartion.group</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="seq_lab_referral" model="ir.sequence">
+            <field name="name">Lab Referral Sequence</field>
+            <field name="code">lab.referral</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="sequence_for_doctor_referral" model="ir.sequence">
+            <field name="name">Doctor Referral</field>
+            <field name="code">doctor.referral.group</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="patient_appointment_sequence" model="ir.sequence">
+            <field name="name">Patient Appointment</field>
+            <field name="code">patient.appointment.sequence</field>
+            <field name="padding">4</field>  <!-- Keeps the padding, e.g., 0001 -->
+            <field name="number_increment">1</field>
+        </record>
+
+        <record id="sequence_for_patient_registration" model="ir.sequence">
+            <field name="name">Patient Registrartion</field>
+            <field name="code">patient.reg.group</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="seq_patient_reg_temp" model="ir.sequence">
+            <field name="name">Patient Temp Reference</field>
+            <field name="code">patient.reg.temp</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="seq_doctor_lab_report" model="ir.sequence">
+            <field name="name">Doctor Lab Report</field>
+            <field name="code">doctor.lab.report</field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="doctor_profile_sequence" model="ir.sequence">
+            <field name="name">Doctor Profile</field>
+            <field name="code">doctor.profile</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+        </record>
+        <record id="patient_appointment_sequence" model="ir.sequence">
+            <field name="name">Patient Appointment</field>
+            <field name="code">patient.appointment.sequence</field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+        </record>
+        <menuitem
+                id="menu_homeo_head"
+                name="HOSPITAL"
+                sequence="0"/>
+        <menuitem
+                id="menu_patient_reg"
+                name='Consultation Details'
+                parent="menu_homeo_head"
+                action="action_patient_registration"
+                sequence="3"/>
+
+        <menuitem
+                id="menu_stock_root"
+                name="Stock"
+                parent="menu_homeo_head"
+                sequence="6"/>
+
+        <menuitem id="menu_my_patient_template_root" name="Patient Registration" parent="menu_homeo_head" sequence="2"/>
+
+
+    </data>
+</odoo>

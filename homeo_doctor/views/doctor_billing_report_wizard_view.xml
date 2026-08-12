@@ -1,0 +1,35 @@
+<odoo>
+    <data>
+        <record id="view_doctor_billing_report_wizard" model="ir.ui.view">
+            <field name="name">doctor.billing.report.wizard.form</field>
+            <field name="model">doctor.billing.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Doctor Billing Report">
+                    <group col="3">
+                        <group><field name="from_date"/></group>
+                        <group> <field name="to_date"/></group>
+                        <group> <field name="doctor"/></group>
+
+                    </group>
+                    <footer>
+                        <button name="generate_report" type="object" string="Print Report" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <record id="action_doctor_billing_report_wizard" model="ir.actions.act_window">
+            <field name="name">Doctor Billing Report</field>
+            <field name="res_model">doctor.billing.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        <menuitem id="menu_reports_root" name="Reports" parent="menu_homeo_head" sequence="21"/>
+        <menuitem id="menu_doctor_billing_report"
+                  name="Doctor Billing Report"
+                  parent="menu_reports_root"
+                  action="action_doctor_billing_report_wizard"
+                />
+
+    </data>
+</odoo>

@@ -1,0 +1,192 @@
+<odoo>
+    <!-- Wizard Form View -->
+    <record id="view_doctor_wise_report_wizard" model="ir.ui.view">
+        <field name="name">doctor.wise.report.wizard.form</field>
+        <field name="model">doctor.patient.count</field>
+        <field name="arch" type="xml">
+            <form string="Doctor Wise Patient Count">
+                <group>
+                    <group>
+                        <field name="start_date"/>
+                    </group>
+                    <group>
+                        <field name="end_date"/>
+                    </group>
+
+                </group>
+                <footer>
+                    <button name="action_print_view_report" string="View" type="object" class="btn-primary"/>
+                    <button name="action_print_report" string="Print Report" type="object" class="btn-primary"/>
+                    <button name="action_export_excel"
+                            string="Excel Report"
+                            type="object"
+                            class="btn-secondary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Wizard Action -->
+    <record id="action_doctor_wise_report_wizard" model="ir.actions.act_window">
+        <field name="name">Doctor Wise Patient Count</field>
+        <field name="res_model">doctor.patient.count</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_reports_root" name="Reports" parent="menu_homeo_head" sequence="21"/>
+    <!--    <menuitem id="menu_doctor_wise_patient_report_root" name="Doctor Wise Patient Count"-->
+    <!--              parent="menu_reports_root"/>-->
+
+    <menuitem id="menu_doctor_wise_patient_report"
+              name="Doctor Wise Patient Count"
+              parent="menu_reports_root"
+              action="action_doctor_wise_report_wizard"/>
+
+    <template id="report_doctor_wise_patient_count">
+        <t t-call="web.html_container">
+            <t t-if="docs">
+                <div class="page">
+                    <h2 style="text-align:center; font-size:18px; margin-bottom:5px;">
+                        Doctor Wise Patient Count
+                    </h2>
+                    <p style="text-align:center; font-size:14px; margin-top:0;">
+                        From
+                        <strong>
+                            <t t-esc="start_date"/>
+                        </strong>
+                        to
+                        <strong>
+                            <t t-esc="end_date"/>
+                        </strong>
+                    </p>
+
+                    <table class="table table-bordered"
+                           style="width:100%; border-collapse:collapse; text-align:center; font-size:13px; margin-top:10px;">
+                        <thead style="background-color:#f2f2f2;">
+                            <tr style="border:1px solid #000;">
+                                <th style="padding:3px; border:1px solid #000; text-align:left; width:180px;">
+                                    Doctor Name
+                                </th>
+                                <t t-foreach="all_dates" t-as="d">
+                                    <th style="padding:3px; border:1px solid #000; min-width:45px;">
+                                        <t t-esc="d.strftime('%d-%b')"/>
+                                    </th>
+                                </t>
+                                <th style="padding:3px; border:1px solid #000;">Total</th>
+                                <th style="padding:3px; border:1px solid #000; background-color:#e8f5e9;">
+                                    With Consultation Fee
+                                </th>
+                                <th style="padding:3px;border:1px solid #000; background-color:#ffebee;">
+                                    Without Consultation Fee
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <t t-foreach="docs" t-as="row">
+                                <tr style="border:1px solid #000;">
+                                    <td style="padding:5px; border:1px solid #000; text-align:left;">
+                                        <strong>
+                                            <t t-esc="row['doctor']"/>
+                                        </strong>
+                                    </td>
+
+                                    <!-- Daily total per date (sum of with + without fee) -->
+                                    <t t-foreach="enumerate(all_dates)" t-as="d_info">
+                                        <td style="padding:5px; border:1px solid #000;">
+                                            <t t-set="i" t-value="d_info[0]"/>
+                                            <t t-set="d" t-value="d_info[1]"/>
+                                            <t t-esc="row['with_fee_counts'][i] + row['without_fee_counts'][i]"/>
+                                        </td>
+                                    </t>
+
+                                    <td style="padding:5px; border:1px solid #000; font-weight:bold;">
+                                        <t t-esc="row['total_with_fee'] + row['total_without_fee']"/>
+                                    </td>
+
+                                    <td style="padding:5px; border:1px solid #000; background-color:#e8f5e9;">
+                                        <t t-esc="row['total_with_fee']"/>
+                                    </td>
+
+                                    <td style="padding:5px; border:1px solid #000; background-color:#ffebee;">
+                                        <t t-esc="row['total_without_fee']"/>
+                                    </td>
+                                </tr>
+                            </t>
+
+                            <!-- Totals Row -->
+                            <tr style="border-top:2px solid #000; background-color:#f9f9f9;">
+                                <td style="text-align:right; padding:6px; font-weight:bold;">
+                                    Total
+                                </td>
+
+                                <t t-foreach="enumerate(all_dates)" t-as="d_info">
+                                    <td style="padding:6px; border:1px solid #000; font-weight:bold;">
+                                        <t t-set="i" t-value="d_info[0]"/>
+                                        <t t-set="d" t-value="d_info[1]"/>
+                                        <t t-esc="total_with_fee_counts[i] + total_without_fee_counts[i]"/>
+                                    </td>
+                                </t>
+
+                                <td style="padding:6px; border:1px solid #000; font-weight:bold;">
+                                    <t t-esc="grand_total_with_fee + grand_total_without_fee"/>
+                                </td>
+
+                                <td style="padding:6px; border:1px solid #000; font-weight:bold; background-color:#e8f5e9;">
+                                    <t t-esc="grand_total_with_fee"/>
+                                </td>
+
+                                <td style="padding:6px; border:1px solid #000; font-weight:bold; background-color:#ffebee;">
+                                    <t t-esc="grand_total_without_fee"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+
+            <t t-if="not docs">
+                <div class="page">
+                    <h3 style="text-align:center; color:red; margin-top:100px;">
+                        No data found for the selected date range.
+                    </h3>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="paperformat_doctor_wise_landscape" model="report.paperformat">
+        <field name="name">Doctor Wise Report Landscape</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">3</field>
+        <field name="margin_right">3</field>
+        <field name="header_line" eval="False"/>
+        <field name="dpi">90</field>
+    </record>
+
+    <!-- Report Action -->
+    <report
+            id="action_doctor_wise_patient_report"
+            model="doctor.patient.count"
+            string="Doctor Wise Patient Report"
+            report_type="qweb-pdf"
+            file="homeo_doctor.report_doctor_wise_patient_count"
+            name="homeo_doctor.report_doctor_wise_patient_count"
+            paperformat="paperformat_doctor_wise_landscape"
+    />
+    <report
+            id="action_doctor_wise_patient_report_html"
+            model="doctor.patient.count"
+            string="Doctor Wise Patient Report"
+            report_type="qweb-html"
+            file="homeo_doctor.report_doctor_wise_patient_count"
+            name="homeo_doctor.report_doctor_wise_patient_count"
+            paperformat="paperformat_doctor_wise_landscape"
+    />
+</odoo>

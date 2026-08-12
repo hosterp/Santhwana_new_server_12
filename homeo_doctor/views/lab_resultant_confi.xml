@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_lab_resultant_confi_tree" model="ir.ui.view">
+        <field name="name">lab.resultant.confi.tree</field>
+        <field name="model">lab.resultant.confi</field>
+        <field name="arch" type="xml">
+            <tree string="Lab Resultant Configuration">
+                <field name="test_name_bill_code" string="Investigation"/>
+                <field name="order"/>
+                <field name="test_name"/>
+                <field name="age_from"/>
+                <field name="age_to"/>
+                <field name="unit"/>
+                <field name="referral_range"/>
+                <field name="min_val"/>
+                <field name="max_val"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_lab_resultant_confi_form" model="ir.ui.view">
+        <field name="name">lab.resultant.confi.form</field>
+        <field name="model">lab.resultant.confi</field>
+        <field name="arch" type="xml">
+            <form string="Lab Resultant Configuration" class="lab_resultant lab_form">
+                <sheet>
+                    <group col="3">
+                        <group>
+                            <field name='test_name_bill_code'/>
+                            <field name="test_name"/>
+                            <field name='gender'/>
+                            <field name='type'/>
+                            <field name='max_val'/>
+                        </group>
+                        <group>
+                            <field name="main_group"/>
+                            <field name="order"/>
+                            <field name="unit"/>
+                            <field name="min_val"/>
+                            <field name="remarks"/>
+                        </group>
+                        <group>
+                            <field name="sub_group"/>
+                            <field name="age_from"/>
+                            <field name="age_to"/>
+                            <field name="referral_range"/>
+                        </group>
+                    </group>
+
+                    <!--                    <div class="oe_title mb-3">-->
+                    <!--                        <label for="test_name" string="Test Configuration" class="oe_edit_only"/>-->
+                    <!--                        <h1>-->
+                    <!--                            <field name="test_name" placeholder="Enter Test Name"/>-->
+                    <!--                        </h1>-->
+                    <!--                    </div>-->
+
+                    <!--                    <group>-->
+                    <!--                           <label for="test_name" string="Test Configuration" class="oe_edit_only"/>-->
+                    <!--                        <group name="test_details" string="Test Details" col="4">-->
+                    <!--                            <field name="test_name_bill_code" string="Test Code" widget="char" required="1"/>-->
+                    <!--                            <field name="main_group" string="Main Group"/>-->
+                    <!--                            <field name="sub_group" string="Sub Group"/>-->
+                    <!--                            <field name="test_name" string="Full Test Name"/>-->
+                    <!--                        </group>-->
+
+                    <!--                        <group name="classification_details" string="Classification" col="4">-->
+                    <!--                            <field name="gender" string="Gender" />-->
+                    <!--                            <field name="order" string="Display Order"/>-->
+                    <!--                            <field name="age_from" string="Age From"/>-->
+                    <!--                            <field name="age_to" string="Age To"/>-->
+                    <!--                            <field name="type" string="Age Type" />-->
+                    <!--                            <field name="unit" string="Unit"/>-->
+                    <!--                        </group>-->
+                    <!--                    </group>-->
+
+                    <!--                    <group string="Reference Range" name="reference_range">-->
+                    <!--                        <group col="4">-->
+                    <!--                            <field name="referral_range" string="Referral Range"/>-->
+                    <!--                            <field name="min_val" string="Minimum Value"/>-->
+                    <!--                            <field name="max_val" string="Maximum Value"/>-->
+                    <!--                        </group>-->
+                    <!--                        <group>-->
+                    <!--                            <field name="remarks" string="Additional Remarks" nolabel="0"/>-->
+                    <!--                        </group>-->
+                    <!--                    </group>-->
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <!-- Search View -->
+    <record id="view_lab_resultant_confi_search" model="ir.ui.view">
+        <field name="name">lab.resultant.confi.search</field>
+        <field name="model">lab.resultant.confi</field>
+        <field name="arch" type="xml">
+            <search string="Lab Resultant Configuration">
+                <field name="test_name_bill_code"/>
+                <field name="main_group"/>
+                <field name="sub_group"/>
+                <field name="test_name"/>
+                <field name="gender"/>
+                <group expand="0" string="Group By">
+                    <filter string="Main Group" name="group_by_main_group" context="{'group_by':'main_group'}"/>
+                    <filter string="Sub Group" name="group_by_sub_group" context="{'group_by':'sub_group'}"/>
+                    <filter string="Gender" name="group_by_gender" context="{'group_by':'gender'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_lab_resultant_confi" model="ir.actions.act_window">
+        <field name="name">Lab Resultant Configuration</field>
+        <field name="res_model">lab.resultant.confi</field>
+        <field name="view_mode">tree,form,search</field>
+        <field name="view_ids"
+               eval="[(5, 0, 0),
+                      (0, 0, {'view_mode': 'tree', 'view_id': ref('view_lab_resultant_confi_tree')}),
+                      (0, 0, {'view_mode': 'form', 'view_id': ref('view_lab_resultant_confi_form')})]"/>
+    </record>
+
+
+    <!-- Tree View for Lab Main Group -->
+    <record id="view_lab_main_group_tree" model="ir.ui.view">
+        <field name="name">lab.main.group.tree</field>
+        <field name="model">lab.main.group</field>
+        <field name="arch" type="xml">
+            <tree string="Lab Main Groups">
+                <field name="main_group"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View for Lab Main Group -->
+    <record id="view_lab_main_group_form" model="ir.ui.view">
+        <field name="name">lab.main.group.form</field>
+        <field name="model">lab.main.group</field>
+        <field name="arch" type="xml">
+            <form string="Lab Main Group">
+                <sheet>
+                    <group>
+                        <field name="main_group"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Lab Main Group -->
+    <record id="action_lab_main_group" model="ir.actions.act_window">
+        <field name="name">Lab Main Groups</field>
+        <field name="res_model">lab.main.group</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+
+    <!-- Tree View for Lab Sub Group -->
+    <record id="view_lab_sub_group_tree" model="ir.ui.view">
+        <field name="name">lab.sub.group.tree</field>
+        <field name="model">lab.sub.group</field>
+        <field name="arch" type="xml">
+            <tree string="Lab Sub Groups">
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View for Lab Sub Group -->
+    <record id="view_lab_sub_group_form" model="ir.ui.view">
+        <field name="name">lab.sub.group.form</field>
+        <field name="model">lab.sub.group</field>
+        <field name="arch" type="xml">
+            <form string="Lab Sub Group">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Lab Sub Group -->
+    <record id="action_lab_sub_group" model="ir.actions.act_window">
+        <field name="name">Lab Sub Groups</field>
+        <field name="res_model">lab.sub.group</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Menu Item for Lab Sub Group -->
+    <menuitem
+            id="menu_lab_sub_group"
+            name="Lab Sub Groups"
+            action="action_lab_sub_group"
+            parent="menu_lab"
+            sequence="4"/>
+
+    <!-- Menu Item for Lab Main Group -->
+    <menuitem
+            id="menu_lab_main_group"
+            name="Lab Main Groups"
+            action="action_lab_main_group"
+            parent="menu_lab"
+            sequence="5"/>
+
+    <!-- Menu Item -->
+    <menuitem
+            id="menu_lab_resultant_confi"
+            name="Lab Resultant Configuration"
+            parent="menu_lab"
+            action="action_lab_resultant_confi"
+            sequence="3"/>
+</odoo>

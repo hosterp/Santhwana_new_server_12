@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_patient_registration,Access Patient Registration,model_patient_registration, ,1,1,1,0
+access_medicine_entry,Access Medicine Entry,model_medicine_entry, ,1,1,1,0
+access_stock_entry_lines,Access Stock Entry Lines,model_stock_entry_lines, ,1,1,1,0
+access_prescription_entry_lines,Access Prescription Entry Lines,model_prescription_entry_lines, ,1,1,1,0
+
+

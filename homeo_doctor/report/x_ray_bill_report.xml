@@ -1,0 +1,297 @@
+<odoo>
+    <template id="report_xray_Bill">
+        <t t-call="web.html_container">
+            <t t-if="not request.env.context.get('no_auto_print')">
+                <script type="text/javascript">
+                    window.onload = function() {
+                    setTimeout(function() {
+                    window.print();
+                    }, 500);
+                    };
+                </script>
+            </t>
+            <t t-foreach="docs" t-as="o">
+                <style>
+                    @media print {
+                    @page {
+                    <!--                    size: A3 landscape;-->
+                    <!--                    margin: 10mm 15mm;-->
+                    }
+
+                    html, body {
+                    width: 100%;
+                    margin: 0;
+                    padding: 0;
+                    }
+
+                    .page {
+                    width: 70%%; /* keep your desired width */
+                    min-height: 18cm; /* keep your min-height */
+                    margin: 0 auto;
+                    padding: 5px; /* custom padding */
+                    box-sizing: border-box;
+                    margin-left: 5px;
+                    padding-right: 126px; /* keep your original layout */
+                    font-family: 'Times New Roman', Times, serif;
+                    }
+                    }
+
+                    h1 { font-size: 38px; }
+                    h2 { font-size: 32px; }
+                    h3 { font-size: 28px; }
+                    p, td, th { font-size: 18px; }
+                    }
+
+                    table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 15px;
+                    font-size: 18px;
+                    }
+
+                    th {
+                    background: #007bff;
+                    color: black;
+                    padding: 12px;
+                    text-align: left;
+                    font-size: 18px;
+                    }
+
+                    td {
+                    padding: 10px;
+                    border-bottom: 1px solid #ddd;
+                    font-size: 18px;
+                    }
+
+                    tr:nth-child(even) {
+                    background: #f9f9f9;
+                    }
+
+                    tfoot td {
+                    font-weight: bold;
+                    background: #f1f1f1;
+                    font-size: 18px;
+                    }
+                </style>
+                <div class="page" style="padding: 15px; font-family: Arial, sans-serif; font-size: 25px;">
+
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <!--                        <div style="flex: 0 0 120px; margin-right: 15px;">-->
+                        <!--                            <img src="/web/binary/company_logo" alt="Logo"-->
+                        <!--                                 style="max-height: 150px; max-width: 150px; border-radius: 50%;"/>-->
+                        <!--                        </div>-->
+                        <!--                        <div style="flex-grow: 1; text-align: center; font-size: 28px;">-->
+                        <!--                            <h1 style="font-size: 36px; margin: 0; font-weight: 900; color: #2c3e50; text-transform: uppercase;">-->
+                        <!--                                SANTHWANA HOSPITAL-->
+                        <!--                            </h1>-->
+
+                        <!--                            <p style="margin: 3px 0; font-size: 20px; font-weight: 900; color: #2c3e50; text-transform: uppercase;">-->
+                        <!--                                N.C.C ROAD, AMBALAMUKKU, TRIVANDRUM-695005-->
+                        <!--                            </p>-->
+                        <!--                            <p style="margin: 3px 0; font-size: 20px; font-weight: 900; color: #2c3e50; text-transform: uppercase;">-->
+                        <!--                                PHONE: 0471-2432121, 4223131-->
+                        <!--                            </p>-->
+                        <!--                            <p style="margin: 3px 0; font-size: 20px; font-weight: 900; color: #2c3e50; text-transform: uppercase;">-->
+                        <!--                                EMAIL: INFO@SANTHWANAHOSPITAL.COM / WEBSITE: WWW.SANTHWANAHOSPITAL.COM-->
+                        <!--                            </p>-->
+                        <!--                            <p style="margin: 3px 0; font-size: 20px; font-weight: 900; color: #2c3e50; text-transform: uppercase;">-->
+                        <!--                                NABH PRE ACCREDITED HOSPITAL | ISO 9001-2015 CERTIFIED-->
+                        <!--                            </p>-->
+                        <!--                        </div>-->
+
+
+                        <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                        <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                        <!--                                </h2>-->
+
+                        <div style="flex: 0 0 60px; margin-right: 10px;">
+                            <img src="/web/binary/company_logo" alt="Logo"
+                                 style="max-height: 150px; max-width:150px; border-radius: 50%;"/>
+                        </div>
+
+
+                        <div style="flex-grow: 1; text-align: center;">
+                            <h1 style="font-size: 20px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                SANTHWANA HOSPITAL
+                            </h1>
+
+
+                            <p style="margin: 2px 0; font-size: 20px;  color: #2c3e50;">
+                                N.C.C Road,Ambalamukku,Trivandrum-695005
+                            </p>
+                            <p style="margin: 2px 0; font-size: 20px; color: #2c3e50;">
+                                Phone: 0471-2432121,Mob:9188429198
+                            </p>
+                            <p style="margin: 2px 0; font-size:20px; color: #2c3e50;">
+                                Email: santhwanatvpm@gmail.com
+                            </p>
+                            <p style="margin: 2px 0; font-size: 20px; color: #2c3e50;">
+                                NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr style="border: 1px solid #000; margin: 10px 0;"/>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <div style="flex: 1; text-align: left; font-weight: bold;font-size: 18px;">DEPARTMENT:
+                            <t t-esc="o.department.display_name"/>
+                        </div>
+                        <div style="flex: 1; text-align: center; font-weight: bold;font-size: 18px;">
+                            <t t-esc="o.mode_pay.upper()"/>
+                            BILL
+                        </div>
+                        <div style="flex: 1; text-align: right; font-weight: bold;font-size: 18px;">Bill No:
+                            <t t-esc="o.bill_number"/>
+                        </div>
+                    </div>
+
+                    <hr style="border: 1px solid #000; margin: 10px 0;"/>
+                    <div style="display: flex; justify-content: space-between; margin-top: 20px;  font-size: 18px;">
+                        <div>
+                            <p style="font-size: 18px;">
+                                <strong>UHID:</strong>
+                                <t t-esc="o.mrd_no.display_name"/>
+                            </p>
+                            <p>
+                                <p style="font-size: 18px;">
+                                    <strong>Patient Name:</strong>
+                                    <t t-esc="o.patient_name"/>
+                                    <span style="margin-left: 10px;">(
+                                        <t t-esc="str(o.age) + '/' + dict(o._fields['gender'].selection).get(o.gender, '')"/>
+                                        )
+                                    </span>
+                                </p>
+
+                            </p>
+                            <p style="font-size: 18px;">
+                                <strong>Doctor:</strong>
+                                <t t-esc="o.doctor.display_name"/>
+                                <t t-if="o.doctor and o.doctor.department_id">
+                                    (
+                                    <t t-esc="o.doctor.department_id.display_name"/>
+                                    )
+                                </t>
+                            </p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="font-size: 18px; ">
+                                <strong>Date &amp; Time:</strong>
+                                <t t-esc="o.bill_date"/>
+                            </p>
+                            <p style="font-size: 18px;">
+                                <strong>Mode of Payment:</strong>
+                                <strong>
+                                    <t t-if="o.payment_method_split">
+                                        <t t-set="modes" t-value="[]"/>
+                                        <t t-if="o.cash_amount &gt; 0" t-set="modes" t-value="modes + ['CASH']"/>
+                                        <t t-if="o.card_amount &gt; 0" t-set="modes" t-value="modes + ['CARD']"/>
+                                        <t t-if="o.upi_amount &gt; 0" t-set="modes" t-value="modes + ['UPI']"/>
+                                        <t t-esc="', '.join(modes)"/>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-esc="o.mode_pay.upper()"/>
+                                    </t>
+                                </strong>
+                            </p>
+                            <!--                            <p style="font-size: 18px;">-->
+                            <!--                                <strong>Mobile:</strong>-->
+                            <!--                                <t t-esc="o.mobile"/>-->
+                            <!--                            </p>-->
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <table style=" font-size: 18px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #000;">
+                                <th style="width: 5%;font-size: 18px;">Sl No</th>
+                                <th style="width: 40%;font-size: 18px;">Particulars</th>
+                                <th style="width: 20%;font-size: 18px;">Rate</th>
+                                <th style="width: 10%;font-size: 18px;">Qty</th>
+                                <th style="width: 15%;font-size: 18px;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="slno" t-value="0"/>
+                            <t t-foreach="o.general_bill_line_ids" t-as="line">
+                                <t t-set="slno" t-value="slno + 1"/>
+                                <tr>
+                                    <td style="font-size: 18px;">
+                                        <t t-esc="slno"/>
+                                    </td>
+                                    <td style="font-size: 18px;">
+                                        <t t-esc="line.particulars.name"/>
+                                    </td>
+                                    <td style="font-size: 18px;">
+                                        <t t-esc="line.rate"/>
+                                    </td>
+                                    <td style="font-size: 18px;">
+                                        <t t-esc="line.quantity"/>
+                                    </td>
+                                    <td style="font-size: 18px;">₹
+                                        <t t-esc="line.total_amt"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                        <tfoot style="border-top: 1px solid #000;">
+                            <tr style="background-color: #f1f1f1 !important;">
+                                <td colspan="3" style="border-top: 2px solid #000; background-color: #f1f1f1 !important;">
+                                    <p style="font-size: 22px; margin: 0;">
+                                        <strong>In Words:</strong>
+                                        <t t-esc="o.amount_in_words"/>
+                                    </p>
+                                </td>
+                                <td colspan="2" style="border-top: 2px solid #000; text-align: right; background-color: #f1f1f1 !important; padding-right: 15px;">
+                                    <div t-if="o.payment_method_split" style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">
+                                        <t t-if="o.cash_amount &gt; 0"> Cash: ₹ <t t-esc="o.cash_amount"/> </t>
+                                        <t t-if="o.card_amount &gt; 0"> | Card: ₹ <t t-esc="o.card_amount"/> </t>
+                                        <t t-if="o.upi_amount &gt; 0"> | UPI: ₹ <t t-esc="o.upi_amount"/> </t>
+                                    </div>
+                                    <div style="font-size: 28px; font-weight: bold;">
+                                        Total: ₹ <t t-esc="o.total_amount"/>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <!-- Footer -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; font-size: 18px;">
+                        <div style="text-align: left; font-weight: bold;">Prepared By :
+                            <t t-esc="o.staff_name.display_name"/>
+                        </div>
+                        <div style="text-align: center; font-weight: bold; flex-grow: 1;">Checked By</div>
+                        <div style="text-align: right; font-weight: bold;">Cashier</div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Paper Format -->
+    <record id="paperformat_a3_landscape" model="report.paperformat">
+        <field name="name">A3 Landscape</field>
+        <field name="default" eval="False"/>
+        <field name="format">A3</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">5</field>
+        <field name="margin_bottom">5</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">10</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <!-- Report Action -->
+    <report
+            id="report_xray_bill_report"
+            string="X RAY Bill"
+            model="xray.billing"
+            report_type="qweb-html"
+            name="homeo_doctor.report_xray_Bill"
+            file="homeo_doctor.report_xray_Bill"
+
+    />
+</odoo>

@@ -1,0 +1,44 @@
+<odoo>
+    <data>
+
+        <!-- Tree View -->
+        <record id="view_hospital_room_type_tree" model="ir.ui.view">
+            <field name="name">hospital.room.type.tree</field>
+            <field name="model">hospital.room.type</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="room_type"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View -->
+        <record id="view_hospital_room_type_form" model="ir.ui.view">
+            <field name="name">hospital.room.type.form</field>
+            <field name="model">hospital.room.type</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="room_type"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_hospital_room_type" model="ir.actions.act_window">
+            <field name="name">Hospital Room Type</field>
+            <field name="res_model">hospital.room.type</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_hospital_room_type_tree"/>
+        </record>
+
+        <!-- Menus -->
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_hospital_config" name="Configuration" parent="menu_lab_root" sequence="20"/>
+        <menuitem id="menu_hospital_room_type" name="Manage Room Type" parent="menu_hospital_config" sequence="3" action="action_hospital_room_type"/>
+
+    </data>
+</odoo>

@@ -1,0 +1,249 @@
+<odoo>
+    <data>
+        <record id="paperformat_a3_landscape" model="report.paperformat">
+            <field name="name">A3 Landscape</field>
+            <field name="default" eval="False"/>
+            <field name="format">A3</field>
+            <field name="orientation">Landscape</field>
+            <field name="margin_top">5</field>
+            <field name="margin_bottom">5</field>
+            <field name="margin_left">5</field>
+            <field name="margin_right">5</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">10</field>
+            <field name="dpi">90</field>
+        </record>
+
+
+        <report
+                id="report_patient_challan_action"
+                model="patient.reg"
+                string="Challan Print"
+                report_type="qweb-html"
+                file="homeo_doctor.report_patient_challan"
+                name="homeo_doctor.report_patient_challan"
+                paperformat="homeo_doctor.paperformat_a3_landscape"
+        />
+
+        <template id="report_patient_challan">
+            <t t-call="web.html_container">
+                <t t-if="not request.env.context.get('no_auto_print')">
+                    <script type="text/javascript">
+                        window.onload = function() {
+                        setTimeout(function() {
+                        window.print();
+                        }, 500);
+                        };
+                    </script>
+                </t>
+                <main>
+                    <t t-foreach="docs" t-as="doc">
+                        <style>
+                            @media print {
+                            @page {
+                            size: A3 landscape;
+                            margin: 5mm 5mm;
+                            }
+
+                            body, .page {
+                            font-size: 25px;
+                            }
+
+                            h1 { font-size: 32px; }
+                            h2 { font-size: 26px; }
+                            h3 { font-size: 22px; }
+                            th, td, p, strong {
+                            font-size: 18px;
+                            }
+                            }
+
+                            /* For screen preview (HTML view) */
+                            .page {
+                            font-size: 25px;
+                            }
+
+                            th {
+                            font-weight: bold;
+                            }
+                        </style>
+
+                        <div class="page"
+                             style="font-family: Arial, sans-serif; font-size: 25px; color: #2c3e50; padding: 10mm 15mm;">
+
+                            <div style="max-width: 1000px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">
+                                <div style="flex: 0 0 60px; margin-right: 10px;">
+                                    <img src="/web/binary/company_logo" alt="Logo"
+                                         style="max-height: 200px; max-width: 200px; border-radius: 50%;"/>
+                                </div>
+
+
+                                <div style="flex-grow: 1; text-align: center;">
+                                    <h1 style="font-size: 25px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                        SANTHWANA HOSPITAL
+                                    </h1>
+
+
+                                    <p style="margin: 2px 0; font-size: 25px; color: #555;">
+                                        N.C.C Road,Ambalamukku,Trivandrum-695005
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 25px; color: #555;">
+                                        Phone: 0471-2432121,Mob:9188429198
+                                    </p>
+                                    <p style="margin: 2px 0; font-size:25px; color: #555;">
+                                        Email: santhwanatvpm@gmail.com
+                                    </p>
+                                    <p style="margin: 2px 0; font-size: 25px; color: #555;">
+                                        NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                    </p>
+                                    <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                    <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                    <!--                                </h2>-->
+
+                                </div>
+                            </div>
+
+
+                            <hr style="border: 1px solid #000; margin: 10px 0;margin-top: 86px;"/>
+
+                            <!-- First Row: Department / Mode of Payment / Bill No -->
+                            <div style="display: flex; flex-wrap: wrap; font-size: 25px; margin-bottom: 10px;">
+                                <div style="flex: 1 0 33.33%; text-align: left;">
+                                    <strong style="font-size: 25px;">DEPARTMENT:</strong>
+                                    <strong style="font-size: 25px;">OUT PATIENT</strong>
+                                </div>
+                                <div style="flex: 1 0 33.33%; text-align: center;">
+                                    <strong style="font-size: 25px;">
+                                        <t t-if="not doc.payment_method_split">
+                                            <t t-esc="doc.register_mode_payment.upper()"/>
+                                        </t>
+                                    </strong>
+                                    <strong style="font-size: 25px;">BILL</strong>
+                                </div>
+                                <div style="flex: 1 0 33.33%; text-align: right;">
+                                    <strong style="font-size: 25px;">Bill No:</strong>
+                                    <span style="font-size: 25px;">
+                                        <t t-esc="doc.bill_number"/>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <hr style="border: 1px solid #000; margin: 10px 0;"/>
+                            <!-- Second Block: Patient Info (same column layout) -->
+                            <table style="width: 100%; border-collapse: collapse; font-size: 25px; margin-bottom: 10px;">
+                                <tbody>
+                                    <!-- Row 1 -->
+                                    <tr>
+                                        <td style="width: 33.33%; text-align: left; padding: 8px;font-size: 25px;">
+                                            <strong style="font-size: 25px;">UHID:</strong>
+                                            <t t-esc="doc.reference_no"/>
+                                        </td>
+                                        <td style="width: 33.33%; text-align: center; padding: 8px;font-size: 25px;">
+                                            <strong style="font-size: 25px;">Doctor:</strong>
+                                            <t t-esc="doc.doc_name.name"/>
+                                            <t t-if="not doc.walk_in_patient and doc.doc_name and doc.doc_name.department_id">
+                                                (<t t-esc="doc.doc_name.department_id.display_name"/>)
+                                            </t>
+                                        </td>
+                                        <td style="width: 33.33%; text-align: right; padding: 8px;font-size: 25px;">
+                                            <strong style="font-size: 25px;">Date:</strong>
+                                           <t t-esc="doc.time.strftime('%d/%m/%Y')"/>
+                                        </td>
+                                    </tr>
+                                    <!-- Row 2 -->
+                                    <tr>
+                                        <td style="width: 33.33%; text-align: left; padding: 8px;font-size: 25px;">
+                                            <strong style="font-size: 25px;">Patient:</strong>
+                                            <t t-esc="doc.patient_id"/>
+                                            (<t t-esc="doc.age"/>/<t t-esc="doc.gender.upper() if doc.gender else ''"/>)
+                                        </td>
+                                        <td style="width: 33.33%; text-align: center; padding: 8px;font-size: 25px;">
+                                            <strong style="font-size: 25px;"></strong>
+                                            <!--                                            <t t-esc="doc.phone_number"/>-->
+                                        </td>
+                                        <td style="width: 33.33%; text-align: right; padding: 8px;font-size: 25px;">
+                                            <strong style="font-size: 25px;">Mode of Payment:</strong>
+                                            <t t-if="doc.payment_method_split">
+                                                <t t-set="modes" t-value="[]"/>
+                                                <t t-if="doc.cash_amount &gt; 0" t-set="modes" t-value="modes + ['CASH']"/>
+                                                <t t-if="doc.card_amount &gt; 0" t-set="modes" t-value="modes + ['CARD']"/>
+                                                <t t-if="doc.upi_amount &gt; 0" t-set="modes" t-value="modes + ['UPI']"/>
+                                                <t t-esc="', '.join(modes)"/>
+                                            </t>
+                                            <t t-else="">
+                                                <t t-esc="doc.register_mode_payment.upper()"/>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 40px; font-size: 25px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid #000;font-size: 25px;">
+                                        <th style="padding: 8px; width: 10%; text-align: left; font-size: 25px;">SL No
+                                        </th>
+                                        <th style="padding: 8px; width: 60%; text-align: left;font-size: 25px;">
+                                            PARTICULARS
+                                        </th>
+                                        <th style="padding: 8px; width: 30%; text-align: right;font-size: 25px;">
+                                            AMOUNT(₹)
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="font-size: 25px;">
+                                        <td style="padding: 8px;font-size: 25px;">1</td>
+                                        <td style="padding: 8px;font-size: 25px;">Registration Fee</td>
+                                        <td style="padding: 8px; text-align: right;font-size: 25px;">
+                                            <t t-esc="doc.registration_fee.fee"/>
+                                        </td>
+                                    </tr>
+                                    <tr style="font-size: 25px;line-height: 81px;">
+                                        <td style="padding: 8px;font-size: 25px;">2</td>
+                                        <td style="padding: 8px;font-size: 25px;">Consultation Fee</td>
+                                        <td style="padding: 8px; text-align: right;font-size: 25px;">
+                                            <t t-esc="doc.consultation_fee"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tr style="margin-top: 15px;"/>
+                                <tfoot style="border-top: 1px solid #000;">
+                                    <tr t-if="doc.payment_method_split">
+                                        <td colspan="3" style="text-align: right; padding: 5px; font-size: 22px;">
+                                            <span t-if="doc.cash_amount &gt; 0">Cash = <t t-esc="doc.cash_amount"/>, </span>
+                                            <span t-if="doc.card_amount &gt; 0">Card = <t t-esc="doc.card_amount"/>, </span>
+                                            <span t-if="doc.upi_amount &gt; 0">UPI = <t t-esc="doc.upi_amount"/></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding: 8px; text-align: left;">
+                                            <strong style="font-size: 25px;">Amount in Words:</strong>
+                                            <span t-esc="doc.amount_to_text_indian()"
+                                                  style="text-transform: capitalize; font-size: 25px;"/>
+                                        </td>
+                                        <td style="padding: 8px; text-align: right;">
+                                            <strong style="font-size: 25px;">Total:</strong>
+                                            <strong style="font-size: 25px;">
+                                                <t t-esc="doc.register_total_amount"/>
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 51px; font-size: 25px;line-height: 97px;">
+                                <div style="text-align: left; font-weight: bold;">Prepared By :
+                                    <t t-esc="doc.register_staff_name.display_name"/>
+                                </div>
+                                <div style="text-align: center; font-weight: bold; flex-grow: 1;">Checked By</div>
+                                <div style="text-align: right; font-weight: bold;">Cashier</div>
+                            </div>
+                        </div>
+                    </t>
+                </main>
+            </t>
+        </template>
+
+    </data>
+</odoo>

@@ -1,0 +1,1539 @@
+.pay_button_container{
+    border: none !important;
+    box-shadow: none !important;
+    padding-top: 17px !important;
+    padding-left: 22px !important;
+}
+
+.pay_mode_style{
+    margin: 0px 5px 0px -18px !important;
+}
+.btn-large-custom {
+    font-size: 24px;
+    padding: 20px 40px;
+    border-radius: 8px;
+}
+.patient_reg_form .o_form_sheet_bg > .o_form_sheet {
+    max-width: 97% !important;
+}
+.o_form_view .o_form_sheet_bg .o_form_sheet {
+    max-width: 98% !important;  /* Almost full width but with small margins */
+    width: 100% !important;
+}
+.o_form_view .o_form_sheet_bg > .o_form_sheet {
+	min-width: 650px;
+	max-width:  2500px !important;
+
+}
+html .o_web_client > .o_action_manager {
+    color: #181717 !important;
+}
+/*
+.o_form_view .o_group {
+    padding: 0px 45px 0px 45px !important;
+}
+*/
+
+.ot_management div{
+    width: 35% !important;
+}
+
+.ot_management select{
+    width: 35% !important;
+}
+.insurance-form div{
+    width: 35% !important;
+}
+.insurance-form .o_field_char{
+    width: 35% !important;
+}
+.insurance-form .o_field_float{
+    width: 35% !important;
+}
+
+.insurance-form select{
+    width: 35% !important;
+}
+
+.patient_consulattaion_page .o_form_sheet_bg > .o_form_sheet {
+    max-width: 100% !important;
+}
+
+
+
+
+
+
+
+/* Custom CSS for Patient Registration Form */
+.o_patient_consultation_form {
+    background-color: #f9f9f9;
+}
+
+.o_consultation_header {
+    background-color: #f1f1f1;
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 15px;
+}
+
+.o_header_buttons {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.o_header_buttons .btn {
+    min-width: 120px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.o_patient_info_group .o_form_label {
+    font-weight: bold;
+    color: #555;
+}
+
+.o_vital_signs_group .o_form_label {
+    color: #007bff;
+}
+
+.o_reference_number {
+    color: #007bff;
+    font-size: 27px;
+}
+
+.o_consultation_date {
+    color: #000;
+    margin-left: 95% ;
+    font-weight: bold;
+}
+
+.o_patient_consultation_form .o_form_sheet {
+    max-width: 1200px;
+    margin: 0 auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.o_notebook .nav-tabs .nav-link.active {
+    background-color: #007bff;
+    color: white;
+}
+
+
+.o_form_view .paitent_details > tbody > tr > td.o_td_label {
+    min-width: 85px !important;
+}
+
+.o_form_view .paitent_details .o_td_label + td {
+    padding: 0px 2% 0px 8px !important;
+
+}
+
+table.o_group.o_inner_group.weight_temp.o_group_col_6 {
+    width: 20% !important;
+
+}
+
+table.o_group.o_inner_group.pressure_sugar.o_group_col_6 {
+    width: 60% !important;
+}
+
+.o_form_view .oe_inline, .o_form_view .oe_left, .o_form_view .oe_right, .o_form_view .o_group.o_inner_group.oe_subtotal_footer {
+    width: 10% !important;
+}
+.o_form_view.o_form_editable .oe_title {
+    max-width: 100%;
+}
+
+.pharmacy_invoice_form .o_form_sheet_bg > .o_form_sheet {
+    max-width: 100% !important;
+}
+
+.patient_consulattaion_page .o_list_view {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    .o_list_table > thead {
+        background-color: #34495E;
+
+        > tr > th {
+            color: white;
+            font-weight: 600;
+        }
+    }
+
+    .o_list_record_selector {
+        width: 40px;
+    }
+}
+
+ .patient_consulattaion_page .o_notebook {
+        margin-top: 20px;
+
+        .nav-tabs {
+            border-bottom: 2px solid #3498DB;
+
+            .nav-link {
+                border-radius: 6px 6px 0 0;
+
+                &.active {
+                    font-weight: 600;
+                    color: #2C3E50;
+                    border-color: #3498DB #3498DB #fff;
+                }
+            }
+        }
+
+        .tab-content {
+            padding-top: 20px;
+        }
+    }
+
+/* Add this to your module's /static/src/scss/styles.scss file */
+
+/* Professional styling for consultation details section */
+ .o_form_view .o_form_sheet {
+  .consultation_details_section {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+
+    /* Section title styling */
+    .o_horizontal_separator {
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: 600;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+
+    /* Row styling for better organization */
+    .o_group_col_6 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    /* Field label styling */
+    .o_form_label {
+      color: #34495e;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Field input styling */
+    .o_field_widget {
+      &.o_field_text textarea {
+        border: 1px solid #dde2e6;
+        border-radius: 4px;
+        padding: 10px;
+        min-height: 90px;
+        transition: all 0.2s ease;
+
+        &:focus {
+          border-color: #3498db;
+          box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+          outline: none;
+        }
+      }
+
+      /* Different styling for different field types */
+      &.clinical_findings textarea {
+        border-left: 4px solid #27ae60;
+      }
+
+      &.medical_history textarea {
+        border-left: 4px solid #e74c3c;
+      }
+
+      &.medication_field textarea {
+        border-left: 4px solid #f39c12;
+      }
+
+      &.examination_field textarea {
+        border-left: 4px solid #9b59b6;
+      }
+
+      &.diagnosis_field textarea,
+      &.diagnosis_field input {
+        border-left: 4px solid #3498db;
+        font-weight: 500;
+      }
+
+      &.date_field .o_datepicker {
+        .o_datepicker_input {
+          border-radius: 4px;
+          border: 1px solid #dde2e6;
+          height: 36px;
+        }
+      }
+    }
+
+    /* Field placeholder styling */
+    textarea::placeholder {
+      color: #95a5a6;
+      font-style: italic;
+      font-size: 13px;
+    }
+  }
+}
+
+/* Styling for the field focus states */
+.consultation_details_section {
+  .o_field_widget.focus {
+    background-color: #f1f7fb;
+    transition: background-color 0.3s ease;
+  }
+
+  /* Add subtle dividers between sections */
+  .o_group > tbody > tr:not(:last-child) {
+    border-bottom: 1px solid #ecf0f1;
+  }
+}
+
+/* Global font size override without modifying base style */
+html {
+    font-size: 16px !important;
+}
+
+/* Ensure consistent sizing across Odoo interface */
+.o_web_client {
+    font-size: 16px !important;
+}
+
+.o_content {
+    font-size: 16px !important;
+}
+
+/* Additional elements to ensure comprehensive coverage */
+.o_form_view,
+.o_list_view,
+.o_kanban_view,
+.o_form_field,
+.o_form_label,
+.dropdown-menu,
+.o_dropdown_menu {
+    font-size: 16px !important;
+}
+
+.o_form_view .o_vital_signs_group .o_field_widget {
+	width: 100%;
+	margin-left: -2px !important;
+}
+
+.o_form_view .o_group.o_inner_group > tbody > tr > td.o_td_label {
+	padding: 5px 15px 0px 9px !important;
+	min-width: 70px !important;
+}
+.o_form_view .o_group .o_td_label + td {
+	padding: 5px 36px 0px 8px !important;
+}
+
+/* Date hide*/
+.patient_consulattaion_page .oe_title {
+	margin-bottom: -40px !important;
+	display: none !important;
+}
+.reduced_height textarea {
+    height: 50px !important;
+}
+
+.btn {
+	font-size: 0.9rem !important;
+}
+.o_control_panel .o_cp_bottom_left > .o_cp_action_menus {
+	margin-right: -10% !important;
+}
+
+
+.o_form_view .o_form_sheet .consultation_details_section .o_form_label {
+
+      padding: 0px !important;
+  }
+
+.o_form_view .o_form_sheet .consultation_details_section .o_field_text{
+  width: 100% !important;       /* Full width */
+    min-height: 80px !important;  /* Minimum visible height */
+    max-height: 1000px !important;/* Very high to allow large content */
+    padding: 5px !important;
+    border: 2px solid #34495e !important;
+    overflow-y: auto !important;  /* Scrollbar if necessary */
+    resize: vertical !important;  /* User can resize if needed */
+    white-space: pre-wrap !important;
+}
+
+.o_form_view .o_form_sheet .consultation_details_section .o_datepicker_input{
+    border-width: 3px !important;
+    border-color: #34495e !important;
+    width: auto !important;
+}
+.o_form_view .o_form_sheet .medicine_course .o_input{
+    border-width: 1px !important;
+    border-color: #34495e !important;
+}
+
+.o_form_view .o_form_sheet .additional_info .o_input{
+    border-width: 1px !important;
+    border-color: #34495e !important;
+}
+.o_td_label .o_form_label {
+    white-space: nowrap;
+}
+
+.additional_info .o_field_widget .o_input_dropdown > input {
+	width: 150px !important;
+}
+
+.additional_info .btn:not(:disabled):not(.disabled) {
+	background-color: #34495e !important;
+	color: white !important;
+	margin-top: -4px !important;
+}
+
+
+.prescription .o_list_view th[data-name="product_id"],
+.prescription .o_list_view td[data-name="product_id"] {
+    width: 30% !important;
+}
+
+.prescription .o_list_view th[data-name="stock_in_hand"],
+.prescription .o_list_view td[data-name="stock_in_hand"] {
+    width: 10% !important;
+}
+.o_list_view .o_list_table .text-warning {
+	color: #000 !important;
+}
+.o_form_view .o_form_sheet_bg {
+    background: none !important; /* Remove default */
+    /*background-image: url('/homeo_doctor/static/src/img/background.jpg') !important; */
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+
+
+
+.pharmacy_description .o_form_sheet_bg > .o_form_sheet {
+	max-width: 93% !important;
+}
+
+.general_form .o_form_sheet_bg > .o_form_sheet {
+	max-width: 100% !important;
+}
+
+
+
+.dropdown-menu a[data-menu="documentation"],
+.dropdown-menu a[data-menu="support"],
+.dropdown-menu a[data-menu="shortcuts"],
+.dropdown-menu a[data-menu="settings"],
+.dropdown-menu a[data-menu="account"],
+.dropdown-menu .dropdown-divider {
+    display: none !important;
+}
+
+ .o_main_navbar .o_switch_company_menu > a .oe_topbar_name {
+	display: inline-block;
+	max-width: 250px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	vertical-align: top;
+	display: none !important;
+}
+
+.o_MessagingMenu {
+    display: none !important;
+}
+
+.o_mail_systray_item {
+    display: none !important;
+}
+
+a[data-menu-xmlid="mail.menu_root_discuss"] {
+    display: none !important;
+}
+
+/*a[data-menu-xmlid="hr.menu_hr_root"] {
+    display: none !important;
+}*/
+.o_menu_entry_lvl_1 span {
+    font-weight: bold !important;
+}
+#menu_lab_root {
+    font-weight: bold !important;
+}
+
+.o_main_navbar .o_menu_sections,
+.o_main_navbar .o_menu_systray span,
+.o_menu_brand {
+    font-weight: bold !important;
+}
+
+
+.o_menu_apps .dropdown-item {
+    font-weight: bold !important;
+}
+
+
+.o_menu_entry_lvl_1 span,
+.o_menu_entry_lvl_2 span,
+.o_menu_entry_lvl_3 span {
+    font-weight: bold !important;
+}
+
+.lab_form .o_form_sheet_bg > .o_form_sheet {
+	max-width: 100% !important;
+}
+
+.lab_department .o_list_table thead > tr > th:not(.o_list_record_selector).o_list_number_th {
+    text-align: center !important;
+}
+.lab_department .o_list_table .o_column_sortable:not(.o_handle_cell) {
+    text-align: center !important;
+}
+
+.lab_department .o_list_table tbody > tr > td:not(.o_list_record_selector):not(.o_handle_cell):not(.o_list_button) {
+    text-align: center !important;
+}
+.lab_resultant .o_form_sheet_bg > .o_form_sheet {
+	max-width: 100% !important;
+}
+
+
+.o_form_view .o_group_col_4 {
+    width: 100%;
+}
+.o_form_view .o_group_col_4 .o_field_widget {
+    margin-bottom: 10px;
+}
+.o_form_view .o_group_col_4 .o_field_label {
+    font-weight: bold;
+    color: #555;
+}
+
+
+
+.lab_form .oe_title h1 {
+    font-size: 22px;
+    margin-bottom: 16px;
+}
+.lab_form .form-section {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+.lab_form .form-group {
+    margin-bottom: 12px;
+}
+.lab_form .col-form-label {
+    color: #4c4c4c;
+	white-space: nowrap;
+}
+.lab_form .field-container {
+    padding: 2px;
+    margin-left: 14px;
+
+}
+.general_form .field-container {
+    padding: 2px;
+    margin-left: 14px;
+    width:25px !important;
+}
+
+.lab_form .o_notebook {
+    margin-top: 16px;
+}
+.lab_form .o_form_sheet {
+    max-width: 100%;
+    width: 100%;
+}
+
+.lab_doctor .o_form_sheet_bg > .o_form_sheet .row.left_colum, .lab_doctor .o_form_sheet_bg > .o_form_sheet .row.right_colum {
+    max-width: 50% !important;
+}
+
+
+
+
+.custom_notebook {
+    width: 60% !important;
+    margin-left : 25px !important;
+
+}
+
+.custom_notebook .o_list_view {
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+/* Make sure columns adapt to the narrower width */
+.custom_notebook .o_list_view thead th {
+    white-space: nowrap;
+}
+
+/* Ensure cell content doesn't cause horizontal scrolling */
+.custom_notebook .o_list_view td {
+    white-space: normal;
+}
+
+
+.left_colum{
+    margin-left: 10px;
+}
+.custom_notebook{
+    border-style: double;
+}
+
+
+.custom_general_notebook {
+    width: 60% !important;
+    margin-left : 25px !important;
+    border-style: double;
+
+}
+
+.custom_general_notebook .o_list_view {
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+/* Make sure columns adapt to the narrower width */
+.custom_general_notebook .o_list_view thead th {
+    white-space: nowrap;
+}
+
+/* Ensure cell content doesn't cause horizontal scrolling */
+.custom_general_notebook .o_list_view td {
+    white-space: normal;
+}
+
+
+
+/* Responsive Clinical Assessment Section */
+.consultation_details_section {
+    padding: 20px !important;
+    background-color: #f9f9f9 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    margin-bottom: 24px !important;
+}
+
+.consultation_details_section .clinical_assessment_grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 15px !important;
+}
+
+/* For tablets */
+@media (max-width: 1024px) {
+    .consultation_details_section .clinical_assessment_grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* For mobile */
+@media (max-width: 768px) {
+    .consultation_details_section .clinical_assessment_grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Field container styling - label and input in same line */
+.consultation_details_section .field_container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    margin-bottom: 0px !important;
+    flex:1 1 auto !important;
+    width: 95% !important;
+}
+
+/* Label styling - fixed width for alignment */
+.consultation_details_section .field_container label {
+    color: #34495e !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    width: 260px !important;
+    min-width: 140px !important;
+    flex-shrink: 0 !important;
+    margin-right: 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Field styling - grow to fill remaining space */
+.consultation_details_section .field_container .o_field_widget {
+    flex-grow: 1 !important;
+    width: auto !important;
+}
+
+/* Style for the group title */
+.consultation_details_section .o_horizontal_separator {
+    grid-column: 1 / -1 !important;
+    color: #2c3e50 !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid #3498db !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 16px !important;
+}
+
+/* Field styling */
+.consultation_details_section .o_field_widget.o_field_text textarea {
+    width: 100% !important;
+    border: 1px solid #dde2e6 !important;
+    border-radius: 4px !important;
+    padding: 10px !important;
+    min-height: 50px !important;
+    transition: all 0.2s ease !important;
+}
+
+.consultation_details_section .o_field_widget.o_field_text textarea:focus {
+    border-color: #3498db !important;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15) !important;
+    outline: none !important;
+}
+
+/* Different styling for different field types */
+.consultation_details_section .clinical_findings textarea {
+    border-left: 4px solid #27ae60 !important;
+
+}
+
+.consultation_details_section .medical_history textarea {
+    border-left: 4px solid #e74c3c !important;
+}
+
+.consultation_details_section .medication_field textarea {
+    border-left: 4px solid #f39c12 !important;
+}
+
+.consultation_details_section .examination_field textarea {
+    border-left: 4px solid #9b59b6 !important;
+}
+
+.consultation_details_section .diagnosis_field textarea {
+    border-left: 4px solid #3498db !important;
+    font-weight: 500 !important;
+}
+
+.consultation_details_section .date_field .o_datepicker .o_datepicker_input {
+    width: 100% !important;
+    border-radius: 4px !important;
+    border: 1px solid #dde2e6 !important;
+    border-left: 4px solid #3498db !important;
+    height: 36px !important;
+}
+
+/* Handle responsiveness for label-field pairs */
+@media (max-width: 1924px) {
+    .consultation_details_section .field_container {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+
+    .consultation_details_section .field_container label {
+        width: 100% !important;
+        margin-bottom: 5px !important;
+    }
+
+    .consultation_details_section .field_container .o_field_widget {
+
+    }
+}
+
+.o_main_navbar > ul > li > a, .o_main_navbar > ul > li > a:hover, .o_main_navbar > ul > li > a:focus {
+	font-size: 16px !important;
+}
+
+.o_menu_brand {
+    display: none !important;
+}
+
+.column_one{
+    margin-left: 30px;
+}
+
+
+.custom_admission_row{
+	border-color: black !important;
+	border-style: groove !important;
+    white-space: nowrap !important;
+}
+.custom_register_payment_row{
+	border-color: black !important;
+	border-style: groove !important;
+    white-space: nowrap !important;
+}
+/*.admission_form{
+
+	border-color: black !important;
+	border-style: groove !important;
+}/*
+/*
+.sub_details{
+    padding-left: 10px !important;
+	border-color: black !important;
+	border-style: groove !important;
+} */
+.custom_lab_row {
+    display: flex !important;
+	margin-left: 1%;
+	width: 35% !important;
+}
+
+
+.narrow_tax_column {
+    width: 80px !important;
+}
+.o_form_editable .o_form_view .o_field_widget {
+  margin-bottom: 5px;
+  border: solid 2px !important;
+}
+
+
+
+
+
+
+.consultation_details_section .clinical_assessment_grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 15px !important;
+}
+
+/* Update responsive breakpoints for 4 columns */
+@media (max-width: 900px) {
+    .consultation_details_section .clinical_assessment_grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .consultation_details_section .clinical_assessment_grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+
+
+/* Vital Signs in Single Line with Title */
+.vital_signs_header_container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: -30px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.vital_signs_title {
+    font-size: 19px;
+    font-weight: 600;
+    color: #34495e;
+    white-space: nowrap;
+    margin: 0 15px 6px 0;
+    min-width: 90px;
+}
+
+.vitals_inline_container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    padding-bottom: 5px; /* For scrollbar space */
+    gap: 7%;
+}
+
+.vital_field_container {
+    display: flex;
+    min-width: 100px;
+    margin-right: 5px;
+    border-right: 3px solid;
+}
+
+/* New style for horizontal alignment */
+.vital_field_row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    margin-right: 11px;
+}
+
+/* Blood pressure special layout */
+.vital_field_container.bp_container {
+    min-width: 180px;
+}
+
+.bp_inputs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.bp_inputs span {
+    font-size: 0.8em;
+    color: #666;
+}
+
+/* Ensure inputs have consistent width */
+.vital_field_container .small_input {
+    width: 100% !important;
+    min-width: 60px;
+    max-width: 80px;
+}
+
+.bp_inputs .small_input {
+    width: 55px !important;
+    min-width: 40px;
+}
+
+/* Label styling */
+.vital_field_container .o_form_label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #34495e;
+    white-space: nowrap;
+    margin-bottom: 0; /* Remove bottom margin */
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .vital_signs_header_container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .vital_signs_title {
+        margin-bottom: 10px;
+    }
+
+    .vitals_inline_container {
+        width: 100%;
+    }
+
+    /* Maintain horizontal alignment on small screens */
+    .vital_field_row {
+        flex-direction: row;
+    }
+}
+
+.o_form_view .o_form_sheet .o_vital_signs_group:after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: #3498db;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+
+.patient_consulattaion_page .o_group {
+	margin: 0px 0 !important;
+}
+
+.prescription {
+    width:60% ! important;
+}
+
+.prescription .o_list_table .o_column_sortable {
+	text-align: center !important;
+}
+
+
+/* Prescription column styling */
+.prescription {
+    width: 100% !important;
+}
+
+.prescription .o_list_view th[data-name="product_id"],
+.prescription .o_list_view td[data-name="product_id"] {
+    width: 30% !important;
+}
+
+.prescription .o_list_view th[data-name="stock_in_hand"],
+.prescription .o_list_view td[data-name="stock_in_hand"] {
+    width: 10% !important;
+}
+
+.prescription .o_list_table .o_column_sortable {
+    text-align: center !important;
+}
+
+.prescription_additional_section {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.prescription_column {
+    width: 60%;
+    padding-right: 15px;
+}
+
+.additional_column {
+    width: 40%;
+}
+
+/* Additional info styling */
+.additional_info_group {
+    height: 100%;
+}
+
+.additional_row {
+    display: flex;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* Field container styling for additional info */
+.additional_info_group .field_container {
+    width: 50%;
+    padding: 0 5px;
+    display: flex;
+    flex-direction: column;
+}
+
+.additional_info_group .field_container label {
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+.additional_info_group .remark_container {
+    width: 100%;
+}
+
+/* Specific adjustments */
+.medicine_course_container field {
+    width: 70px;
+}
+
+.button_container .button_wrapper {
+    margin-top: 5px;
+}
+
+.button_container button {
+    background-color: #34495e !important;
+    color: white !important;
+}
+
+/* Input styling */
+.o_form_view .o_form_sheet .additional_info_group input,
+.o_form_view .o_form_sheet .additional_info_group textarea {
+    border-width: 1px !important;
+    border-color: #34495e !important;
+}
+
+/* Prescription styling (unchanged) */
+.prescription {
+    width: 100% !important;
+}
+
+.prescription .o_list_view th[data-name="product_id"],
+.prescription .o_list_view td[data-name="product_id"] {
+    width: 30% !important;
+}
+
+.prescription .o_list_view th[data-name="stock_in_hand"],
+.prescription .o_list_view td[data-name="stock_in_hand"] {
+    width: 10% !important;
+}
+
+.prescription .o_list_table .o_column_sortable {
+    text-align: center !important;
+}
+
+.field_container.medicine_course_container {
+	width: 36% !important;
+}
+
+
+
+.patient_consulattaion_page .paitent_details .o_field_widget {
+	width: 115px !important;
+}
+
+
+.custom_general_notebook .o_list_view th[data-name="tax"],
+.custom_general_notebook .o_list_view td[data-name="tax"] {
+    width: 10% !important;
+}
+
+.pharmacy-card {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 16px;
+    background: #fefefe;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-top: 10px;
+}
+.pharmacy-card .o_form_label {
+    font-weight: bold;
+}
+
+.second_row_general{
+    margin-left: 0.5% !important;
+   /* width: 56%; */
+}
+
+
+.o_input {
+	border: 1px solid #1d4797 !important;
+
+}
+
+.second_row_admission{
+    margin-left: 0.5% !important;
+    width: 85%;
+}
+
+.second_row_register {
+	width: 87%;
+	margin-left: .5% !important;
+}
+
+.Register_details {
+    border-bottom: solid 2px #007bff;
+}
+
+.o_list_view .o_list_table thead {
+    color: #fff !important;
+    background-color: #387298 !important;
+}
+
+.o_main_navbar {
+    background-color: #387298 !important;
+
+}
+.o_main_navbar > ul > li > a:hover, .o_main_navbar > ul > li > label:hover {
+    background-color: #2e8bc8 !important;
+}
+
+
+.btn:not(:disabled):not(.disabled) {
+    background-color: #387298 !important;
+    color: white !important;
+}
+
+.o_data_cell.o_field_cell {
+    border-right:1px solid;
+}
+
+/* Hide the chevron icons */
+.o_pager_previous:before,
+.o_pager_next:before {
+    display: none !important;
+}
+
+/* Replace with text */
+.o_pager_previous:after {
+    content: "Previous";
+}
+
+.o_pager_next:after {
+    content: "Next";
+}
+
+/* Add < > symbols */
+.o_pager_counter:before {
+    content: " < ";
+    margin-left: 5px;
+}
+
+.o_pager_counter:after {
+    content: " > ";
+    margin-right: 5px;
+}
+
+/* Hide the slash and limit */
+.o_pager_counter > span:not(.o_pager_value) {
+    display: none;
+}
+
+/* Adjust layout */
+.o_pager {
+    display: flex;
+    align-items: center;
+}
+
+/* Make buttons wider to fit text */
+.o_pager .btn {
+    min-width: 80px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.o_main_navbar > ul > li > a, .o_main_navbar > ul > li > a:hover, .o_main_navbar > ul > li > a:focus {
+	border-right: 1px solid !important;
+}
+
+.row.pay_button_advance {
+	justify-content: center;
+	width: 83%;
+}
+
+.nav-tabs .nav-link {
+
+background-color: #387298;
+color: white ;
+}
+
+
+.sub_details .col.px-1 {
+ border: 1px solid
+}
+.admission_form .col.px-1{
+ border: 1px solid
+}
+.genaral_billing_class .col.px-1{
+ border: 1px solid
+ }
+ .row.mx-n1.second_row_general .col-md-3.px-1{
+   border: 1px solid
+
+}
+
+.row .col-md-12 {
+    border: 1px solid;
+    height: 25%;
+}
+.row {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+    margin-right: -25px;
+    margin-left: 25px;
+}
+.col-md-12{
+    position: relative;
+    width: 100%;
+    padding-right: 5px;
+    padding-left: 16px;
+}
+
+.lab_billing_class .col-md-1,.col-md-2{
+ border: 1px solid;
+}
+
+.custom_lab_row .row.left_colum .col-md-6, .custom_lab_row .row.right_colum .col-md-6{
+        max-width: 100%;
+        border: 1px solid;
+}
+
+.o_form_label.col-md-5.col-form-label.py-0.small.text-nowrap.reason {
+	font-size: 14px !important;
+}
+
+
+.o_purchase_dashboard {
+	display: none;
+}
+
+
+
+.col.px-1 {
+    box-shadow: -1px 1px 5px #53aade;
+    /* box-shadow: 0 5px 7px rgba(189, 55, 55, 0.25), 0 10px 10px rgba(57, 55, 135, 0.22); */
+}
+/* .col.px-1:hover {
+    box-shadow: -1px 1px 5px #53aade;
+
+} */
+
+.row.mx-n1 {
+    margin-bottom: 12px;
+}
+
+.row .col-md-12 {
+
+    margin: 5px 2px 1px;
+    box-shadow: -1px 1px 5px #53aade;
+}
+.col-md-2 {
+    box-shadow: -1px 1px 5px #53aade;
+}
+
+.row.mx-n1.second_row_general .col-md-3.px-1 {
+
+    box-shadow: -1px 1px 5px #53aade;
+}
+
+
+.o_input {
+
+    box-shadow: -1px 1px 1px #53aade;
+}
+
+
+
+
+
+.custom_register_payment_row > div {
+
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.form-group.row.mb-1 {
+    border-bottom: 1px solid;
+    border: 1px solid;
+    margin: 11px;
+    box-shadow: -1px 1px 1px #53aade;
+}
+
+
+.sub_details .col.px-1 {
+
+    border-radius: 12px;
+}
+
+.form-group.row.mb-1 {
+
+    border-radius: 12px;
+}
+
+.admission_form .col.px-1 {
+
+    border-radius: 12px;
+}
+
+.genaral_billing_class .col.px-1 {
+
+    border-radius: 12px;
+}
+
+.row.mx-n1.second_row_general .col-md-3.px-1 {
+
+    border-radius: 12px;
+}
+
+.row .col-md-12 {
+
+    border-radius: 12px;
+}
+
+.col-md-2 {
+
+    border-radius: 12px;
+    margin-top: 9px;
+}
+
+
+.lab_billing_class .col-md-1, .col-md-2 {
+    border: 1px solid;
+    border-radius: 12px;
+    box-shadow: -1px 1px 5px #53aade;
+    margin-top: 9px;
+}
+
+.custom_lab_row > div > div {
+    border-radius: 12px;
+    box-shadow: -1px 1px 5px #53aade;
+    height: auto;
+    min-height: 40px;
+    margin-bottom: 10px;
+}
+
+
+
+.custom_register_payment_row .row .col-md-6.left_column {
+    margin-left: -17px !important;
+}
+
+.custom_admission_row .row .col-md-6.left_column {
+    margin-left: -26px;
+}
+
+.clinical_assessment_grid {
+	border: 2px solid;
+	padding-left: 8%;
+	padding-right: 1%;
+}
+
+.additional_column_second {
+	border: 1px solid;
+}
+
+.additional_row > div {
+	border: 1px solid;
+}
+
+
+.row.custom_lab_result > div {
+	border: 1px solid;
+	border-radius: 12px;
+	box-shadow: -1px 1px 5px #53aade;
+}
+
+.custom_lab_result {
+	margin-bottom: 13px;
+	margin-left: -1%;
+}
+
+.custom_lab_result {
+	margin-bottom: 13px;
+	margin-left: 0.5%;
+
+}
+
+.col-md-12.custom_lab_result_second {
+	border: 2px solid black;
+	padding: 18px;
+	border-radius: 13px;
+	box-shadow: -1px 1px 5px #53aade;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* Custom Billing Notebook Compact Styling */
+.billing_notebook_compact {
+    margin: 0;
+    padding: 0;
+}
+
+.billing_notebook_compact .tab-content {
+    padding: 15px 10px;
+}
+
+/* Custom Billing Group Styling */
+.billing_group_compact {
+    margin-bottom: 15px;
+}
+
+.billing_group_compact > .o_group_text {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 3px;
+}
+
+/* Custom Billing Separator Styling */
+.billing_separator_compact {
+    margin: 8px 0 5px 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+/* Custom Billing List View Styling */
+.billing_list_compact {
+    margin-bottom: 10px;
+}
+
+.billing_list_compact .o_list_table {
+    margin-bottom: 0;
+}
+
+.billing_list_compact .o_list_table thead th {
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background-color: #387298;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.billing_list_compact .o_list_table tbody td {
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.billing_list_compact .o_list_table tbody tr:hover {
+    background-color: #387298;
+}
+
+/* Status Color Coding for Billing Lists */
+.billing_list_compact .o_list_table tbody tr.text-success {
+    background-color: #d4edda !important;
+}
+
+.billing_list_compact .o_list_table tbody tr.text-danger {
+    background-color: #f8d7da !important;
+}
+
+/* Responsive adjustments for Billing Notebook */
+@media (max-width: 768px) {
+    .billing_notebook_compact .row .col-md-6 {
+        margin-bottom: 20px;
+    }
+    
+    .billing_list_compact .o_list_table thead th,
+    .billing_list_compact .o_list_table tbody td {
+        padding: 3px 5px;
+        font-size: 11px;
+    }
+}
+
+/* Remove excessive margins in Billing Notebook */
+.billing_notebook_compact .o_field_widget {
+    margin-bottom: 8px;
+}
+
+.billing_notebook_compact .o_inner_group {
+    margin-bottom: 10px;
+}
+
+/* Compact field labels in Billing Notebook */
+.billing_notebook_compact .o_field_widget label {
+    margin-bottom: 2px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+
+.o_group.o_inner_group.billing_group_compact {
+	border: 1px solid;
+}
+
+
+a[href="/web/database/manager"],
+a[href*="odoo.com"] {
+    display: none !important;
+}
+.o_list_view.prescription-tree-big-font .o_data_cell,
+.o_list_view.prescription-tree-big-font .o_field_cell,
+.o_list_view.prescription-tree-big-font td,
+.o_list_view.prescription-tree-big-font th,
+.o_list_view.prescription-tree-big-font input,
+.o_list_view.prescription-tree-big-font select,
+.o_list_view.prescription-tree-big-font span {
+    font-size: 18px !important;
+}
+
+.o_list_view .wide-column {
+    min-width: 400px !important;
+    width: 400px !important;
+}
+
+
+.big-checkbox input[type="checkbox"] {
+    transform: scale(1.5);   /* Increase size */
+    margin-right: 5px;
+}

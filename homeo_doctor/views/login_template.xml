@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Extend login template -->
+    <template id="login_with_captcha" inherit_id="web.login" name="Login with Captcha">
+
+        <!-- Insert reCAPTCHA after Password field -->
+        <xpath expr="//input[@name='password']/.." position="after">
+            <div class="form-group captcha-wrapper text-center mt-3">
+                <div class="g-recaptcha" data-sitekey="6LctbcorAAAAAB6LnHT76AJe5dD-giFwWTjWoZwe"></div>
+            </div>
+        </xpath>
+
+    </template>
+
+    <!-- Load JS in frontend assets -->
+    <template id="assets_frontend" inherit_id="web.assets_frontend" name="Captcha Assets">
+        <xpath expr="." position="inside">
+            <script src="https://www.google.com/recaptcha/api.js" async="async" defer="defer"/>
+            <style>
+                .captcha-wrapper {
+                    max-width: 100%;
+                    margin: 10px auto 18px;
+                }
+                .captcha-wrapper .g-recaptcha {
+                    transform: scale(0.85);
+                    transform-origin: 0 0;
+                }
+            </style>
+        </xpath>
+    </template>
+</odoo>

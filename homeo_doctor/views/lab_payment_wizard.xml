@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_lab_payment_wizard_form" model="ir.ui.view">
+        <field name="name">lab.payment.wizard.form</field>
+        <field name="model">lab.payment</field>
+        <field name="arch" type="xml">
+            <form string="Appointment Payment">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="patient_id" invisible="1"/>
+                            <field name="patient_name"/>
+                            <field name="pay_mode"/>
+                            <!--                            <field name="total_fee" widget="monetary"/>-->
+                        </group>
+                        <group>
+
+                            <field name="total_amount"/>
+                            <field name="amount_paid" attrs="{'invisible': [('pay_mode', '!=', 'cash')]}"/>
+                            <field name="balance" attrs="{'invisible': [('pay_mode', '!=', 'cash')]}"/>
+                            <!--                            <field name="payment_reference" attrs="{'invisible': [('payment_method', '=', 'cash')], 'required': [('payment_method', '!=', 'cash')]}"/>-->
+                        </group>
+                    </group>
+                    <!--                    <notebook>-->
+                    <!--                        <page string="Doctors &amp; Fees">-->
+                    <!--                            <field name="doctor_ids" widget="many2many_tags"/>-->
+                    <!--                            <field name="consultation_fee_ids">-->
+                    <!--                                <tree editable="bottom">-->
+                    <!--                                    <field name="doctor_id"/>-->
+                    <!--                                    <field name="fee_amount" sum="Total"/>-->
+                    <!--                                </tree>-->
+                    <!--                            </field>-->
+                    <!--                        </page>-->
+                    <!--                    </notebook>-->
+                    <!--                </sheet>-->
+                    <footer>
+                        <button name="action_confirm_payment" string="Confirm Payment" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_lab_payment_wizard" model="ir.actions.act_window">
+        <field name="name">Lab Payment</field>
+        <field name="res_model">lab.payment</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_lab_payment_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

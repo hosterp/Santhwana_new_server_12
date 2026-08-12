@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record id="view_casualty_reg_form" model="ir.ui.view">
+            <field name="name">casualty.registration.form</field>
+            <field name="model">casualty.reg</field>
+            <field name="arch" type="xml">
+                <form string="Casualty Registration">
+                    <header>
+                        <button string="Admit Patient" type="object" name="action_admit_patient"
+                                class="oe_highlight"/>
+                        <button string="Move to Pharmacy" type="object" name="action_move_to_pharmacy"
+                                class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        <group col="3">
+                            <group>
+                                <field name="casualty_no" readonly="1" invisible="1"/>
+                                <field name="user_ide" string="UHID"/>
+                                <field name="date"/>
+                                <field name="patient_id"/>
+                                <field name="age"/>
+                                <field name="gender"/>
+
+                            </group>
+                            <group>
+                                <field name="vssc_boolean"/>
+                                <field name="id_proof" attrs="{'invisible': [('vssc_boolean', '=', False)]}"/>
+                                <field name="vssc_id" attrs="{'invisible': [('vssc_boolean', '=', False)]}"/>
+                                <field name="phone_number"/>
+                                <field name="email"/>
+                                <field name="address"/>
+                                <!--                                <field name="department_id"/>-->
+                            </group>
+                            <group>
+
+                                <field name="pin_code"/>
+                                <field name="doctor_id"/>
+                                <field name="doc_name" invisible="1"/>
+                                <field name="registration_fee"/>
+                            </group>
+                            <field name="remark"/>
+                        </group>
+
+                        <button string="Fill Prescription" type="object" name="action_fill_prescription"
+                                class="oe_highlight"/>
+                        <field name="prescription_boolean" invisible="1"/>
+                        <notebook>
+                            <page attrs="{'invisible': [('prescription_boolean', '=', False)]}">
+                                <field name="prescription_line_ids">
+                                    <tree editable="1">
+                                        <field name="product_id"/>
+                                        <field name="morn"/>
+                                        <field name="noon"/>
+                                        <field name="night"/>
+                                        <field name="per_ped" string="Per Med" invisible="1"/>
+                                        <field name="total_med" string="Total Dosage" invisible="1"/>
+                                    </tree>
+
+                                </field>
+                            </page>
+                        </notebook>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="seq_casualty_reg" model="ir.sequence">
+            <field name="name">Casualty Registration</field>
+            <field name="code">casualty.reg</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <record id="view_casualty_reg_tree" model="ir.ui.view">
+            <field name="name">casualty.registration.tree</field>
+            <field name="model">casualty.reg</field>
+            <field name="arch" type="xml">
+                <tree string="Casualty Registration">
+                    <field name="casualty_no"/>
+                    <field name="patient_id"/>
+                    <field name="age"/>
+                    <field name="phone_number"/>
+                    <field name="address"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_prescription_entry_form" model="ir.ui.view">
+            <field name="name">prescription.entry.form</field>
+            <field name="model">prescription.casualty.entry.lines</field>
+            <field name="arch" type="xml">
+                <form string="Prescription Entry">
+                    <notebook>
+                        <page string="Prescription Details">
+                            <group>
+                                <field name="product_id"/>
+                                <field name="morn"/>
+                                <field name="noon"/>
+                                <field name="night"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_prescription_entry_tree" model="ir.ui.view">
+            <field name="name">prescription.entry.tree</field>
+            <field name="model">prescription.casualty.entry.lines</field>
+            <field name="arch" type="xml">
+                <tree string="Prescription Entries">
+                    <field name="product_id"/>
+                    <field name="morn"/>
+                    <field name="noon"/>
+                    <field name="night"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="prescription_entry_action" model="ir.actions.act_window">
+            <field name="name">Prescription Entry</field>
+            <field name="res_model">prescription.casualty.entry.lines</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_prescription_entry_tree"/>
+            <field name="target">current</field>
+            <field name="context">{'default_prescription_line_id': active_id}</field>
+        </record>
+
+        <record id="casualty_reg_action" model="ir.actions.act_window">
+            <field name="name">Casualty Registration</field>
+            <field name="res_model">casualty.reg</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+<!--        <menuitem id="menu_casualty_reg" name="Casualty Registration" parent="menu_my_patient_template_root"-->
+<!--                  action="casualty_reg_action"/>-->
+    </data>
+</openerp>

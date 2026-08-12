@@ -1,0 +1,12 @@
+<odoo>
+  <record id="view_hr_employee_kanban_group_by_department" model="ir.ui.view">
+    <field name="name">hr.employee.kanban.group</field>
+    <field name="model">hr.employee</field>
+    <field name="inherit_id" ref="hr.hr_kanban_view_employees"/>
+    <field name="arch" type="xml">
+      <xpath expr="//kanban" position="attributes">
+        <attribute name="default_group_by">department_id</attribute>
+      </xpath>
+    </field>
+  </record>
+</odoo>

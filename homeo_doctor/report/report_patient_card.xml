@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <!--    <record id="paperformat_patient_card" model="report.paperformat">-->
+    <!--        <field name="name">Patient Card Minimal</field>-->
+    <!--        <field name="default" eval="False"/>-->
+    <!--        <field name="format">Custom</field>-->
+    <!--        <field name="orientation">Portrait</field>-->
+    <!--        <field name="margin_top">2</field>-->
+    <!--        <field name="margin_bottom">5</field> &lt;!&ndash; reduce from 50 to 5 &ndash;&gt;-->
+    <!--        <field name="margin_left">2</field>-->
+    <!--        <field name="margin_right">2</field>-->
+    <!--        <field name="header_line" eval="False"/>-->
+    <!--        <field name="header_spacing">0</field>-->
+    <!--        <field name="dpi">90</field>-->
+    <!--    </record>-->
+
+
+    <record id="report_patient_card" model="ir.actions.report">
+        <field name="name">Patient Card</field>
+        <field name="model">patient.reg</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">homeo_doctor.patient_card_template</field>
+        <field name="report_file">homeo_doctor.patient_card_template</field>
+        <field name="binding_model_id" ref="model_patient_reg"/>
+        <field name="binding_type">report</field>
+        <!--        <field name="paperformat_id" ref="homeo_doctor.paperformat_patient_card"/>-->
+        <field name="print_report_name">'Patient_Card_%s' % (object.reference_no)</field>
+    </record>
+
+
+    <template id="patient_card_template">
+        <t t-call="web.html_container">
+
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&amp;display=swap');
+                .patient-card * {
+                color: #000 !important;
+                font-family: 'Roboto', sans-serif !important;
+                font-size: 16pt;
+                font-weight: 400;
+                line-height: 1.5;
+                }
+                }
+                .patient-card .cards-container {
+                display: flex;
+                width: 100%;
+                gap: 5mm; /* space between left and right card */
+                }
+                .patient-card .card {
+                flex: 1;
+                box-sizing: border-box;
+                height: 35mm;
+                }
+                body.o_in_iframe.container-fluid {
+                padding: 0 !important;
+                margin: 0 !important;
+                }
+            </style>
+
+            <div class="row patient-card" style="width: 300mm; overflow: hidden; margin:0; padding:0;">
+                <div class="cards-container">
+
+                    <!-- Left Card -->
+                    <t t-set="patient_doc" t-value="docs[0]"/>
+                    <div class="card" style="float: left; width: 50%; box-sizing: border-box; padding-left:25mm;">
+                        <p style="margin:0;">
+                            <t t-esc="patient_doc.create_date.strftime('%d-%m-%Y %I:%M %p')"/>
+                            <t t-esc="patient_doc.reference_no"/>
+                        </p>
+                        <p style="margin:0;">
+                            <t t-esc="patient_doc.patient_id"/>
+                            <t t-esc="patient_doc.age"/>
+                            <t t-esc="patient_doc.gender"/>
+                        </p>
+                        <p style="margin:0;">
+                            <t t-esc="patient_doc.address"/>
+                            <t t-esc="patient_doc.phone_number"/>
+                        </p>
+                        <p style="margin:0;">
+                            <t t-esc="patient_doc.doc_name.display_name"/>
+                        </p>
+                    </div>
+
+                    <!-- Right Card (same data as left) -->
+                    <div class="card" style="float: left; width: 50%; box-sizing: border-box; padding-left:35mm;">
+                        <p style="margin:0;">
+                            <t t-esc="patient_doc.create_date.strftime('%d-%m-%Y %I:%M %p')"/>
+                            <t t-esc="patient_doc.reference_no"/>
+                        </p>
+                        <p style="margin:0;">
+                            <t t-esc="patient_doc.patient_id"/>
+                            <t t-esc="patient_doc.age"/>
+                            <t t-esc="patient_doc.gender"/>
+                        </p>
+                        <p style="margin:0;">
+                            <t t-esc="patient_doc.address"/>
+                            <t t-esc="patient_doc.phone_number"/>
+                        </p>
+                        <p style="margin:0;">
+                            <t t-esc="patient_doc.doc_name.display_name"/>
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </t>
+    </template>
+
+
+</odoo>

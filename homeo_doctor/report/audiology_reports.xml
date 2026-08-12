@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <report
+        id="action_report_audiology_invoice"
+        string="Audiology Therapy Invoice"
+        model="audiology.ref"
+        report_type="qweb-pdf"
+        name="homeo_doctor.report_audiology_invoice"
+        file="homeo_doctor.report_audiology_invoice"
+    />
+</odoo>

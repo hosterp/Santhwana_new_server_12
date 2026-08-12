@@ -1,0 +1,51 @@
+<odoo>
+    <data>
+        <!-- Zero Stock Report Line Tree View -->
+        <record id="view_zero_stock_report_line_tree" model="ir.ui.view">
+            <field name="name">zero.stock.report.line.tree</field>
+            <field name="model">zero.stock.report.line</field>
+            <field name="arch" type="xml">
+                <tree string="Zero Stock Report" create="false" edit="false" delete="false">
+                    <field name="date" string="Purchase Date"/>
+                    <field name="zero_stock_date" string="Zero Stock Date"/>
+                    <field name="category_id" string="Category"/>
+                    <field name="product_id" string="Medicine Name"/>
+                    <field name="batch" string="Batch No"/>
+                    <field name="current_stock" string="Current Stock"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Zero Stock Report Line Search View -->
+        <record id="view_zero_stock_report_line_search" model="ir.ui.view">
+            <field name="name">zero.stock.report.line.search</field>
+            <field name="model">zero.stock.report.line</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="product_id" string="Medicine Name"/>
+                    <field name="category_id" string="Category"/>
+                    <field name="batch" string="Batch No"/>
+                    <field name="date" string="Purchase Date"/>
+                    <field name="zero_stock_date" string="Zero Stock Date"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Zero Stock Report Server Action -->
+        <record id="action_zero_stock_report_server" model="ir.actions.server">
+            <field name="name">Zero Stock</field>
+            <field name="model_id" ref="model_zero_stock_report"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = model.action_open_zero_stock()
+            </field>
+        </record>
+
+        <!-- Menu Item -->
+        <menuitem id="menu_zero_stock_report"
+                  name="Zero Stock"
+                  parent="homeo_doctor.menu_reports_roo_super_admin"
+                  action="action_zero_stock_report_server"
+                  sequence="30"/>
+    </data>
+</odoo>

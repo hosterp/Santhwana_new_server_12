@@ -1,0 +1,56 @@
+<odoo>
+    <data>
+        <record id="view_general_department_form" model="ir.ui.view">
+            <field name="name">general.department.form</field>
+            <field name="model">general.department</field>
+            <field name="arch" type="xml">
+                <form class="lab_form">
+                    <sheet>
+                        <group col="4">
+                            <group>
+                                <field name="department_name"/>
+                                <field name="show_in_sale"/>
+
+                            </group>
+                            <group>
+                                <field name="code"/>
+                                <field name="show_in_all_in_one_report"/>
+
+                            </group>
+                            <group>
+                                <field name="dept_billing"/>
+                                <field name="separate_report"/>
+
+
+                            </group>
+                            <group>
+                                <field name="inventory"/>
+
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="view_general_department_tree" model="ir.ui.view">
+            <field name="name">general.department.tree</field>
+            <field name="model">general.department</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="department_name"/>
+                    <field name="code"/>
+                    <field name="dept_billing"/>
+                    <field name="inventory"/>
+                </tree>
+            </field>
+        </record>
+        <record id="action_general_department" model="ir.actions.act_window">
+            <field name="name">General Department</field>
+            <field name="res_model">general.department</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <menuitem id="menu_general_billing" name="General Billing" parent="menu_lab_root" sequence="3"/>
+        <menuitem id="menu_general_department" name="General Department" parent="menu_general_billing" action="action_general_department"
+                  sequence="1"/>
+    </data>
+</odoo>

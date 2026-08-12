@@ -1,0 +1,185 @@
+<odoo>
+    <data>
+        <template id="billing_report_template">
+            <t t-call="web.html_container">
+                <div class="page">
+                    <div style="padding-top: 2mm; margin-bottom: 10px;">
+
+                        <div style="display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif;">
+                            <img t-att-src="'/web/binary/company_logo'"
+                                 style="width: 70px; height: 70px; border-radius: 50%; margin-right: 15px;"/>
+                            <div style="flex-grow: 1; text-align: center;">
+                                <h1 style="font-size: 22px; margin: 0; font-weight: bold; color: #2c3e50;">
+                                    SANTHWANA HOSPITAL
+                                </h1>
+
+
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    N.C.C Road,Ambalamukku,Trivandrum-695005
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Phone: 0471-2432121,4223131
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    Email:info@santhwanahospital.com / Website:www.santhwanahospital.com
+                                </p>
+                                <p style="margin: 2px 0; font-size: 14px; color: #555;">
+                                    NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                                </p>
+
+                                <!--                                <h2 style="font-size: 18px; margin: 0; font-weight: bold; color: #2c3e50;">-->
+                                <!--                                    GST NO :32AAICS1884P1ZS | CIN:U85110KL997PTC011813-->
+                                <!--                                </h2>-->
+
+                            </div>
+                        </div>
+                    </div>
+                    <h2 style="text-align: center;">General Billing Report</h2>
+                    <h3 style="text-align: center;">
+
+                        <t t-esc="data['date_from']"/>
+                        to
+                        <t t-esc="data['date_to']"/>
+                    </h3>
+
+
+                    <table class="table table-bordered"
+                           style="border: 1px solid #ddd; width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="font-weight: bold; background-color: #f2f2f2;">
+                                <!--                                <th style="border: 1px solid #ddd; padding: 8px;">SL No</th>-->
+                                <th style="border: 1px solid #ddd; padding: 8px;">Bill No</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Bill Date</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Type</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Department</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Category</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Mrd No</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Patient Name</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Gender</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Doctor</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Payment Method</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="total_amount" t-value="0"/>
+                            <t t-foreach="data['billing_records']" t-as="record">
+                                <t t-if="record">
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['bill_number']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['bill_date']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['bill_type']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['department']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['op_category']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['mrd_no']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['patient_name']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['gender']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['doctor']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['mode_pay']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <t t-esc="record['total_amount']"/>
+                                            <t t-set="total_amount"
+                                               t-value="total_amount + (float(record['total_amount']) if record['total_amount'] else 0)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+
+                            <tr>
+                                <td colspan="10" style="text-align: right; border: 1px solid #ddd; padding: 8px;">
+                                    <strong>Total</strong>
+                                </td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">
+                                    <strong>
+                                        <t t-esc="total_amount"/>
+                                    </strong>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </t>
+        </template>
+        <record id="general_report_billing_paperformat" model="report.paperformat">
+            <field name="name">Doctor Billing PDF Format</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="margin_top">7</field>
+            <field name="margin_bottom">7</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="orientation">Portrait</field>
+            <field name="header_line" eval="False"/>
+        </record>
+
+        <report
+                id="billing_report_action"
+                model="general.billing"
+                string="General Billing Report"
+                report_type="qweb-pdf"
+                name="homeo_doctor.billing_report_template"
+                file="homeo_doctor.billing_report_template"
+                paperformat="general_report_billing_paperformat"
+        />
+        <record id="view_billing_report_wizard_general_form" model="ir.ui.view">
+            <field name="name">billing.report.wizard.form</field>
+            <field name="model">billing.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="General Billing Report">
+                    <group col="3">
+                        <group>
+                            <field name="date_from"/>
+                        </group>
+                        <group>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="mode_pay"/>
+                        </group>
+
+                    </group>
+                    <footer>
+                        <button string="Print PDF" type="object" name="action_generate_pdf_report" class="btn-primary"/>
+                        <button string="Excel Report" type="object" name="action_generate_excel_report"
+                                class="btn-secondary"/>
+                        <button string="Cancel" special="cancel" class="btn-secondary"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <record id="action_open_billing_report_wizard" model="ir.actions.act_window">
+            <field name="name">General Billing Report</field>
+            <field name="res_model">billing.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_billing_report_wizard_general_form"/>
+            <field name="target">new</field>
+        </record>
+        <menuitem id="menu_lab_root" name="Home" parent="menu_homeo_head" sequence="11"/>
+        <menuitem id="menu_reports_root" name="Reports" parent="menu_homeo_head" sequence="21"/>
+        <menuitem id="menu_general_billing_report" name="General Billing Report"
+                  parent="menu_reports_root" action="action_open_billing_report_wizard"/>
+
+    </data>
+</odoo>

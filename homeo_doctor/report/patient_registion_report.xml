@@ -1,0 +1,71 @@
+<odoo>
+    <data>
+        <template id="report_patient_registration_pdf">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <div class="page">
+                        <h2 style="text-align: center;">Patient Registration</h2>
+                        <div class="row" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                            <div class="col" style="flex: 1; padding-right: 20px;">
+                                <strong>Patient ID:</strong>
+                                <span t-field="doc.reference_no"/>
+                            </div>
+                            <div class="col" style="flex: 1; padding-left: 300px;">
+                                <strong>Date:</strong>
+                                <span t-field="doc.formatted_date"/>
+                            </div>
+                        </div>
+                        <div class="row" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                            <div class="col" style="flex: 1; padding-right: 20px;">
+                                <strong>Patient Name:</strong>
+                                <span t-field="doc.patient_id"/>
+                            </div>
+                            <div class="col" style="flex: 1; padding-left: 300px;">
+                                <strong>Age:</strong>
+                                <span t-field="doc.age"/>
+                            </div>
+                        </div>
+                        <div class="row" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                            <div class="col" style="flex: 1; padding-right: 20px;">
+                                <strong>Address:</strong>
+                                <span t-field="doc.address"/>
+                            </div>
+                            <div class="col" style="flex: 1;padding-left: 300px;">
+                                <strong>Ph:</strong>
+                                <span t-field="doc.phone_number"/>
+                            </div>
+                        </div>
+                        <div class="row" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                            <div class="col" style="flex: 1; padding-right: 20px;">
+                                <strong>Doctor:</strong>
+                                <span t-field="doc.doc_name"/>
+                            </div>
+                            <div class="col" style="flex: 1; padding-left: 300px;">
+                                <strong>Time:</strong>
+                                <span t-field="doc.time"/>
+                            </div>
+                        </div>
+                         <div class="row" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                            <div class="col" style="flex: 1; padding-right: 20px;">
+                                <strong>Gender:</strong>
+                                <span t-field="doc.gender"/>
+                            </div>
+                            <div class="col" style="flex: 1; padding-left: 300px;">
+                                <strong>Registration Fee:</strong>
+                                <span t-field="doc.registration_fee"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </template>
+        <record id="action_patient_registration_report" model="ir.actions.report">
+            <field name="name">Patient Registration</field>
+            <field name="model">patient.reg</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">homeo_doctor.report_patient_registration_pdf</field>
+            <field name="report_file">homeo_doctor.report_patient_registration_pdf</field>
+            <field name="print_report_name">'Patient Registration'</field>
+        </record>
+    </data>
+</odoo>

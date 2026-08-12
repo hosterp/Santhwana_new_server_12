@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="patient_registration_form" model="ir.ui.view">
+            <field name="name">patient.registration.form</field>
+            <field name="model">patient.registration</field>
+            <field name="arch" type="xml">
+                <form string="Consultation Details" class="patient_consulattaion_page">
+                    <header>
+                        <button name="action_create_referral_lab" type="object" string="Lab Referral"
+                                class="oe_highlight"/>
+                        <button name="action_create_referral_mri" type="object" string="MRI Referral"
+                                class="oe_highlight"/>
+                        <button name="action_create_referral_ct" type="object" string="CT Referral"
+                                class="oe_highlight"/>
+                        <button name="action_create_referral_xray" type="object" string="X-RAY Referral"
+                                class="oe_highlight"/>
+                        <button name="action_create_referral_audiology" type="object" string="Audiology Referral"
+                                class="oe_highlight"/>
+                        <button name="action_move_to_pharmacy" string="Move to Pharmacy" type="object"
+                                class="oe_highlight"/>
+                        <field name="move_to_admission_clicked" invisible="1"/>
+                        <button name="action_view_consultations" type="object" string="View All Consultations"
+                                class="btn-primary"/>
+                        <button name="admission_button" string="Admit Patient" type="object" class="btn-danger"
+                                attrs="{'invisible': [('move_to_admission_clicked', '=', True)]}"/>
+                        <field name="appointment_date"/>
+                        <field name="status" widget="statusbar" options="{'clickable': 'true'}"/>
+
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="token_no" readonly="1" class="o_reference_number"
+                                       placeholder="Consultation Reference"/>
+                            </h1>
+                            <div class="o_consultation_date">
+                                <field name="formatted_date" readonly="1" string="Consultation Date"/>
+                            </div>
+                        </div>
+
+                        <group name="patient_info" string="Patient Information" col="12" class="paitent_details"
+                               style="border-bottom: 2px solid #007bff; padding: 15px 0; margin-bottom: 15px;">
+                            <field name="patient_id" string="UHID" readonly="1" colspan="1" required="0"/>
+                            <field name="patient_name" string="Name" colspan="1" required="0"/>
+                            <field name="age" string="Age" colspan="1" required="1"/>
+                            <field name="gender" string="Gender" colspan="1"/>
+                            <field name="phone_number" widget="phone" string="Mobile No" colspan="1" required="0"/>
+                            <!--                            <field name="address" style="margin-right:10px;" string="Address" colspan="1" required="1"/>-->
+                            <field name="doctor" string="Consulting Doctor" colspan="1" required="1"/>
+                        </group>
+
+                        <group name="vital_signs" class="o_vital_signs_group single_row_vitals">
+                            <div class="vital_signs_header_container">
+                                <h3 class="vital_signs_title">Vital Signs &#8594;</h3>
+                                <div class="vitals_inline_container">
+                                    <!-- Blood pressure with high/low -->
+                                    <div class="vital_field_container bp_container">
+                                        <div class="vital_field_row">
+                                            <label class="o_form_label" for="blood_pressure">BP(mmHg)</label>
+                                            <div class="bp_inputs">
+                                                <span>(High)</span>
+                                                <field name="blood_pressure" class="oe_inline small_input"/>
+                                                <span>-</span>
+                                                <span>(Low)</span>
+                                                <field name="blood_pressure_low" nolabel="1"
+                                                       class="oe_inline small_input"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Weight -->
+                                    <div class="vital_field_container">
+                                        <div class="vital_field_row">
+                                            <label class="o_form_label" for="weight">Weight (kg)</label>
+                                            <field name="weight" class="small_input"/>
+                                        </div>
+                                    </div>
+
+                                    <!-- Temperature -->
+                                    <div class="vital_field_container">
+                                        <div class="vital_field_row">
+                                            <label class="o_form_label" for="temperature">Temp (°C)</label>
+                                            <field name="temperature" class="small_input"/>
+                                        </div>
+                                    </div>
+
+                                    <!-- SPO2 -->
+                                    <div class="vital_field_container">
+                                        <div class="vital_field_row">
+                                            <label class="o_form_label" for="spo">SPO2 (%)</label>
+                                            <field name="spo" class="small_input"/>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pulse Rate -->
+                                    <div class="vital_field_container">
+                                        <div class="vital_field_row">
+                                            <label class="o_form_label" for="pulse_rate">Pulse (bpm)</label>
+                                            <field name="pulse_rate" class="small_input"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </group>
+                        <group name="consultation_details" string="Clinical Assessment"
+                               class="consultation_details_section"
+                               style="margin-top: 15px;">
+
+                            <div class="field_container" style="width: 100%;">
+                                <label for="presenting_complaints"
+                                       style="font-weight: bold; display: block; margin-bottom: 4px;">Presenting
+                                    Complaints
+                                </label>
+                                <field name="presenting_complaints" widget="text" nolabel="1"
+                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>
+                            </div>
+
+                            <div class="field_container" style="width: 100%;">
+                                <label for="allergies"
+                                       style="font-weight: bold; display: block; margin-bottom: 4px;">Allergy if any
+                                </label>
+                                <field name="allergies" widget="text" nolabel="1"
+                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>
+                            </div>
+                            <div class="field_container" style="width: 100%;">
+                                <label for="past_medical_history"
+                                       style="font-weight: bold; display: block; margin-bottom: 4px;">Past Medical
+                                    History
+                                </label>
+                                <field name="past_medical_history" widget="text" nolabel="1"
+                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>
+                            </div>
+                            <div class="field_container" style="width: 100%;">
+                                <label for="present_medications"
+                                       style="font-weight: bold; display: block; margin-bottom: 4px;">Present
+                                    Medications
+                                </label>
+                                <field name="present_medications" widget="text" nolabel="1"
+                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>
+                            </div>
+                            <div class="field_container" style="width: 100%;">
+                                <label for="general_examination"
+                                       style="font-weight: bold; display: block; margin-bottom: 4px;">General
+                                    Examination
+                                </label>
+                                <field name="general_examination" widget="text" nolabel="1"
+                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>
+                            </div>
+                            <div class="field_container" style="width: 100%;">
+                                <label for="local_and_systemic"
+                                       style="font-weight: bold; display: block; margin-bottom: 4px;">Local and
+                                    Systemic Examination
+                                </label>
+                                <field name="local_and_systemic" widget="text" nolabel="1"
+                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>
+                            </div>
+                            <div class="field_container" style="width: 100%;">
+                                <label for="endoscopy_finding"
+                                       style="font-weight: bold; display: block; margin-bottom: 4px;">Endoscopy/EUN
+                                    Findings
+                                </label>
+                                <field name="endoscopy_finding" widget="text" nolabel="1"
+                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>
+                            </div>
+                            <div class="field_container" style="width: 100%;">
+                                <label for="professional_diagnosis"
+                                       style="font-weight: bold; display: block; margin-bottom: 4px;">
+
+                                </label>
+                                <field name="professional_diagnosis" widget="text" nolabel="1"
+                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>
+                            </div>
+                            <div class="field_container" style="width: 100%;">
+                                <label for="review"
+                                       style="font-weight: bold; display: block; margin-bottom: 4px;">
+
+                                </label>
+                                <field name="review" widget="text" nolabel="1"
+                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+
+                                <!-- Review Date -->
+                                <div style="display: flex; flex-direction: column;">
+                                    <label for="review_date" style="font-weight: bold; margin-bottom: 4px;">
+                                        Review Date
+                                    </label>
+                                    <field name="review_date" nolabel="1"
+                                           style="width: 100%; border: none; background: transparent;"/>
+                                </div>
+
+                                <!-- Review Note -->
+                                <div style="display: flex; flex-direction: column;">
+                                    <label for="review_note" style="font-weight: bold; margin-bottom: 4px;">
+                                        Review Note
+                                    </label>
+                                    <field name="review_note" widget="text" nolabel="1"
+                                           style="width: 100%; min-height: 80px; border: none; background: transparent;"/>
+                                </div>
+
+                            </div>
+
+
+                            <!--                            <div class="clinical_assessment_grid"-->
+                            <!--                                 style="display: flex; flex-direction: column; gap: 15px;">-->
+
+                            <!--                                &lt;!&ndash; Symptoms &ndash;&gt;-->
+                            <!--                                <div class="field_container" style="width: 100%;">-->
+                            <!--                                    <label for="symptoms"-->
+                            <!--                                           style="font-weight: bold; display: block; margin-bottom: 4px;">Symptoms-->
+                            <!--                                    </label>-->
+                            <!--                                    <field name="symptoms" widget="text" nolabel="1"-->
+                            <!--                                           style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                </div>-->
+
+                            <!--                                &lt;!&ndash; Presenting Complaints &ndash;&gt;-->
+                            <!--                                <div class="field_container" style="width: 100%;">-->
+                            <!--                                    <label for="presenting_complaints"-->
+                            <!--                                           style="font-weight: bold; display: block; margin-bottom: 4px;">Presenting-->
+                            <!--                                        Complaints-->
+                            <!--                                    </label>-->
+                            <!--                                    <field name="presenting_complaints" widget="text" nolabel="1"-->
+                            <!--                                           style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                </div>-->
+
+                            <!-- Allergies -->
+                            <!--                                                            <div class="field_container" style="width: 100%;">-->
+                            <!--                                                                <label for="allergies"-->
+                            <!--                                                                       style="font-weight: bold; display: block; margin-bottom: 4px;">Allergies-->
+                            <!--                                                                </label>-->
+                            <!--                                                                <field name="allergies" widget="text" nolabel="1"-->
+                            <!--                                                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                                            </div>-->
+
+                            <!-- General Examination -->
+                            <!--                                                            <div class="field_container" style="width: 100%;">-->
+                            <!--                                                                <label for="general_examination"-->
+                            <!--                                                                       style="font-weight: bold; display: block; margin-bottom: 4px;">General-->
+                            <!--                                                                    Examination-->
+                            <!--                                                                </label>-->
+                            <!--                                                                <field name="general_examination" widget="text" nolabel="1"-->
+                            <!--                                                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                                            </div>-->
+
+                            <!-- Present Medications -->
+                            <!--                                                            <div class="field_container" style="width: 100%;">-->
+                            <!--                                                                <label for="present_medications"-->
+                            <!--                                                                       style="font-weight: bold; display: block; margin-bottom: 4px;">Present-->
+                            <!--                                                                    Medications-->
+                            <!--                                                                </label>-->
+                            <!--                                                                <field name="present_medications" widget="text" nolabel="1"-->
+                            <!--                                                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                                            </div>-->
+
+                            <!--                                &lt;!&ndash; Local and Systemic &ndash;&gt;-->
+                            <!--                                                            <div class="field_container" style="width: 100%;">-->
+                            <!--                                                                <label for="local_and_systemic"-->
+                            <!--                                                                       style="font-weight: bold; display: block; margin-bottom: 4px;">Local and-->
+                            <!--                                                                    Systemic-->
+                            <!--                                                                </label>-->
+                            <!--                                                                <field name="local_and_systemic" widget="text" nolabel="1"-->
+                            <!--                                                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                                            </div>-->
+
+                            <!--                                &lt;!&ndash; Investigation &ndash;&gt;-->
+                            <!--                                <div class="field_container" style="width: 100%;">-->
+                            <!--                                    <label for="investigation"-->
+                            <!--                                           style="font-weight: bold; display: block; margin-bottom: 4px;">Investigation-->
+                            <!--                                    </label>-->
+                            <!--                                    <field name="investigation" widget="text" nolabel="1"-->
+                            <!--                                           style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                </div>-->
+
+                            <!--                                &lt;!&ndash; Endoscopy Finding &ndash;&gt;-->
+                            <!--                                                            <div class="field_container" style="width: 100%;">-->
+                            <!--                                                                <label for="endoscopy_finding"-->
+                            <!--                                                                       style="font-weight: bold; display: block; margin-bottom: 4px;">Endoscopy-->
+                            <!--                                                                    Finding-->
+                            <!--                                                                </label>-->
+                            <!--                                                                <field name="endoscopy_finding" widget="text" nolabel="1"-->
+                            <!--                                                                       style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                                            </div>-->
+
+                            <!--                                &lt;!&ndash; Scheduled Follow-up Date &ndash;&gt;-->
+                            <!--                                <div class="field_container" style="width: 100%;">-->
+                            <!--                                    <label for="review_date"-->
+                            <!--                                           style="font-weight: bold; display: block; margin-bottom: 4px;">Scheduled-->
+                            <!--                                        Follow-up Date-->
+                            <!--                                    </label>-->
+                            <!--                                    <field name="review_date" nolabel="1"-->
+                            <!--                                           style="width: 100%; border: none; background: transparent;"/>-->
+                            <!--                                </div>-->
+
+                            <!--                                &lt;!&ndash; Checkup Reports &ndash;&gt;-->
+                            <!--                                <div class="field_container" style="width: 100%;">-->
+                            <!--                                    <label for="checkup_reports"-->
+                            <!--                                           style="font-weight: bold; display: block; margin-bottom: 4px;">Checkup-->
+                            <!--                                        Reports-->
+                            <!--                                    </label>-->
+                            <!--                                    <field name="checkup_reports" widget="text" nolabel="1"-->
+                            <!--                                           style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                </div>-->
+
+                            <!--                                &lt;!&ndash; Review Note &ndash;&gt;-->
+                            <!--                                <div class="field_container" style="width: 100%;">-->
+                            <!--                                    <label for="review_note"-->
+                            <!--                                           style="font-weight: bold; display: block; margin-bottom: 4px;">Review Note-->
+                            <!--                                    </label>-->
+                            <!--                                    <field name="review_note" widget="text" nolabel="1"-->
+                            <!--                                           style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                </div>-->
+
+                            <!--                                &lt;!&ndash; C.D.A &ndash;&gt;-->
+                            <!--                                <div class="field_container" style="width: 100%;">-->
+                            <!--                                    <label for="professional_diagnosis"-->
+                            <!--                                           style="font-weight: bold; display: block; margin-bottom: 4px;">C.D.A-->
+                            <!--                                    </label>-->
+                            <!--                                    <field name="professional_diagnosis" widget="text" nolabel="1"-->
+                            <!--                                           style="width: 100%; min-height: 80px; border: none; background: transparent;"/>-->
+                            <!--                                </div>-->
+
+                            <!--                            </div>-->
+                        </group>
+
+
+                        <!-- Modified layout for Prescription and Additional Info section -->
+                        <div class="prescription_additional_section">
+                            <div class="prescription_column">
+                                <group name="prescription" class="prescription" string="Prescription">
+                                    <field name="med_ids" nolabel="1">
+                                        <tree editable="bottom" decoration-warning="total_med == 0">
+                                            <field name="category" required="1"/>
+                                            <field name="products_id" required="1"/>
+                                            <field name="generic"/>
+                                            <field name="reg_time"/>
+                                            <!--                                            <field name="morn" string="Morning"/>-->
+                                            <!--                                            <field name="noon" string="Noon"/>-->
+                                            <!--                                            <field name="night" string="Night"/>-->
+                                            <field name="duration" string="Duration"/>
+                                            <field name="remarks" string="Remarks"/>
+                                            <field name="stock_in_hand" string="Stock"/>
+                                            <field name="per_ped" string="Per Med" invisible="1"/>
+                                            <field name="total_med" string="Total Dosage" invisible="1"/>
+                                        </tree>
+                                    </field>
+                                </group>
+                            </div>
+                            <div class="additional_column">
+                                <group string="Additional Information" class="additional_info_group">
+                                    <!-- First row - with proper label for attributes -->
+                                    <div class="additional_column_second">
+                                        <div class="additional_row">
+                                            <!--                                            <div class="field_container medicine_course_container">-->
+                                            <!--                                                <label for="medicine_course" string="Medicine Course"/>-->
+                                            <!--                                                <field name="medicine_course" nolabel="1"/>-->
+                                            <!--                                            </div>-->
+                                            <div class="field_container department_container">
+                                                <label for="referred_department_ids" string="Referred Departments"/>
+                                                <field name="referred_department_ids" widget="many2many_tags"
+                                                       nolabel="1"/>
+                                            </div>
+                                            <div class="field_container doctor_container">
+                                                <label for="referred_doctor_ids" string="Referred Doctors"/>
+                                                <field name="referred_doctor_ids" widget="many2many_tags" nolabel="1"/>
+                                            </div>
+                                            <div class="field_container button_container">
+                                                <!-- For button container, we need a valid for attribute or use span instead -->
+                                                <span class="label_text">Action</span>
+                                                <div class="button_wrapper">
+                                                    <button name="action_reffer_move" type="object" string="GO"/>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Second row - with proper label for attributes -->
+                                        <!-- <div class="additional_row"> -->
+
+                                        <!-- </div> -->
+
+                                        <!-- Remarks field -->
+                                        <div class="field_container remark_container">
+                                            <label for="remark" string="Additional Remarks"/>
+                                            <field name="remark" placeholder="Additional Remarks" nolabel="1"/>
+                                        </div>
+                                    </div>
+                                </group>
+                            </div>
+                        </div>
+
+                        <field name="remark_boolean" invisible="1"/>
+                        <field name="doctor_remark_ids" attrs="{'invisible': [('remark_boolean', '=', False)]}">
+                            <tree editable="bottom">
+                                <field name="doctor_id"/>
+                                <field name="remark" placeholder="Remark for this doctor"/>
+                            </tree>
+                        </field>
+                        <notebook>
+                            <!-- Notebook content remains unchanged -->
+                            <page string="Lab Reports" name="lab_reports">
+                                <field name="lab_report_ids">
+                                    <tree>
+                                        <field name="bill_number" invisible="1"/>
+                                        <field name="test_on"/>
+                                        <field name="result_status"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Medical Imaging" name="medical_imaging">
+                                <notebook>
+                                    <page string="MRI" name="mri_reports">
+                                        <field name="mri_report_ids">
+                                            <tree>
+                                                <field name="scan_report_date"/>
+                                                <field name="report_details"/>
+                                            </tree>
+                                        </field>
+                                    </page>
+                                    <page string="CT Scan" name="ct_reports">
+                                        <field name="ct_report_ids">
+                                            <tree>
+                                                <field name="scan_report_date"/>
+                                                <field name="report_details"/>
+                                            </tree>
+                                        </field>
+                                    </page>
+                                    <page string="X-RAY" name="xray_reports">
+                                        <field name="xray_report_ids">
+                                            <tree>
+                                                <field name="scan_report_date"/>
+                                                <field name="report_details"/>
+                                            </tree>
+                                        </field>
+                                    </page>
+                                    <page string="Audiology" name="audiology_reports">
+                                        <field name="audiology_report_ids">
+                                            <tree>
+                                                <field name="scan_report_date"/>
+                                                <field name="report_details"/>
+                                            </tree>
+                                        </field>
+                                    </page>
+                                </notebook>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Rest of the XML remains unchanged -->
+        <record id="patient_registration_tree" model="ir.ui.view">
+            <field name="name">patient.registration.tree</field>
+            <field name="model">patient.registration</field>
+            <field name="arch" type="xml">
+                <tree string="Consultation Details">
+                    <field name="patient_id" string="UHID"/>
+                    <field name="token_no" string="Token No"/>
+                    <field name="appointment_date" string="Appointment Date"/>
+                    <field name="patient_name" string="Patient Name"/>
+                    <!--                    <field name="formatted_date" string="Consultation Date"/>-->
+                    <!--                    <field name="reference_no" string="Appointment NO"/>-->
+                    <!--                    <field name="appointment_date" string="Appointment Date"/>-->
+                    <field name="age"/>
+                    <field name="gender"/>
+                    <field name="phone_number" string="Mobile No"/>
+                    <field name="doctor"/>
+                    <!--                    <field name="referred_doctor_ids" widget="many2many_tags" string="Referred Doctors"/>-->
+                    <!--                    <field name="referred_department_ids" widget="many2many_tags" string="Referred Department"/>-->
+                    <field name="consultation_fee" invisible="1"/>
+                    <field name="vssc_check" string="VSSC"/>
+                    <field name="status"/>
+                </tree>
+            </field>
+        </record>
+        <record id="view_patient_reg_consultation_search" model="ir.ui.view">
+            <field name="name">patient.registration.consultation.search</field>
+            <field name="model">patient.registration</field>
+            <field name="arch" type="xml">
+                <search string="Search Patient Registration">
+                    <field name="patient_id" string="UHID"/>
+                    <field name="patient_name" string="Patient Name"/>
+                    <field name="appointment_date" string="Appointment Date"/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_by_doctor" string="Doctor" context="{'group_by': 'doctor'}"/>
+                        <filter name="group_by_date" string="Appointment Date"
+                                context="{'group_by': 'appointment_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="patient_reg_consultation_tree" model="ir.ui.view">
+            <field name="name">patient.reg.consultation.tree</field>
+            <field name="model">patient.registration</field>
+            <field name="arch" type="xml">
+                <tree string="Consultation Details">
+                    <field name="patient_id" string="UHID"/>
+                    <field name="token_no" string="Token No"/>
+                    <field name="appointment_date" string="Appointment Date"/>
+                    <field name="patient_name" string="Patient Name"/>
+                    <!--                    <field name="formatted_date" string="Consultation Date"/>-->
+                    <!--                    <field name="reference_no" string="Appointment NO"/>-->
+                    <!--                    <field name="appointment_date" string="Appointment Date"/>-->
+                    <field name="age"/>
+                    <field name="gender"/>
+                    <field name="phone_number" string="Mobile No"/>
+                    <field name="doctor"/>
+                    <!--                    <field name="referred_doctor_ids" widget="many2many_tags" string="Referred Doctors"/>-->
+                    <!--                    <field name="referred_department_ids" widget="many2many_tags" string="Referred Department"/>-->
+                    <field name="consultation_fee"/>
+                    <field name="vssc_check" string="VSSC"/>
+
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_patient_reg_consultation" model="ir.actions.act_window">
+            <field name="name">Consultation Details</field>
+            <field name="res_model">patient.registration</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="patient_reg_consultation_tree"/>
+            <field name="search_view_id" ref="view_patient_reg_consultation_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create new patient
+                </p>
+            </field>
+        </record>
+        <record id="action_patient_registration" model="ir.actions.act_window">
+            <field name="name">Patient ID</field>
+            <field name="res_model">patient.registration</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="patient_registration_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create new patient
+                </p>
+            </field>
+        </record>
+
+        <record id="view_referral_form" model="ir.ui.view">
+            <field name="name">doctor.referral.form</field>
+            <field name="model">doctor.referral</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group col="3">
+                            <group>
+                                <field name="patient_name"/>
+                                <field name="patient_id" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="user_ide" string="Patient ID"/>
+                            </group>
+                            <group>
+                                <field name="referral_type" invisible="1"/>
+                                <field name="doctor_id"/>
+                            </group>
+                            <field name="details"/>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button string="Submit" type="object" name="action_submit" class="oe_highlight"/>
+
+                        <!-- Cancel button -->
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <record id="view_referral_form_lab" model="ir.ui.view">
+            <field name="name">lab.referral.form</field>
+            <field name="model">lab.referral</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group col="3">
+                            <group>
+                                <field name="patient_name"/>
+                                <field name="lab_test" widget="many2many_tags" style="width: 200px;" invisible="1"/>
+                                <field name="test_type" widget="many2many_tags" style="width: 300px;"/>
+
+                                <field name="patient_id" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="user_ide" string="UHID"/>
+                                <field name="test_names" invisible="1"/>
+
+                            </group>
+                            <group>
+                                <field name="referral_type" invisible="1"/>
+                                <field name="doctor" invisible="1"/>
+                            </group>
+                            <div>
+                                <h5>Remarks</h5>
+                            </div>
+                            <field name="details"/>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button string="Submit" type="object" name="action_submit" class="oe_highlight"/>
+
+                        <!-- Cancel button -->
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Custom Tree View for Patient Registration -->
+        <record id="view_patient_registration_tree" model="ir.ui.view">
+            <field name="name">patient.registration.tree.prev</field>
+            <field name="model">patient.registration</field>
+            <field name="arch" type="xml">
+                <tree string="Previous Consultations">
+                    <field name="appointment_date" string="Date"/>
+                    <field name="patient_id" string="UHID"/>
+                    <field name="patient_name"/>
+                    <field name="doctor_id"/>
+                    <field name="referred_doctor_ids" widget="many2many_tags" string="Referred Doctors"/>
+                    <field name="referred_department_ids" widget="many2many_tags" string="Referred Department"/>
+                    <button name="action_view_consultation_form"
+                            string="View"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-eye"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_previous_consultations" model="ir.actions.act_window">
+            <field name="name">Previous Consultations</field>
+            <field name="res_model">patient.registration</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="homeo_doctor.view_patient_registration_tree"/>
+            <field name="context">{'default_patient_id': active_id}</field>
+            <field name="target">new</field>
+        </record>
+
+    </data>
+</odoo>
