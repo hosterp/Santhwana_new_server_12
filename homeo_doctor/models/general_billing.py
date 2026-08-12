@@ -3342,8 +3342,13 @@ class OTBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date',default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                             readonly=False,)
+    doctor = fields.Many2one(
+        'doctor.profile', string='Doctor',
+        compute="_compute_doctor_name", store=True, readonly=False,
+    )
+    doctor_manual = fields.Boolean(
+        string='Manual Doctor Override', default=False, copy=False,
+    )
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
     bill_types = fields.Many2one('bill.type', string='Bill Type')
@@ -3404,9 +3409,12 @@ class OTBilling(models.Model):
     def write(self, vals):
         if self.env.context.get('no_sync'):
             return super(OTBilling, self).write(vals)
-        
+
+        if 'doctor' in vals and not self.env.context.get('skip_doctor_manual'):
+            vals['doctor_manual'] = True
+
         res = super(OTBilling, self).write(vals)
-        
+
         patient_fields = {'patient_name', 'mobile', 'age', 'gender'}
         if patient_fields & set(vals.keys()):
             for rec in self:
@@ -3416,7 +3424,7 @@ class OTBilling(models.Model):
                     if 'mobile' in vals: sync_vals['phone_number'] = vals['mobile']
                     if 'age' in vals: sync_vals['age'] = vals['age']
                     if 'gender' in vals: sync_vals['gender'] = vals['gender']
-                    
+
                     if sync_vals:
                         rec.mrd_no.sudo().write(sync_vals)
         return res
@@ -3439,10 +3447,29 @@ class OTBilling(models.Model):
             ('user_id', '=', self.env.uid)
         ], limit=1)
         return employee.id
-    @api.onchange('mrd_no', 'bill_date')
+
+    @api.onchange('doctor')
+    def _onchange_doctor_manual(self):
+        if self.doctor:
+            self.doctor_manual = True
+
+    @api.onchange('mrd_no', 'bill_date', 'bill_type')
     def _onchange_mrd_no_update_doctor(self):
         for rec in self:
-            rec.doctor = False
+            if rec.doctor_manual:
+                continue
+
+            if rec.doctor and rec.status in ['paid', 'cancelled']:
+                continue
+
+            if not rec.doctor and isinstance(rec.id, int):
+                existing = self.sudo().browse(rec.id)
+                if existing.doctor_manual and existing.doctor:
+                    rec.doctor = existing.doctor.id
+                    continue
+                if existing.doctor:
+                    rec.doctor = existing.doctor.id
+                    continue
 
             if not rec.mrd_no or not rec.bill_date:
                 continue
@@ -3487,9 +3514,27 @@ class OTBilling(models.Model):
                         # 3. Use master registration doctor
                         rec.doctor = rec.mrd_no.doc_name.id
 
-    @api.depends('mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    @api.depends(
+        'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date',
+        'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type', 'doctor_manual',
+    )
     def _compute_doctor_name(self):
         for rec in self:
+            if rec.doctor_manual:
+                continue
+
+            if rec.doctor and rec.status in ['paid', 'cancelled']:
+                continue
+
+            if not rec.doctor and isinstance(rec.id, int):
+                existing = rec.sudo().browse(rec.id)
+                if existing.doctor_manual and existing.doctor:
+                    rec.doctor = existing.doctor.id
+                    continue
+                if existing.doctor:
+                    rec.doctor = existing.doctor.id
+                    continue
+
             doctor = False
             if rec.mrd_no and rec.bill_date:
                 bill_date = rec.bill_date
@@ -3806,6 +3851,7 @@ class OTBilling(models.Model):
     @api.onchange('mrd_no')
     def _onchange_mrd_no(self):
         if self.mrd_no:
+            self.doctor_manual = False
             self.patient_name = self.mrd_no.patient_id
             self.age = self.mrd_no.age
             self.gender = self.mrd_no.gender

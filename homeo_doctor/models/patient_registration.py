@@ -377,6 +377,9 @@ class PatientRegistration(models.Model):
                                     update_doc_id = vals.get('doc_name')
 
                                 if update_doc_id:
+                                    if getattr(record, 'doctor_manual', False):
+                                        continue
+
                                     # Trigger recomputation
                                     for method_name in ['_compute_doctor_name', '_compute_doctor_name_ip', '_compute_doctor_id', '_compute_doctor']:
                                         if hasattr(record, method_name):
@@ -385,7 +388,7 @@ class PatientRegistration(models.Model):
                                     # Force direct write
                                     doc_f = 'doctor' if 'doctor' in record._fields else ('doctor_id' if 'doctor_id' in record._fields else ('doctor_name' if 'doctor_name' in record._fields else False))
                                     if doc_f:
-                                        record.write({doc_f: update_doc_id})
+                                        record.with_context(skip_doctor_manual=True).write({doc_f: update_doc_id})
 
                                 # Update Department (Specific to general billing models)
                                 if target_general_dept_id and model_name in ['general.billing', 'ip.part.billing', 'ot.billing', 'casuality.billing', 'audiology.billing', 'xray.billing']:
