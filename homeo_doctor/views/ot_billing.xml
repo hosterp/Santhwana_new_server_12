@@ -113,6 +113,7 @@
                                     <div class="form-group row my-1">
                                         <label for="doctor" class="col-md-5 col-form-label py-0 small">Doctor</label>
                                         <div class="col-md-7 field-container py-0">
+                                            <field name="doctor_override" invisible="1"/>
                                             <field name="doctor" options="{'no_create': True, 'no_edit': True}"/>
                                         </div>
                                     </div>

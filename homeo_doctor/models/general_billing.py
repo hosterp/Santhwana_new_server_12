@@ -3342,7 +3342,13 @@ class OTBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date',default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one('doctor.profile', string='Doctor')
+    doctor = fields.Many2one(
+        'doctor.profile', string='Doctor',
+        compute='_compute_ot_doctor', inverse='_inverse_ot_doctor', readonly=False,
+    )
+    doctor_override = fields.Many2one(
+        'doctor.profile', string='Manual Doctor', copy=False,
+    )
     doctor_manual = fields.Boolean(default=False, copy=False)
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
@@ -3536,9 +3542,29 @@ class OTBilling(models.Model):
 
         return doctor or False
 
+    @api.depends(
+        'doctor_override', 'mrd_no', 'mrd_no.doc_name', 'mrd_no.doctor',
+        'bill_date', 'bill_type', 'status',
+    )
+    def _compute_ot_doctor(self):
+        for rec in self:
+            if rec.doctor_override:
+                rec.doctor = rec.doctor_override
+            else:
+                rec.doctor = rec._lookup_ot_doctor()
+
+    def _inverse_ot_doctor(self):
+        for rec in self:
+            lookup_doctor = rec._lookup_ot_doctor()
+            if rec.doctor and rec.doctor.id != lookup_doctor:
+                rec.doctor_override = rec.doctor
+            elif not rec.doctor:
+                rec.doctor_override = False
+
     @api.onchange('mrd_no')
     def _onchange_mrd_no_update_doctor(self):
         for rec in self:
+            rec.doctor_override = False
             if rec.status in ['paid', 'cancelled']:
                 continue
             if not rec.mrd_no or not rec.bill_date:
@@ -3548,7 +3574,7 @@ class OTBilling(models.Model):
     @api.onchange('bill_date', 'bill_type')
     def _onchange_bill_date_update_doctor(self):
         for rec in self:
-            if rec.status in ['paid', 'cancelled'] or rec.doctor:
+            if rec.status in ['paid', 'cancelled'] or rec.doctor_override:
                 continue
             if not rec.mrd_no or not rec.bill_date:
                 continue
