@@ -63,7 +63,8 @@ class PharmacyDescription(models.Model):
                 rec.bill_sequence = int(seq)
 
                 # fy example: 25-26 → take 26
-                rec.fiscal_year_end = int(fy.split('-')[1])
+                fy_parts = fy.split('-')
+                rec.fiscal_year_end = int(fy_parts[1]) if len(fy_parts) > 1 else int(fy_parts[0])
             else:
                 rec.bill_sequence = 0
                 rec.fiscal_year_end = 0
@@ -229,7 +230,18 @@ class PharmacyDescription(models.Model):
 
     def action_cancel(self):
         for record in self:
+            if record.status == 'cancelled':
+                continue
+            record._restore_all_lines_stock()
             record.status = 'cancelled'
+
+    def _get_all_prescription_lines(self):
+        self.ensure_one()
+        return self.prescription_line_ids | self.description_line_ids
+
+    def _restore_all_lines_stock(self):
+        for line in self._get_all_prescription_lines():
+            line.restore_all_deducted_stock()
 
     def get_cancelled_bills(self):
         return self.search([('active', '=', False)])
@@ -368,6 +380,11 @@ class PharmacyDescription(models.Model):
         return res
 
     def write(self, vals):
+        if vals.get('status') == 'cancelled':
+            for record in self:
+                if record.status != 'cancelled':
+                    record._restore_all_lines_stock()
+
         res = super(PharmacyDescription, self).write(vals)
         for record in self:
             record._process_payment()
@@ -393,126 +410,36 @@ class PharmacyDescription(models.Model):
             rec.bill_amount = sum(line.rate for line in rec.prescription_line_ids)  # Excluding GST
 
     def _process_payment(self):
-        # Check if the context already has the 'payment_processed' flag
-        if self.env.context.get('payment_processed', False):
-            return  # Skip processing if payment already processed
+        if self.env.context.get('payment_processed'):
+            return
+        self = self.with_context(payment_processed=True)
+        if self.payment_mathod == 'credit' and self.status != 'cancelled':
+            self._sync_credit_stock()
 
-        # Add the flag to the context
-        context = dict(self.env.context, payment_processed=True)
-        self = self.with_context(context)
+    def _sync_credit_stock(self):
+        for line in self._get_all_prescription_lines():
+            line.sync_stock_deduction()
 
-        if self.payment_mathod == 'credit':
-            for line in self.prescription_line_ids:
-                if line.products_id and line.qty:
-                    stock_entries = self.env['stock.entry'].search([
-                        ('product_id', '=', line.products_id.product_id.id)
-                    ], order="id asc")
-
-                    remaining_qty = line.qty
-                    for entry in stock_entries:
-                        if remaining_qty <= 0:
-                            break
-                        if entry.quantity >= remaining_qty:
-                            entry.quantity -= remaining_qty
-                            remaining_qty = 0
-                        else:
-                            remaining_qty -= entry.quantity
-                            entry.quantity = 0
-
-                    line.stock_in_hand = sum(stock_entries.mapped('quantity'))
-    def action_print_pharmacy_disc_bill(self):
-        return self.env.ref('homeo_doctor.action_pharmacy_report').report_action(self)
+    def _validate_stock_availability(self):
+        for line in self._get_all_prescription_lines():
+            line._check_stock_availability()
 
     def action_register_payment(self):
-        if self.staff_name and self.staff_pwd:
-            employee = self.staff_name
-
-            if not employee.staff_password_hash:
-                raise ValidationError("This staff has no password set.")
-
-            if self.staff_pwd != employee.staff_password_hash:
-                raise ValidationError("The password does not match.")
-        else:
-            if not self.staff_name:
-                raise ValidationError("Please Select staff Name.")
-            elif not self.staff_pwd:
-                raise ValidationError("Please Enter Password.")
-            else:
-                raise ValidationError("Please enter both staff name and password.")
+        self.password_validation()
         for record in self:
-            for line in record.prescription_line_ids:
-                if line.products_id and line.qty:
-
-                    stock_entries = self.env['stock.entry'].search([
-                        ('product_id', '=', line.products_id.product_id.id)
-                    ], order="id asc")
-
-                    remaining_qty = line.qty
-                    for entry in stock_entries:
-                        if remaining_qty <= 0:
-                            break
-                        if entry.quantity >= remaining_qty:
-                            entry.quantity -= remaining_qty
-                            remaining_qty = 0
-                        else:
-                            remaining_qty -= entry.quantity
-                            entry.quantity = 0
-                    line.stock_in_hand = sum(stock_entries.mapped('quantity'))
+            if record.status == 'paid':
+                raise ValidationError("This bill is already paid.")
+            if record.status == 'cancelled':
+                raise ValidationError("Cannot pay a cancelled bill.")
+            record._validate_stock_availability()
+            for line in record._get_all_prescription_lines():
+                line.sync_stock_deduction()
             record.status = 'paid'
 
-        # return {
-        #     'type': 'ir.actions.client',
-        #     'tag': 'display_notification',
-        #     'params': {
-        #         'title': 'Payment Confirmed',
-        #         'message': f'Payment has been confirmed for {self.name}',
-        #         'sticky': False,
-        #         'next': {'type': 'ir.actions.act_window_close'},
-        #     }
-        # }
-
         return self.env.ref('homeo_doctor.action_pharmacy_report').report_action(self)
-        # partner = False
-        # if self.patient_id and hasattr(self.patient_id, 'partner_id') and self.patient_id.partner_id:
-        #     partner = self.patient_id.partner_id.id
-        # else:
-        #     # Look for existing partner with same name/phone
-        #     partner = self.env['res.partner'].search([
-        #         ('name', '=', self.name),
-        #         ('phone', '=', self.phone_number)
-        #     ], limit=1)
-        #
-        #     if not partner:
-        #         # Create a new partner for this patient
-        #         partner = self.env['res.partner'].create({
-        #             'name': self.name,
-        #             'phone': self.phone_number,
-        #         }).id
-        #     else:
-        #         partner = partner.id
-        #
-        # return {
-        # 'name': 'Register Payment',
-        # 'type': 'ir.actions.act_window',
-        # 'res_model': 'account.payment',
-        # 'view_mode': 'form',
-        # 'view_id': self.env.ref('homeo_doctor.view_account_payment_form_inherit').id,
-        # 'target': 'new',
-        # 'context': {
-        #     'default_pharm_id': self.id,
-        #     'default_amount': self.bill_amount,
-        #     'default_payment_type': 'inbound',
-        #     'default_communication': self.name,  # This is fine, communication isn't used for sequence
-        #     'default_payment_method_id': self.env.ref('account.account_payment_method_manual_in').id,
-        #     'default_journal_id': self.env['account.journal'].search([('type', '=', 'bank')], limit=1).id,
-        #     # Remove the next line to let Odoo handle the sequence
-        #     'default_name': self.name,
-        #     'default_uhid': self.patient_id.id if self.patient_id else False,
-        #     'default_partner_id': partner,
-        #     'default_partner_type': 'customer',
-        # }
 
-    # }
+    def action_print_pharmacy_disc_bill(self):
+        return self.env.ref('homeo_doctor.action_pharmacy_report').report_action(self)
 
     def view_prescription_details(self):
         """
@@ -579,11 +506,143 @@ class PharmacyPrescriptionLine(models.Model):
     packing = fields.Char(string='Packing')
     mfc = fields.Char(string='Manufacturer')
     qty = fields.Integer(string='QTY')
+    qty_deducted = fields.Float(string='Qty Deducted', default=0.0, copy=False)
     gst = fields.Integer(string='GST Rate(%)')
     discount = fields.Float(string='Disc %')
     stock_in_hand = fields.Char(string='Stock In Hand', compute="_compute_stock_in_hand")
     # rate = fields.Float(string='Rate')
     description_id = fields.Many2one('pharmacy.description', string="Sale Reference")
+
+    def _get_pharmacy_bill(self):
+        self.ensure_one()
+        return self.pharmacy_id or self.description_id
+
+    def _get_product(self):
+        self.ensure_one()
+        if self.products_id and self.products_id.product_id:
+            return self.products_id.product_id
+        return False
+
+    def _get_available_stock_qty(self):
+        product = self._get_product()
+        if not product:
+            return 0.0
+        entries = self.env['stock.entry'].search([
+            ('product_id', '=', product.id),
+            ('quantity', '>', 0),
+        ])
+        return sum(entries.mapped('quantity'))
+
+    def _get_stock_entries_for_deduct(self, product):
+        return self.env['stock.entry'].search([
+            ('product_id', '=', product.id),
+            ('quantity', '>', 0),
+        ], order='exp_date asc, id asc')
+
+    def _deduct_stock_quantity(self, qty):
+        self.ensure_one()
+        product = self._get_product()
+        if not product or qty <= 0:
+            return
+        remaining = qty
+        for entry in self._get_stock_entries_for_deduct(product):
+            if remaining <= 0:
+                break
+            if entry.quantity >= remaining:
+                entry.quantity -= remaining
+                remaining = 0
+            else:
+                remaining -= entry.quantity
+                entry.quantity = 0
+        if remaining > 0:
+            raise ValidationError(
+                "Not enough stock for %s. Short by %s unit(s)."
+                % (product.display_name, int(remaining))
+            )
+
+    def _restore_stock_quantity(self, qty):
+        self.ensure_one()
+        if qty <= 0:
+            return
+        product = self._get_product()
+        if not product:
+            return
+        StockEntry = self.env['stock.entry']
+        entry = False
+        if self.batch:
+            entry = StockEntry.search([
+                ('product_id', '=', product.id),
+                ('batch', '=', self.batch),
+            ], limit=1)
+        if not entry:
+            entry = StockEntry.search([
+                ('product_id', '=', product.id),
+            ], order='exp_date asc, id asc', limit=1)
+        if entry:
+            entry.quantity += qty
+        else:
+            StockEntry.create({
+                'product_id': product.id,
+                'quantity': qty,
+                'rate': self.supplier_rate or self.per_ped or 0,
+                'batch': self.batch,
+                'manf_date': self.manf_date,
+                'exp_date': self.exp_date,
+                'hsn': self.hsn,
+                'company': self.mfc,
+                'gst': self.gst or 0,
+                'date': fields.Date.context_today(self),
+                'state': 'confirmed',
+            })
+
+    def _check_stock_availability(self, extra_qty=0):
+        self.ensure_one()
+        if not self.products_id or not self.qty:
+            return
+        needed = (self.qty or 0) - (self.qty_deducted or 0) + extra_qty
+        if needed <= 0:
+            return
+        available = self._get_available_stock_qty()
+        if available < needed:
+            product_name = self._get_product().display_name if self._get_product() else 'Medicine'
+            raise ValidationError(
+                "Not enough stock for %s. Available: %s, Required: %s."
+                % (product_name, int(available), int(needed))
+            )
+
+    def sync_stock_deduction(self):
+        self.ensure_one()
+        if self.env.context.get('skip_stock_sync'):
+            return
+        bill = self._get_pharmacy_bill()
+        if not bill or bill.status == 'cancelled':
+            return
+        if not self.products_id:
+            return
+
+        target = int(self.qty or 0)
+        current = int(self.qty_deducted or 0)
+        delta = target - current
+        if delta > 0:
+            self._check_stock_availability()
+            self._deduct_stock_quantity(delta)
+            super(PharmacyPrescriptionLine, self.with_context(skip_stock_sync=True)).write({
+                'qty_deducted': current + delta,
+            })
+        elif delta < 0:
+            self._restore_stock_quantity(abs(delta))
+            super(PharmacyPrescriptionLine, self.with_context(skip_stock_sync=True)).write({
+                'qty_deducted': current + delta,
+            })
+
+    def restore_all_deducted_stock(self):
+        for line in self:
+            deducted = line.qty_deducted or 0
+            if deducted > 0:
+                line._restore_stock_quantity(deducted)
+                super(PharmacyPrescriptionLine, line.with_context(skip_stock_sync=True)).write({
+                    'qty_deducted': 0,
+                })
 
     @api.onchange('products_id', 'category')
     def _onchange_products_id(self):
@@ -598,19 +657,21 @@ class PharmacyPrescriptionLine(models.Model):
             }
         }
 
-    @api.onchange('qty')
+    @api.onchange('qty', 'products_id', 'per_ped')
     def _onchange_qty(self):
         for rec in self:
-            if rec.qty and rec.stock_in_hand and rec.qty > rec.stock_in_hand:
-                return {
-                    'warning': {
-                        'title': "Not enough stock",
-                        'message': f"Only {rec.stock_in_hand} units available in stock!",
-                    },
-                    'value': {'qty': 0},  # reset qty if user exceeds stock
-                }
+            if rec.qty and rec.stock_in_hand is not None:
+                if rec.qty > float(rec.stock_in_hand or 0):
+                    return {
+                        'warning': {
+                            'title': "Not enough stock",
+                            'message': "Only %s units available in stock!" % rec.stock_in_hand,
+                        },
+                        'value': {'qty': 0},
+                    }
+            if rec.qty and rec.per_ped:
+                rec.rate = math.ceil(rec.per_ped * rec.qty)
 
- 
     @api.depends('rate', 'gst')
     def _compute_tax_components(self):
         for rec in self:
@@ -695,70 +756,63 @@ class PharmacyPrescriptionLine(models.Model):
             else:
                 record.stock_in_hand = 0.0
 
+    def _auto_init(self):
+        res = super(PharmacyPrescriptionLine, self)._auto_init()
+        self._cr.execute("""
+            UPDATE pharmacy_prescription_line pl
+               SET qty_deducted = pl.qty
+              FROM pharmacy_description pd
+             WHERE pl.pharmacy_id = pd.id
+               AND pl.qty > 0
+               AND COALESCE(pl.qty_deducted, 0) = 0
+               AND pd.status != 'cancelled'
+               AND (pd.payment_mathod = 'credit' OR pd.status = 'paid')
+        """)
+        self._cr.execute("""
+            UPDATE pharmacy_prescription_line pl
+               SET qty_deducted = pl.qty
+              FROM pharmacy_description pd
+             WHERE pl.description_id = pd.id
+               AND pl.qty > 0
+               AND COALESCE(pl.qty_deducted, 0) = 0
+               AND pd.status != 'cancelled'
+               AND (pd.payment_mathod = 'credit' OR pd.status = 'paid')
+        """)
+        return res
+
     @api.model
     def create(self, vals):
-        """Deduct the quantity from stock when a record is created."""
         record = super(PharmacyPrescriptionLine, self).create(vals)
-        if record.products_id and record.qty:
-            stock_entries = self.env['stock.entry'].search([
-                ('product_id', '=', record.products_id.product_id.id),
-            ], order="id asc")
-
-            remaining_qty = record.qty
-            for entry in stock_entries:
-                if remaining_qty <= 0:
-                    break
-                if self.stock_in_hand >= remaining_qty:
-                    self.stock_in_hand -= remaining_qty
-                    remaining_qty = 0
-                else:
-                    remaining_qty -= self.stock_in_hand
-                    self.stock_in_hand = 0
-
+        bill = record._get_pharmacy_bill()
+        if bill and bill.payment_mathod == 'credit' and bill.status != 'cancelled':
+            record.sync_stock_deduction()
         return record
 
     def write(self, vals):
-        """Adjust stock when updating records."""
-        for record in self:
-            original_qty = record.qty
-            new_qty = vals.get('quantity', original_qty)
+        if self.env.context.get('skip_stock_sync'):
+            return super(PharmacyPrescriptionLine, self).write(vals)
 
-            if original_qty != new_qty:
-                diff = new_qty - original_qty  # If increased, need to deduct more
+        for line in self:
+            if 'products_id' in vals and line.qty_deducted:
+                line._restore_stock_quantity(line.qty_deducted)
+                super(PharmacyPrescriptionLine, line.with_context(skip_stock_sync=True)).write({
+                    'qty_deducted': 0,
+                })
 
-                stock_entries = self.env['stock.entry'].search([
-                    ('product_id', '=', record.products_id.product_id.id),
-                ], order="id asc")
+        res = super(PharmacyPrescriptionLine, self).write(vals)
 
-                remaining_qty = diff
-                for entry in stock_entries:
-                    if remaining_qty <= 0:
-                        break
-                    if entry.quantity >= remaining_qty:
-                        entry.quantity -= remaining_qty
-                        remaining_qty = 0
-                    else:
-                        remaining_qty -= entry.quantity
-                        entry.quantity = 0
+        for line in self:
+            bill = line._get_pharmacy_bill()
+            if bill and bill.payment_mathod == 'credit' and bill.status != 'cancelled':
+                line.sync_stock_deduction()
+        return res
 
-        return super(PharmacyPrescriptionLine, self).write(vals)
+    def unlink(self):
+        for line in self:
+            if line.qty_deducted:
+                line._restore_stock_quantity(line.qty_deducted)
+        return super(PharmacyPrescriptionLine, self).unlink()
 
-    @api.onchange('qty','product_id','per_ped')
-    def _onchange_qty(self):
-        for rec in self:
-            if rec.qty and rec.stock_in_hand is not None:
-                if rec.qty > float(rec.stock_in_hand):
-                    return {
-                        'warning': {
-                            'title': "Not enough stock",
-                            'message': f"Only {rec.stock_in_hand} available in stock!",
-                        },
-                        'value': {'qty': 0},
-                    }
-
-            if rec.qty:
-                product = rec.per_ped * rec.qty
-                rec.rate = math.ceil(product)
     # @api.depends('product_id', 'total_med')
     # def _compute_rate(self):
     #     for record in self:
