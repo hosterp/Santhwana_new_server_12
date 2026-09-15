@@ -133,7 +133,7 @@
                                                 t-esc="doc.uhid.gender.upper() if doc.uhid.gender else ''"/>)
                                         </td>
                                         <td style="width: 33.33%; text-align: center; padding: 8px;font-size: 25px;">
-                                            <strong style="font-size: 25px;"></strong>
+                                          <!--  <strong style="font-size: 25px;"></strong>-->
                                             <!--                                            <t t-esc="doc.phone_number"/>-->
                                         </td>
                                         <td style="width: 33.33%; text-align: right; padding: 8px;font-size: 25px;">

@@ -130,7 +130,7 @@ class PharmacyDescription(models.Model):
                                 target_doctor = found_doctor.id
                         
                         if target_doctor:
-                            print(f"DEBUG: Pharmacy {rec.id} found Revisit Doctor ID {target_doctor} from {reg_log.date}")
+                           # print(f"DEBUG: Pharmacy {rec.id} found Revisit Doctor ID {target_doctor} from {reg_log.date}")
                             rec.doctor_name = target_doctor
                         else:
                             print(f"DEBUG: Pharmacy {rec.id} Revisit found but no doctor ID/name")
