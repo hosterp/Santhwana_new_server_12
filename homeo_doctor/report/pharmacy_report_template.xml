@@ -19,6 +19,13 @@
 
                 <hr style="border: 1px solid #999; margin-bottom: 10px;"/>
 
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <h3 style="margin: 0; font-weight: bold; color: #2c3e50; text-transform: uppercase;">Medicine Report</h3>
+                    <p style="margin: 3px 0; font-size: 12px;">
+                        From: <t t-esc="docs.date_from"/> To: <t t-esc="docs.date_to"/>
+                    </p>
+                </div>
+
                 <!-- Table -->
                 <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
                     <thead>
@@ -29,49 +36,59 @@
                             <t t-if="docs.with_patient_name">
                                 <th style="border: 1px solid #000; padding: 5px;">Patient Name</th>
                             </t>
-                            <th style="border: 1px solid #000; padding: 5px;">Medicine</th>
                             <th style="border: 1px solid #000; padding: 5px;">Doctor</th>
-                            <th style="border: 1px solid #000; padding: 5px;">Qty</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: right;">Qty</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        <t t-set="total_qty" t-value="0"/>
-                        <t t-foreach="docs._get_prescription_lines()" t-as="line">
-                            <tr>
-                                <td style="border: 1px solid #000; padding: 5px; text-align: center;">
-                                    <t t-esc="line.pharmacy_id.date"/>
+                        <t t-set="grand_total_qty" t-value="0"/>
+                        <t t-foreach="docs._get_grouped_prescription_lines()" t-as="group">
+                            <tr style="background-color: #e6f2ff; font-weight: bold;">
+                                <td t-att-colspan="4 if docs.with_patient_name else 3"
+                                    style="border: 1px solid #000; padding: 6px 8px; text-align: left;">
+                                    Medicine: <t t-esc="group['medicine_name']"/>
                                 </td>
-                                <td style="border: 1px solid #000; padding: 5px; text-align: center;">
-                                    <t t-esc="line.pharmacy_id.bill_number"/>
+                                <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-weight: bold;">
+                                    Subtotal Qty:
                                 </td>
-                                <td style="border: 1px solid #000; padding: 5px; text-align: center;">
-                                    <t t-esc="line.pharmacy_id.uhid_id.display_name"/>
-                                </td>
-
-                                <t t-if="docs.with_patient_name">
-                                    <td style="border: 1px solid #000; padding: 5px; text-align: left;">
-                                        <t t-esc="line.pharmacy_id.name"/>
-                                    </td>
-                                </t>
-                                <td style="border: 1px solid #000; padding: 5px; text-align: left;">
-                                    <t t-esc="line.products_id.display_name"/>
-                                </td>
-                                <td style="border: 1px solid #000; padding: 5px; text-align: left;">
-                                    <t t-esc="line.pharmacy_id.doctor_name.display_name"/>
-                                </td>
-                                <td style="border: 1px solid #000; padding: 5px; text-align: right;">
-                                    <t t-esc="line.qty"/>
+                                <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-weight: bold;">
+                                    <t t-esc="group['total_qty']"/>
                                 </td>
                             </tr>
-                            <t t-set="total_qty" t-value="total_qty + (line.qty or 0)"/>
+                            <t t-foreach="group['lines']" t-as="line">
+                                <tr>
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                        <t t-esc="line.pharmacy_id.date"/>
+                                    </td>
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                        <t t-esc="line.pharmacy_id.bill_number"/>
+                                    </td>
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                        <t t-esc="line.pharmacy_id.uhid_id.display_name"/>
+                                    </td>
+
+                                    <t t-if="docs.with_patient_name">
+                                        <td style="border: 1px solid #000; padding: 5px; text-align: left;">
+                                            <t t-esc="line.pharmacy_id.name"/>
+                                        </td>
+                                    </t>
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: left;">
+                                        <t t-esc="line.pharmacy_id.doctor_name.display_name"/>
+                                    </td>
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: right;">
+                                        <t t-esc="line.qty"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-set="grand_total_qty" t-value="grand_total_qty + group['total_qty']"/>
                         </t>
 
-                        <tr style="font-weight: bold; background-color: #f9f9f9;">
-                            <td t-att-colspan="6 if docs.with_patient_name else 5"
-                                style="border: 1px solid #000; text-align: right; padding: 5px;">Total Quantity</td>
-                            <td style="border: 1px solid #000; text-align: right; padding: 5px;">
-                                <t t-esc="total_qty"/>
+                        <tr style="font-weight: bold; background-color: #d9d9d9;">
+                            <td t-att-colspan="5 if docs.with_patient_name else 4"
+                                style="border: 1px solid #000; text-align: right; padding: 6px;">Total Quantity</td>
+                            <td style="border: 1px solid #000; text-align: right; padding: 6px;">
+                                <t t-esc="grand_total_qty"/>
                             </td>
                         </tr>
                     </tbody>

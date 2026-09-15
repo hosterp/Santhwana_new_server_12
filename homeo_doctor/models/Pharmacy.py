@@ -534,6 +534,13 @@ class PharmacyPrescriptionLine(models.Model):
         return sum(entries.mapped('quantity'))
 
     def _get_stock_entries_for_deduct(self, product):
+        if self.products_id and self.products_id.quantity > 0:
+            other_entries = self.env['stock.entry'].search([
+                ('product_id', '=', product.id),
+                ('id', '!=', self.products_id.id),
+                ('quantity', '>', 0),
+            ], order='exp_date asc, id asc')
+            return self.products_id | other_entries
         return self.env['stock.entry'].search([
             ('product_id', '=', product.id),
             ('quantity', '>', 0),
@@ -693,46 +700,27 @@ class PharmacyPrescriptionLine(models.Model):
     def _onchange_product_id(self):
         for line in self:
             if line.products_id:
-                stock_entry = self.env['stock.entry'].search([
-                    ('product_id', '=', line.products_id.product_id.id),
-                    ('quantity', '>', 0),
-                    # ('state', '=', 'confirmed'),
-                    # ('exp_date', '>', fields.Date.today()),
-                ], order='exp_date asc', limit=1)
-
-                if stock_entry:
-                    line.batch = stock_entry.batch
-                    line.manf_date = stock_entry.manf_date
-                    line.exp_date = stock_entry.exp_date
-                    line.per_ped = stock_entry.pup
-                    line.supplier_rate = stock_entry.rate
-                    line.hsn = stock_entry.hsn
-                    line.mfc = stock_entry.company
-                    line.gst = stock_entry.gst
-                    # line.uom_id = stock_entry.uom_id.id
+                stock_entry = line.products_id
+                line.batch = stock_entry.batch
+                line.manf_date = stock_entry.manf_date
+                line.exp_date = stock_entry.exp_date
+                line.per_ped = stock_entry.pup
+                line.supplier_rate = stock_entry.rate
+                line.hsn = stock_entry.hsn
+                line.mfc = stock_entry.company
+                line.gst = stock_entry.gst
 
     @api.depends('products_id')
     def _compute_product_details(self):
         for line in self:
             if line.products_id:
-                stock_entry = self.env['stock.entry'].search([
-                    ('product_id', '=', line.products_id.product_id.id),
-                    ('quantity', '>', 0),
-                    # ('exp_date', '>', fields.Date.today()),
-                ], order='exp_date asc', limit=1)
-
-                if stock_entry:
-                    line.batch = stock_entry.batch
-                    line.manf_date = stock_entry.manf_date
-                    line.exp_date = stock_entry.exp_date
-                    line.hsn = stock_entry.hsn
-                    line.per_ped = stock_entry.pup
-                    line.supplier_rate = stock_entry.rate
-                else:
-                    line.batch = False
-                    line.manf_date = False
-                    line.exp_date = False
-                    line.hsn = False
+                stock_entry = line.products_id
+                line.batch = stock_entry.batch
+                line.manf_date = stock_entry.manf_date
+                line.exp_date = stock_entry.exp_date
+                line.hsn = stock_entry.hsn
+                line.per_ped = stock_entry.pup
+                line.supplier_rate = stock_entry.rate
             else:
                 line.batch = False
                 line.manf_date = False
@@ -741,18 +729,10 @@ class PharmacyPrescriptionLine(models.Model):
 
     @api.depends('products_id')
     def _compute_stock_in_hand(self):
-        """Fetch the total available quantity from stock.entry for the selected product."""
+        """Fetch available quantity from stock.entry for the selected batch."""
         for record in self:
             if record.products_id:
-                total_quantity = sum(self.env['stock.entry'].search([
-                    ('product_id', '=', record.products_id.product_id.id),
-                ]).mapped('quantity'))  # Summing up all quantities
-
-                record.stock_in_hand = total_quantity
-                # record.per_ped = record.product_id.lst_price
-                # record.supplier_rate = record.product_id.standard_price
-
-
+                record.stock_in_hand = record.products_id.quantity
             else:
                 record.stock_in_hand = 0.0
 

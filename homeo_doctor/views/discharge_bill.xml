@@ -3912,7 +3912,9 @@
                     <field name="vssc_boolean"/>
                     <field name="doctor"/>
                     <field name="mode_pay"/>
-                    <field name="total_amount"/>
+                    <!-- Stored net_amount: same figure as Total Amount, without
+                         recomputing department bills on every list load. -->
+                    <field name="net_amount" string="Total Amount"/>
                     <field name="status" string="Payment Status"/>
                 </tree>
             </field>

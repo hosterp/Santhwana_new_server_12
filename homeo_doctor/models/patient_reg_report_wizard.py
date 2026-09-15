@@ -137,3 +137,113 @@ class PatientRegistrationReport(models.AbstractModel):
             'docs': patient_wizard,
             'data': data,
         }
+
+
+class PatientRevisitReportWizard(models.TransientModel):
+    _name = 'patient.revisit.report.wizard'
+    _description = 'Patient Revisit Report Wizard'
+
+    from_date = fields.Date(string="From Date", required=True, default=fields.Date.today)
+    to_date = fields.Date(string="To Date", required=True, default=fields.Date.today)
+    register_mode_payment = fields.Selection([('cash', 'Cash'),
+                                              ('card', 'Card'),
+                                              ('cheque', 'Cheque'),
+                                              ('credit', 'Credit'),
+                                              ('upi', 'Mobile Pay'), ], string='Payment Method', default='cash')
+
+    def action_print_pdf(self):
+        domain = [
+            ('appointment_date', '>=', self.from_date),
+            ('appointment_date', '<=', self.to_date)
+        ]
+
+        if self.register_mode_payment:
+            domain.append(('register_mode_payment', '=', self.register_mode_payment))
+
+        patients = self.env['patient.appointment'].search(domain)
+
+        patient_list = []
+        sl = 1
+
+        for patient in patients:
+            patient_list.append({
+                'sl': sl,
+                'reference_no': patient.patient_id.reference_no or '',
+                'patient_name': patient.patient_name.name if hasattr(patient.patient_name,
+                                                                   'name') else patient.patient_name or '',
+                'age': patient.age or '',
+                'address': patient.address or '',
+                'phone': patient.phone_number or '',
+                'consultation_fee': patient.consultation_fee or '',
+                'registration_fee': patient.registration_fee or '',
+                'register_total_amount': patient.register_total_amount or '',
+                'mode_of_payment': patient.register_mode_payment or '',
+                'doctor': patient.doctor_ids.name if hasattr(patient.doctor_ids, 'name') else patient.doctor_ids or '',
+            })
+            sl += 1
+
+        from_date_str = self.from_date.strftime('%Y-%m-%d') if self.from_date else ''
+        to_date_str = self.to_date.strftime('%Y-%m-%d') if self.to_date else ''
+
+        data = {
+            'form': {
+                'from_date': from_date_str,
+                'to_date': to_date_str,
+                'patients': patient_list,
+            },
+            'docs': self,
+        }
+
+        return self.env.ref('homeo_doctor.action_patient_revisit_pdf').with_context(landscape=True).report_action(
+            self, data=data)
+
+
+class PatientRevisitReport(models.AbstractModel):
+    _name = 'report.homeo_doctor.patient_revisit_pdf_template'
+    _description = 'Patient Revisit Report Parser'
+
+    @api.model
+    def _get_report_values(self, docids, data=None):
+        if not data:
+            data = {}
+
+        patient_wizard = self.env['patient.revisit.report.wizard'].browse(docids)
+
+        if not data.get('form', {}).get('patients'):
+            patients = self.env['patient.appointment'].search([
+                ('appointment_date', '>=', patient_wizard.from_date),
+                ('appointment_date', '<=', patient_wizard.to_date)
+            ])
+
+            patient_list = []
+            sl = 1
+
+            for patient in patients:
+                patient_list.append({
+                    'sl': sl,
+                    'reference_no': patient.patient_id.reference_no.display_name if hasattr(patient.patient_id.reference_no, 'display_name') else (patient.patient_id.reference_no or ''),
+                    'patient_name': patient.patient_id.patient_name if hasattr(patient.patient_id,
+                                                                       'patient_name') else patient.patient_id or '',
+                    'age': patient.age or '',
+                    'address': patient.address or '',
+                    'phone': patient.phone_number or '',
+                    'doctor': patient.doctor_ids.name if hasattr(patient.doctor_ids, 'name') else patient.doctor_ids or '',
+                })
+                sl += 1
+
+            from_date_str = patient_wizard.from_date.strftime('%Y-%m-%d') if patient_wizard.from_date else ''
+            to_date_str = patient_wizard.to_date.strftime('%Y-%m-%d') if patient_wizard.to_date else ''
+
+            data['form'] = {
+                'from_date': from_date_str,
+                'to_date': to_date_str,
+                'patients': patient_list,
+            }
+
+        return {
+            'doc_ids': docids,
+            'doc_model': 'patient.revisit.report.wizard',
+            'docs': patient_wizard,
+            'data': data,
+        }
+

@@ -712,8 +712,8 @@
                             <page string="Prescriptions">
                                 <field name="prescription_line_ids">
                                     <tree editable="bottom" class="prescription-tree-big-font">
-                                        <field name="category"/>
-                                        <field name="products_id"/>
+                                        <field name="category" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                                        <field name="products_id" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
                                         <field name="total_med" invisible="1"/>
                                         <field name="morn" invisible="1"/>
                                         <field name="noon" invisible="1"/>

@@ -5201,6 +5201,16 @@ class DischargeBilling(models.Model):
         'general_bill_line_ids.total_amt',
     )
     def _compute_total_unpaid_amount(self):
+        # List/search_read computes many rows at once. Re-running department
+        # searches for every row is what hangs Discharge Billing. Use the
+        # already-stored net amount there. Opening a form is one record and
+        # still uses the live calculation below — no data is written here.
+        if len(self) > 1:
+            for rec in self:
+                rec.total_amount = float(rec.net_amount or rec.settled_total_amount or 0.0)
+                rec.room_rent = 0.0
+            return
+
         for rec in self:
             if not rec.mrd_no:
                 rec.total_amount = sum(rec.general_bill_line_ids.mapped('total_amt') or [0.0])

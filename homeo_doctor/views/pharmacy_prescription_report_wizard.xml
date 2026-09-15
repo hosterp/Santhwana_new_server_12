@@ -13,7 +13,7 @@
                         <field name="date_to"/>
                     </group>
                     <group>
-                        <field name="medicines_id"/>
+                        <field name="medicine_id"/>
                     </group>
                     <group>
                         <field name="with_patient_name"/>

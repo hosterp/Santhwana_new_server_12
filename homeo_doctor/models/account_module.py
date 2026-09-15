@@ -653,27 +653,36 @@ class StockEntry(models.Model):
     def _compute_dispensed(self):
         for record in self:
             record.dispensed=record.qty-record.quantity
+    def name_get(self):
+        result = []
+        for rec in self:
+            prod_name = rec.product_id.display_name if rec.product_id else (rec.name or '')
+            details = []
+            if rec.batch:
+                details.append(f"Batch: {rec.batch}")
+            if rec.exp_date:
+                details.append(f"Exp: {rec.exp_date.strftime('%m/%Y')}")
+            if rec.supplier_mrp is not None:
+                details.append(f"MRP: {rec.supplier_mrp:.2f}")
+            if rec.quantity is not None:
+                details.append(f"Stock: {int(rec.quantity)}")
+
+            if details:
+                name = f"{prod_name} [{', '.join(details)}]"
+            else:
+                name = prod_name
+            result.append((rec.id, name))
+        return result
+
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=100):
-        """Return only one stock.entry per unique product name to avoid duplicates in dropdowns."""
         args = args or []
         domain = args[:]
         if name:
-            domain += [('product_id.name', operator, name)]
+            domain += ['|', ('product_id.name', operator, name), ('batch', operator, name)]
 
-        records = self.search(domain, limit=None)
-
-        seen_products = set()
-        result = []
-        for rec in records:
-            pid = rec.product_id.id
-            if pid and pid not in seen_products:
-                seen_products.add(pid)
-                result.append((rec.id, rec.product_id.name or rec.name))
-                if limit and len(result) >= limit:
-                    break
-
-        return result
+        records = self.search(domain, limit=limit)
+        return records.name_get()
 
     @api.model
     def create(self, vals):
