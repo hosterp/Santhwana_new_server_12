@@ -328,10 +328,10 @@
                         <div class="prescription_additional_section">
                             <div class="prescription_column">
                                 <group name="prescription" class="prescription" string="Prescription">
-                                    <field name="med_ids" nolabel="1">
+                                    <field name="med_ids" nolabel="1" context="{'hide_stock_details': True}">
                                         <tree editable="bottom" decoration-warning="total_med == 0">
                                             <field name="category" required="1" options="{'no_create': True, 'no_create_edit': True}"/>
-                                            <field name="products_id" required="1" options="{'no_create': True, 'no_create_edit': True}"/>
+                                            <field name="products_id" required="1" options="{'no_create': True, 'no_create_edit': True}" context="{'hide_stock_details': True}"/>
                                             <field name="generic"/>
                                             <field name="reg_time"/>
                                             <!--                                            <field name="morn" string="Morning"/>-->

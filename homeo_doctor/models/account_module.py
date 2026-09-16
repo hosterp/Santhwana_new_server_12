@@ -655,8 +655,12 @@ class StockEntry(models.Model):
             record.dispensed=record.qty-record.quantity
     def name_get(self):
         result = []
+        hide_details = self.env.context.get('hide_stock_details')
         for rec in self:
             prod_name = rec.product_id.display_name if rec.product_id else (rec.name or '')
+            if hide_details:
+                result.append((rec.id, prod_name))
+                continue
             details = []
             if rec.batch:
                 details.append(f"Batch: {rec.batch}")
