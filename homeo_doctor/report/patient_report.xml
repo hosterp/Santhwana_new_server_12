@@ -109,7 +109,7 @@
                                                 <t t-esc="data[1].category.display_name"/>
                                             </td>
                                             <td style="padding: 6px;">
-                                                <t t-esc="data[1].products_id.display_name"/>
+                                              <t t-esc="data[1].products_id.display_name.split('[')[0].strip() if data[1].products_id.display_name else ''"/>
                                             </td>
                                             <td style="padding: 6px;">
                                                 <t t-esc="data[1].generic.display_name"/>
