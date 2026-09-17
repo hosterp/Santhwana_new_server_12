@@ -309,6 +309,8 @@
             <xpath expr="//field[@name='name']" position="after">
                 <field name="supplier_name"
                        invisible="context.get('default_move_type') not in ('in_invoice', 'in_refund','in_receipt')"/>
+                <field name="supplier_invoice" string="Invoice No"
+                       invisible="context.get('default_move_type') not in ('in_invoice', 'in_refund','in_receipt')"/>
                 <field name="supplier_phone"
                        invisible="context.get('default_move_type') not in ('in_invoice', 'in_refund','in_receipt')"/>
                 <field name="supplier_gst"

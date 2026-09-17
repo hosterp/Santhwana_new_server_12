@@ -40,7 +40,7 @@ class AccountMove(models.Model):
     mobile=fields.Char(related='uhid.phone_number',string='Mobile No')
     invoice_line_ids=fields.One2many('account.move.line','move_id')
     supplier_name = fields.Many2one('res.partner',string='Supplier Name')
-    supplier_invoice = fields.Char('Invoice No')
+    supplier_invoice = fields.Char('Invoice No', required=True)
     supplier_phone = fields.Char('Phone No')
     supplier_email = fields.Char('Email Id')
     supplier_gst = fields.Char('GST No')
@@ -95,11 +95,40 @@ class AccountMove(models.Model):
 
             # print(move.cgst_amount, move.sgst_amount, '✅ CGST/SGST split')
             # print(move.amount_total_with_gst, '✅ Total Incl. GST')
+    def _verify_no_duplicate_supplier_invoice(self):
+        """Raise ValidationError if supplier_invoice is empty or already exists on any vendor bill."""
+        for rec in self:
+            if rec.move_type != 'in_invoice':
+                continue
+            if not rec.supplier_invoice or not str(rec.supplier_invoice).strip():
+                raise ValidationError(_("Invoice No is required for Vendor Bills."))
+
+            inv_no = str(rec.supplier_invoice).strip()
+            domain = [
+                ('id', '!=', rec.id),
+                ('move_type', '=', 'in_invoice'),
+                ('supplier_invoice', '=ilike', inv_no),
+            ]
+
+            duplicate = self.env['account.move'].sudo().search(domain, limit=1)
+            if duplicate:
+                dup_supplier = (duplicate.supplier_name.name if duplicate.supplier_name else False) or \
+                               (duplicate.partner_id.name if duplicate.partner_id else False) or "N/A"
+                raise ValidationError(
+                    _("Invoice No '%s' already exists in Bill '%s' (Supplier: %s). "
+                      "Duplicate invoice numbers are not allowed!")
+                    % (inv_no, duplicate.name or duplicate.id, dup_supplier)
+                )
+
+    @api.constrains('supplier_invoice', 'supplier_name', 'partner_id', 'move_type')
+    def _check_unique_supplier_invoice(self):
+        self.filtered(lambda m: m.move_type == 'in_invoice')._verify_no_duplicate_supplier_invoice()
+
     @api.onchange('supplier_name')
     def _onchange_supplier_name(self):
         for rec in self:
-            rec.supplier_gst= rec.supplier_name.gst_no
-            rec.supplier_dl= rec.supplier_name.reg_no
+            rec.supplier_gst = rec.supplier_name.gst_no
+            rec.supplier_dl = rec.supplier_name.reg_no
             rec.supplier_phone = rec.supplier_name.mobile
 
     @api.depends('invoice_line_ids', 'global_discount', 'amount_untaxed')
@@ -128,36 +157,16 @@ class AccountMove(models.Model):
             move.discount_amount = discount_amount
 
             # Update total after discount
-            # move.amount_total = move.amount_before_discount + move.amount_total_with_gst
-            move.amount_total =  move.amount_total_with_gst
+            move.amount_total = move.amount_total_with_gst
             # Update amount_residual to match the discounted total for unpaid/partially paid invoices
             if move.state == 'posted' and move.payment_state in ['not_paid', 'partial']:
-                # Calculate the payment ratio if partially paid
                 if move.payment_state == 'partial' and move.amount_residual != 0 and amount_before_discount != 0:
                     paid_ratio = 1 - (move.amount_residual / amount_before_discount)
-                    # Apply the same payment ratio to the new discounted total
                     move.amount_residual = (amount_before_discount - discount_amount) * (1 - paid_ratio)
                 else:
-                    # If not paid at all, residual should equal the new total
                     move.amount_residual = amount_before_discount - discount_amount
 
-                # Update amount_residual_signed accordingly
                 move.amount_residual_signed = -move.amount_residual if move.is_inbound() else move.amount_residual
-
-    @api.model
-    def create(self, vals):
-        if vals.get('name', 'New') in ['New', '/']:
-            raw_seq = self.env['ir.sequence'].next_by_code('purchase.order') or '0'
-            padded_seq = raw_seq.zfill(4)
-
-            today = date.today()
-            year_start = today.year % 100
-            year_end = (today.year + 1) % 100
-            fiscal_suffix = f"{year_start:02d}-{year_end:02d}"
-
-            vals['name'] = f"{padded_seq}/{fiscal_suffix}"
-        return super(AccountMove, self).create(vals)
-
 
     @api.onchange('po_number')
     def _onchange_po_number(self):
@@ -180,7 +189,6 @@ class AccountMove(models.Model):
 
             self.invoice_line_ids = invoice_lines
         else:
-            # If PO is removed, clear invoice lines
             self.invoice_line_ids = [(5, 0, 0)]
 
     def _default_partner(self):
@@ -188,45 +196,28 @@ class AccountMove(models.Model):
 
     partner_id = fields.Many2one('res.partner', string="Customer", required=True, default=_default_partner)
 
-    # @api.model
-    # def create(self, vals):
-    #     if vals.get('move_type') == 'out_invoice' and not vals.get('name'):
-    #         vals['name'] = self.env['ir.sequence'].next_by_code('account.move')
-    #
-    #     return super(AccountMove, self).create(vals)
     @api.model
     def create(self, vals):
-        # 1) If this is a vendor bill, override the default name:
         if vals.get('move_type') == 'in_invoice':
-            # Force name to False so we can generate our custom sequence
             vals['name'] = False
-
-            # a) fetch next number from our custom sequence code 'in.invoice'
-            #    (You must have created a sequence with code = 'in.invoice')
             raw_seq = self.env['ir.sequence'].next_by_code('in.invoice') or '0'
             padded_seq = str(raw_seq).zfill(4)
-
-            # b) compute fiscal-year suffix, e.g. '25-26' if today is in 2025
             today = fields.Date.context_today(self)
             year_start = today.year % 100
             year_end = (today.year + 1) % 100
             fiscal_suffix = f"{year_start:02d}-{year_end:02d}"
-
-            # c) set name = "0001/25-26"
             vals['name'] = f"{padded_seq}/{fiscal_suffix}"
 
-        # 2) Else if it’s a customer invoice, let Odoo’s default run:
-        #    (We do nothing here, so `name` remains whatever default or next_by_code('account.move') gives.)
-        #    If you wanted to override out_invoice as well, you could add an elif for move_type == 'out_invoice'.
+        res = super(AccountMove, self).create(vals)
+        if res.move_type == 'in_invoice':
+            res._verify_no_duplicate_supplier_invoice()
+        return res
 
-        return super(AccountMove, self).create(vals)
     def action_post(self):
         res = super(AccountMove, self).action_post()
 
         for move in self:
-            # After posting the invoice, recalculate amount_residual based on discount
             if move.move_type == 'in_invoice' and move.global_discount > 0:
-                # Apply discount to residual amount
                 move.amount_residual = move.amount_total
                 move.amount_residual_signed = -move.amount_residual if move.is_inbound() else move.amount_residual
 
@@ -268,24 +259,25 @@ class AccountMove(models.Model):
 
     def write(self, vals):
         result = super(AccountMove, self).write(vals)
-        # If global_discount is being updated on an already posted invoice
+
+        # Verify duplicate invoice on any write to vendor bills
+        in_invoices = self.filtered(lambda m: m.move_type == 'in_invoice')
+        if in_invoices:
+            in_invoices._verify_no_duplicate_supplier_invoice()
+
         if 'global_discount' in vals and any(move.state == 'posted' for move in self):
             for move in self.filtered(lambda m: m.state == 'posted' and m.move_type == 'in_invoice'):
-                # Recalculate amount_residual based on updated discount
                 discount_amount = move.amount_before_discount * (move.global_discount / 100.0)
                 new_total = move.amount_before_discount - discount_amount
 
-                # Update the amount_residual appropriately
                 if move.payment_state == 'not_paid':
                     move.amount_residual = new_total
                 elif move.payment_state == 'partial':
-                    # Calculate the payment ratio
                     paid_amount = move.amount_before_discount - move.amount_residual
                     if move.amount_before_discount != 0:
                         paid_ratio = paid_amount / move.amount_before_discount
                         move.amount_residual = new_total * (1 - paid_ratio)
 
-                # Update amount_residual_signed accordingly
                 move.amount_residual_signed = -move.amount_residual if move.is_inbound() else move.amount_residual
 
         return result
