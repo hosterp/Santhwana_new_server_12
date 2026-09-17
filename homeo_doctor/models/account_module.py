@@ -197,6 +197,15 @@ class AccountMove(models.Model):
     partner_id = fields.Many2one('res.partner', string="Customer", required=True, default=_default_partner)
 
     @api.model
+    def name_search(self, name='', args=None, operator='ilike', limit=100):
+        args = args or []
+        domain = args[:]
+        if name:
+            domain += ['|', '|', ('name', operator, name), ('supplier_invoice', operator, name), ('supplier_name', operator, name)]
+        records = self.search(domain, limit=limit)
+        return records.name_get()
+
+    @api.model
     def create(self, vals):
         if vals.get('move_type') == 'in_invoice':
             vals['name'] = False

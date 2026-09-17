@@ -328,6 +328,20 @@
         </field>
     </record>
 
+    <record id="view_account_invoice_filter_inherit_supplier_invoice" model="ir.ui.view">
+        <field name="name">account.move.select.inherit.supplier.invoice</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="supplier_invoice" string="Invoice No" filter_domain="[('supplier_invoice', 'ilike', self)]"/>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <filter string="Invoice No" name="group_supplier_invoice" context="{'group_by': 'supplier_invoice'}"/>
+            </xpath>
+        </field>
+    </record>
+
     <record id="inherit_account_payment_register_form" model="ir.ui.view">
         <field name="name">account.payment.register.form.inherit</field>
         <field name="model">account.payment.register</field>
