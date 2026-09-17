@@ -163,31 +163,34 @@ class RevenueReportWizard(models.TransientModel):
             })
         return rows
 
+    def _prepare_report_payload(self):
+        rows = self._get_revenue_data()
+        grand_total = sum(r['grand_total'] for r in rows)
+
+        return {
+            'from_date': self.from_date.strftime('%d-%m-%Y'),
+            'to_date': self.to_date.strftime('%d-%m-%Y'),
+            'rows': rows,
+            'grand_total': round(grand_total, 2),
+        }
+
     # -------------------------------------------------------
     # Button actions
     # -------------------------------------------------------
     def action_print_report(self):
         """Print / Download PDF report."""
-        rows = self._get_revenue_data()
-        grand_total = sum(r['grand_total'] for r in rows)
-        data = {
-            'from_date': self.from_date.strftime('%d-%m-%Y'),
-            'to_date': self.to_date.strftime('%d-%m-%Y'),
-            'rows': rows,
-            'grand_total': round(grand_total, 2),
-        }
-        return self.env.ref('homeo_doctor.action_revenue_report_pdf').report_action(self, data=data)
+        report_action = self.env.ref('homeo_doctor.action_revenue_report_pdf', raise_if_not_found=False)
+        paperformat = self.env.ref('homeo_doctor.revenue_report_paperformat', raise_if_not_found=False)
+        if report_action and paperformat:
+            paperformat.sudo().write({'orientation': 'Portrait', 'format': 'A4'})
+            report_action.sudo().write({'paperformat_id': paperformat.id})
+
+        data = self._prepare_report_payload()
+        return report_action.report_action(self, data=data)
 
     def action_view_report(self):
         """Open HTML preview in browser (qweb-html)."""
-        rows = self._get_revenue_data()
-        grand_total = sum(r['grand_total'] for r in rows)
-        data = {
-            'from_date': self.from_date.strftime('%d-%m-%Y'),
-            'to_date': self.to_date.strftime('%d-%m-%Y'),
-            'rows': rows,
-            'grand_total': round(grand_total, 2),
-        }
+        data = self._prepare_report_payload()
         return self.env.ref('homeo_doctor.action_revenue_report_html').report_action(self, data=data)
 
 
