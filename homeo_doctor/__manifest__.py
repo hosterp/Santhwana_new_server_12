@@ -110,6 +110,8 @@
         "report/medicine_reorder.xml",
         "report/ipdischarge_billing_report.xml",
         "report/patient_count_report.xml",
+        "report/revenue_report_template.xml",
+        "report/revenue_report_wizard.xml",
         "views/custom_title.xml",
         "views/account_move_view.xml",
         "views/register_paymeny.xml",
@@ -161,6 +163,7 @@
         "views/zero_stock_report_view.xml",
         "data/ir_sequence_data.xml",
         'security/groups.xml',
+        'security/ir.model.access.csv',
 
     ],
     'assets': {

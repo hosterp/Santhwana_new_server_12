@@ -31,3 +31,4 @@ from . import cancelled_bill
 from . import medicine_reorder
 from . import IP_Billing_report
 from . import patient_count_report
+from . import revenue_report_wizard

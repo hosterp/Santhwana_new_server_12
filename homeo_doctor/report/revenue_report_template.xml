@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==============================================================
+         SHARED HEADER / BODY  (used by both PDF and HTML templates)
+    ============================================================== -->
+    <template id="revenue_report_body">
+        <t t-call="web.external_layout">
+            <div class="page">
+
+                <!-- ── Hospital Header ───────────────────────────── -->
+                <div style="display:flex; align-items:center; justify-content:center;
+                            margin-bottom:18px; font-family:Arial,sans-serif;">
+                    <img t-att-src="'/web/binary/company_logo'"
+                         style="width:65px; height:65px; border-radius:50%; margin-right:14px;"/>
+                    <div style="flex-grow:1; text-align:center;">
+                        <h1 style="font-size:22px; margin:0; font-weight:bold; color:#2c3e50;">
+                            SANTHWANA HOSPITAL
+                        </h1>
+                        <p style="margin:2px 0; font-size:13px; color:#555;">
+                            N.C.C Road, Ambalamukku, Trivandrum – 695005
+                        </p>
+                        <p style="margin:2px 0; font-size:13px; color:#555;">
+                            Phone: 0471-2432121, 4223131
+                        </p>
+                        <p style="margin:2px 0; font-size:13px; color:#555;">
+                            Email: info@santhwanahospital.com | www.santhwanahospital.com
+                        </p>
+                        <p style="margin:2px 0; font-size:12px; color:#777;">
+                            NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ── Report Title ───────────────────────────────── -->
+                <div style="text-align:center; margin-bottom:12px;">
+                    <h2 style="margin:0; font-size:17px; color:#1a3c6e; text-transform:uppercase;
+                                letter-spacing:1px; border-bottom:2px solid #1a3c6e; display:inline-block;
+                                padding-bottom:4px;">
+                        Revenue Report
+                    </h2>
+                    <p style="margin:6px 0 0; font-size:13px; color:#555;">
+                        Period: <strong><t t-esc="data.get('from_date')"/></strong>
+                        &amp;nbsp; to &amp;nbsp;
+                        <strong><t t-esc="data.get('to_date')"/></strong>
+                    </p>
+                </div>
+
+                <!-- ── Data Table ─────────────────────────────────── -->
+                <table style="width:100%; border-collapse:collapse; font-size:13px;
+                               font-family:Arial,sans-serif; margin-top:8px;">
+                    <thead>
+                        <tr style="background:#1a3c6e; color:#fff;">
+                            <th style="padding:8px 10px; text-align:center; width:10%;
+                                       border:1px solid #ddd;">
+                                Sl No
+                            </th>
+                            <th style="padding:8px 10px; text-align:center; width:50%;
+                                       border:1px solid #ddd;">
+                                Date
+                            </th>
+                            <th style="padding:8px 10px; text-align:right; width:40%;
+                                       border:1px solid #ddd;">
+                                Grand Total (₹)
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="data.get('rows', [])" t-as="row">
+                            <tr t-att-style="'background:#f9f9f9;' if row_index % 2 == 0 else 'background:#fff;'">
+                                <td style="padding:7px 10px; text-align:center; border:1px solid #ddd;">
+                                    <t t-esc="row.get('sl_no')"/>
+                                </td>
+                                <td style="padding:7px 10px; text-align:center; border:1px solid #ddd;">
+                                    <t t-esc="row.get('date')"/>
+                                </td>
+                                <td style="padding:7px 10px; text-align:right; border:1px solid #ddd;">
+                                    <t t-esc="'{:,.2f}'.format(row.get('grand_total', 0.0))"/>
+                                </td>
+                            </tr>
+                        </t>
+
+                        <!-- No data row -->
+                        <t t-if="not data.get('rows')">
+                            <tr>
+                                <td colspan="3" style="padding:12px; text-align:center;
+                                                       border:1px solid #ddd; color:#999;">
+                                    No revenue records found for the selected period.
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                    <tfoot>
+                        <tr style="background:#e8f0fe; font-weight:bold; font-size:14px;">
+                            <td colspan="2" style="padding:8px 10px; text-align:right;
+                                                   border:1px solid #ddd; color:#1a3c6e;">
+                                Grand Total
+                            </td>
+                            <td style="padding:8px 10px; text-align:right;
+                                       border:1px solid #ddd; color:#1a3c6e;">
+                                <t t-esc="'{:,.2f}'.format(data.get('grand_total', 0.0))"/>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+            </div>
+        </t>
+    </template>
+
+    <!-- ==============================================================
+         PDF Template
+    ============================================================== -->
+    <template id="revenue_report_pdf_template">
+        <t t-name="homeo_doctor.revenue_report_pdf_template">
+            <t t-call="web.html_container">
+                <t t-call="homeo_doctor.revenue_report_body">
+                    <t t-set="data" t-value="data"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- ==============================================================
+         HTML (View) Template
+    ============================================================== -->
+    <template id="revenue_report_html_template">
+        <t t-name="homeo_doctor.revenue_report_html_template">
+            <t t-call="web.html_container">
+                <t t-call="homeo_doctor.revenue_report_body">
+                    <t t-set="data" t-value="data"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

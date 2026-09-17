@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ============================================================
+             PDF Report Action
+        ============================================================ -->
+        <report
+            id="action_revenue_report_pdf"
+            string="Revenue Report"
+            model="revenue.report.wizard"
+            report_type="qweb-pdf"
+            name="homeo_doctor.revenue_report_pdf_template"
+            file="homeo_doctor.revenue_report_pdf_template"
+        />
+
+        <!-- ============================================================
+             HTML / View Report Action
+        ============================================================ -->
+        <report
+            id="action_revenue_report_html"
+            string="Revenue Report (View)"
+            model="revenue.report.wizard"
+            report_type="qweb-html"
+            name="homeo_doctor.revenue_report_html_template"
+            file="homeo_doctor.revenue_report_html_template"
+        />
+
+        <!-- ============================================================
+             Wizard Form View
+        ============================================================ -->
+        <record id="view_revenue_report_wizard_form" model="ir.ui.view">
+            <field name="name">revenue.report.wizard.form</field>
+            <field name="model">revenue.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Revenue Report">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>Revenue Report</h1>
+<!--                            <p style="color:#6c757d;">-->
+<!--                                Select a date range to generate the combined-->
+<!--                                revenue report (date-wise grand totals).-->
+<!--                            </p>-->
+                        </div>
+                        <group col="2">
+                            <field name="from_date" string="From Date"/>
+                            <field name="to_date"   string="To Date"/>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button
+                            name="action_print_report"
+                            string="Print"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-print"/>
+                        <button
+                            name="action_view_report"
+                            string="View"
+                            type="object"
+                            class="btn-secondary"
+                            icon="fa-eye"/>
+                        <button
+                            string="Cancel"
+                            class="btn-default"
+                            special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- ============================================================
+             Window Action (opens the wizard)
+        ============================================================ -->
+        <record id="action_revenue_report_wizard" model="ir.actions.act_window">
+            <field name="name">Revenue Report</field>
+            <field name="res_model">revenue.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- ============================================================
+             Menu item  – under "Collection Report" parent menu
+             (parent: menu_collection_root defined in total_collection_report.xml)
+        ============================================================ -->
+        <menuitem
+            id="menu_revenue_report"
+            name="Revenue Report"
+            parent="menu_reports_root"
+            action="action_revenue_report_wizard"
+            sequence="20"/>
+
+    </data>
+</odoo>
