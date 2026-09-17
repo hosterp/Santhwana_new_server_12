@@ -5,12 +5,11 @@
          SHARED HEADER / BODY  (used by both PDF and HTML templates)
     ============================================================== -->
     <template id="revenue_report_body">
-        <t t-call="web.external_layout">
-            <div class="page">
+        <div style="font-family:Arial,sans-serif; padding:20px;">
 
                 <!-- ── Hospital Header ───────────────────────────── -->
                 <div style="display:flex; align-items:center; justify-content:center;
-                            margin-bottom:18px; font-family:Arial,sans-serif;">
+                            margin-bottom:8px; font-family:Arial,sans-serif;">
                     <img t-att-src="'/web/binary/company_logo'"
                          style="width:65px; height:65px; border-radius:50%; margin-right:14px;"/>
                     <div style="flex-grow:1; text-align:center;">
@@ -33,7 +32,7 @@
                 </div>
 
                 <!-- ── Report Title ───────────────────────────────── -->
-                <div style="text-align:center; margin-bottom:12px;">
+                <div style="text-align:center; margin-bottom:6px;">
                     <h2 style="margin:0; font-size:17px; color:#1a3c6e; text-transform:uppercase;
                                 letter-spacing:1px; border-bottom:2px solid #1a3c6e; display:inline-block;
                                 padding-bottom:4px;">
@@ -104,8 +103,7 @@
                     </tfoot>
                 </table>
 
-            </div>
-        </t>
+        </div>
     </template>
 
     <!-- ==============================================================
