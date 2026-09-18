@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- ═══════════════════════════════════════════════════════
+             SUPPLIER INVOICE PRINT – QWeb PDF Template
+             Model: account.move  (move_type = in_invoice)
+             ═══════════════════════════════════════════════════════ -->
+        <template id="supplier_invoice_print_template">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="web.internal_layout">
+                        <div class="page">
+
+                            <style>
+                                @page { size: A4 portrait; margin: 10mm 7mm 10mm 7mm; }
+
+                                body, table { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; }
+
+                                /* ── Header ── */
+                                .inv-header {
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    margin-bottom: 16px;
+                                    border-bottom: 2px solid #1a73e8;
+                                    padding-bottom: 10px;
+                                }
+                                .inv-header img { width: 80px; height: 80px; border-radius: 50%; margin-right: 16px; }
+                                .inv-header-text { text-align: center; flex: 1; }
+                                .inv-header-text h1 { font-size: 22px; margin: 0; font-weight: bold; color: #1a3a5c; }
+                                .inv-header-text p  { margin: 2px 0; font-size: 12px; color: #555; }
+
+                                /* ── Title banner ── */
+                                .inv-title-bar {
+                                    background: linear-gradient(135deg, #1a73e8, #0d5db7);
+                                    color: #fff;
+                                    text-align: center;
+                                    padding: 8px 0;
+                                    font-size: 16px;
+                                    font-weight: bold;
+                                    letter-spacing: 1px;
+                                    border-radius: 4px;
+                                    margin-bottom: 14px;
+                                }
+
+                                /* ── Info grid ── */
+                                .inv-info-table {
+                                    width: 100%;
+                                    border-collapse: collapse;
+                                    margin-bottom: 14px;
+                                    border: 1px solid #cce0f5;
+                                    border-radius: 4px;
+                                    overflow: hidden;
+                                }
+                                .inv-info-table th {
+                                    background-color: #e8f0fe;
+                                    color: #1a3a5c;
+                                    font-size: 11px;
+                                    padding: 5px 10px;
+                                    text-align: left;
+                                    border: 1px solid #cce0f5;
+                                    white-space: nowrap;
+                                }
+                                .inv-info-table td {
+                                    font-size: 12px;
+                                    font-weight: bold;
+                                    color: #222;
+                                    padding: 5px 10px;
+                                    border: 1px solid #cce0f5;
+                                }
+
+                                /* ── Line items table ── */
+                                .inv-lines-table {
+                                    width: 100%;
+                                    border-collapse: collapse;
+                                    font-size: 11pt;
+                                }
+                                .inv-lines-table thead tr {
+                                    background-color: #1a73e8;
+                                    color: #fff;
+                                }
+                                .inv-lines-table thead th {
+                                    padding: 7px 8px;
+                                    text-align: center;
+                                    font-size: 12px;
+                                    border: 1px solid #1a73e8;
+                                }
+                                .inv-lines-table tbody td {
+                                    padding: 6px 8px;
+                                    font-size: 11px;
+                                    border: 1px solid #ddd;
+                                }
+                                .inv-lines-table tbody tr:nth-child(even) { background-color: #f4f8ff; }
+                                .inv-lines-table tfoot td {
+                                    padding: 7px 8px;
+                                    font-size: 12px;
+                                    font-weight: bold;
+                                    border-top: 2px solid #1a73e8;
+                                }
+
+                                /* ── Footer ── */
+                                .inv-footer {
+                                    margin-top: 18px;
+                                    border-top: 1px solid #ccc;
+                                    padding-top: 8px;
+                                    text-align: center;
+                                    font-size: 9px;
+                                    color: #777;
+                                }
+                                .inv-sign-row {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    margin-top: 30px;
+                                    font-size: 11px;
+                                }
+                                .inv-sign-row div { text-align: center; width: 30%; border-top: 1px solid #444; padding-top: 5px; }
+                            </style>
+
+                            <!-- ── HOSPITAL HEADER (same as customer invoice) ── -->
+                            <div class="inv-header">
+                                <img t-att-src="'/web/binary/company_logo'" alt="Logo"/>
+                                <div class="inv-header-text">
+                                    <h1>SANTHWANA HOSPITAL</h1>
+                                    <p>N.C.C Road, Ambalamukku, Trivandrum - 695005</p>
+                                    <p>Phone: 0471-2432121, Mob: 9188429198</p>
+                                    <p>D/L NOS : RLF20KL2022000342 , RLF21KL2022000340</p>
+                                    <p>GSTIN: 32AAICS1884P1ZS | CIN: U85110KL1997PTC011813</p>
+                                    <p>NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED</p>
+                                </div>
+                            </div>
+
+                            <!-- ── TITLE BANNER ── -->
+                            <div class="inv-title-bar">SUPPLIER INVOICE</div>
+
+                            <!-- ── SUPPLIER INFO GRID ── -->
+                            <table class="inv-info-table">
+                                <tr>
+                                    <th>Bill Number</th>
+                                    <td><t t-esc="o.name or ''"/></td>
+                                    <th>Invoice Number</th>
+                                    <td><t t-esc="o.supplier_invoice or ''"/></td>
+                                </tr>
+                                <tr>
+                                    <th>Supplier Name</th>
+                                    <td><t t-esc="o.supplier_name.name if o.supplier_name else ''"/></td>
+                                    <th>Bill Date</th>
+                                    <td><t t-esc="o.supplier_bill_date.strftime('%d-%m-%Y') if o.supplier_bill_date else ''"/></td>
+                                </tr>
+                                <tr>
+                                    <th>GST Number</th>
+                                    <td><t t-esc="o.supplier_gst or ''"/></td>
+                                    <th>DL / REG Number</th>
+                                    <td><t t-esc="o.supplier_dl or ''"/></td>
+                                </tr>
+                                <tr>
+                                    <th>Phone</th>
+                                    <td><t t-esc="o.supplier_phone or ''"/></td>
+                                    <th>Payment Mode</th>
+                                    <td><t t-esc="(o.pay_mode or '').upper()"/></td>
+                                </tr>
+                                <t t-if="o.po_number">
+                                    <tr>
+                                        <th>PO Number</th>
+                                        <td colspan="3"><t t-esc="o.po_number.name"/></td>
+                                    </tr>
+                                </t>
+                            </table>
+
+                            <!-- ── MEDICINE LINE ITEMS TABLE ── -->
+                            <table class="inv-lines-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:4%;">Sl</th>
+                                        <th style="width:22%;">Medicine / Product</th>
+                                        <th style="width:8%;">Batch</th>
+                                        <th style="width:7%;">Exp Date</th>
+                                        <th style="width:6%;">HSN</th>
+                                        <th style="width:5%;">Ord Qty</th>
+                                        <th style="width:5%;">Rec Qty</th>
+                                        <th style="width:5%;">Free</th>
+                                        <th style="width:6%;">Pack</th>
+                                        <th style="width:7%;">MRP (₹)</th>
+                                        <th style="width:7%;">Rate (₹)</th>
+                                        <th style="width:5%;">GST%</th>
+                                        <th style="width:9%;">Amount (₹)</th>
+                                        <th style="width:9%;">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-set="sl" t-value="1"/>
+                                    <t t-foreach="o.invoice_line_ids" t-as="line">
+                                        <t t-if="line.display_type == False or line.display_type == 'product'">
+                                            <tr>
+                                                <td style="text-align:center;"><t t-esc="sl"/><t t-set="sl" t-value="sl + 1"/></td>
+                                                <td><t t-esc="line.product_id.display_name if line.product_id else ''"/></td>
+                                                <td style="text-align:center;"><t t-esc="line.batch or ''"/></td>
+                                                <td style="text-align:center;">
+                                                    <t t-esc="line.expiry_date.strftime('%m/%Y') if line.expiry_date else ''"/>
+                                                </td>
+                                                <td style="text-align:center;"><t t-esc="line.hsn or ''"/></td>
+                                                <td style="text-align:center;"><t t-esc="line.ord_qty or 0"/></td>
+                                                <td style="text-align:center;"><t t-esc="line.quantity or 0"/></td>
+                                                <td style="text-align:center;"><t t-esc="line.free_qty or 0"/></td>
+                                                <td style="text-align:center;"><t t-esc="line.pack or 1"/></td>
+                                                <td style="text-align:right;"><t t-esc="'%.2f' % (line.supplier_mrp or 0.0)"/></td>
+                                                <td style="text-align:right;"><t t-esc="'%.2f' % (line.price_unit or 0.0)"/></td>
+                                                <td style="text-align:center;"><t t-esc="line.gst or 0"/>%</td>
+                                                <td style="text-align:right;"><t t-esc="'%.2f' % (line.price_subtotal or 0.0)"/></td>
+                                                <td style="text-align:center;">
+                                                    <t t-esc="o.invoice_date.strftime('%d-%m-%Y') if o.invoice_date else ''"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background-color:#e8f0fe;">
+                                        <td colspan="12" style="text-align:right; color:#1a3a5c;">
+                                            Sub Total (excl. GST):
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <t t-esc="'%.2f' % (o.amount_before_discount or o.amount_untaxed or 0.0)"/>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    <t t-if="o.cgst_amount or o.sgst_amount">
+                                        <tr>
+                                            <td colspan="12" style="text-align:right; color:#555;">
+                                                CGST Amount:
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <t t-esc="'%.2f' % (o.cgst_amount or 0.0)"/>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="12" style="text-align:right; color:#555;">
+                                                SGST Amount:
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <t t-esc="'%.2f' % (o.sgst_amount or 0.0)"/>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                    </t>
+                                    <t t-if="o.global_discount and o.global_discount > 0">
+                                        <tr>
+                                            <td colspan="12" style="text-align:right; color:#d32f2f;">
+                                                Discount (<t t-esc="'%.2f' % o.global_discount"/>%):
+                                            </td>
+                                            <td style="text-align:right; color:#d32f2f;">
+                                                - <t t-esc="'%.2f' % (o.discount_amount or 0.0)"/>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                    </t>
+                                    <tr style="background-color:#1a73e8; color:#fff; font-size:13px;">
+                                        <td colspan="12" style="text-align:right;">
+                                            GRAND TOTAL (incl. GST):
+                                        </td>
+                                        <td style="text-align:right; font-weight:bold;">
+                                            ₹ <t t-esc="'%.2f' % (o.amount_total_with_gst or o.amount_total or 0.0)"/>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <!-- ── STAFF / SIGNATORY ROW ── -->
+                            <div class="inv-sign-row">
+                                <div>
+                                    <t t-if="o.verified_person_name">
+                                        <strong>Verified By:</strong><br/>
+                                        <t t-esc="o.verified_person_name"/>
+                                    </t>
+                                    <t t-else="">
+                                        <strong>Verified By:</strong><br/>–
+                                    </t>
+                                </div>
+                                <div>
+                                    <strong>Staff Name (Created By):</strong><br/>
+                                    <t t-esc="o.create_uid.name if o.create_uid else ''"/>
+                                </div>
+                                <div>
+                                    Authorised Signatory
+                                </div>
+                            </div>
+
+                            <!-- ── FOOTER ── -->
+                            <div class="inv-footer">
+                                Email: info@santhwanahospital.com | Website: www.santhwanahospital.com |
+                                NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
+                            </div>
+
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <!-- Paper Format -->
+        <record id="supplier_invoice_print_paperformat" model="report.paperformat">
+            <field name="name">Supplier Invoice Print – A4 Portrait</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="orientation">Portrait</field>
+            <field name="header_line" eval="False"/>
+        </record>
+
+        <!-- Report Action – bound to account.move, appears in Print menu -->
+        <record id="supplier_invoice_print_report_action" model="ir.actions.report">
+            <field name="name">Supplier Invoice PDF</field>
+            <field name="model">account.move</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">homeo_doctor.supplier_invoice_print_template</field>
+            <field name="report_file">homeo_doctor.supplier_invoice_print_template</field>
+            <field name="print_report_name">'Supplier_Invoice_' + (object.name or '')</field>
+            <field name="paperformat_id" ref="homeo_doctor.supplier_invoice_print_paperformat"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_type">report</field>
+        </record>
+
+    </data>
+</odoo>

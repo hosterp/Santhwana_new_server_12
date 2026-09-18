@@ -59,6 +59,7 @@
         "report/lab_billing_wizard_report.xml",
         "report/pharmacy_description_report.xml",
         "report/supplier_billing_report.xml",
+        "report/supplier_invoice_print.xml",
         "report/admitted_patient_billing_wizard.xml",
         "report/appointment_challan.xml",
         "report/admission_challan_report.xml",
