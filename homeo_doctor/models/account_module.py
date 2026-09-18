@@ -72,6 +72,35 @@ class AccountMove(models.Model):
         store=True,
         currency_field='currency_id'
     )
+    is_verified = fields.Boolean(string='Verified', default=False, copy=False)
+    verified_by = fields.Many2one('res.users', string='Verified By', readonly=True, copy=False)
+    verified_person_name = fields.Char(string='Verified Person Name', readonly=True, copy=False)
+    verified_date = fields.Datetime(string='Verified Date', readonly=True, copy=False)
+
+    def action_verify_invoice(self):
+        self.ensure_one()
+        return {
+            'name': _('Verify Supplier Invoice'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'supplier.invoice.verify.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_move_id': self.id,
+                'default_user_id': self.env.user.id,
+            }
+        }
+
+    def button_draft(self):
+        res = super(AccountMove, self).button_draft()
+        self.write({
+            'is_verified': False,
+            'verified_by': False,
+            'verified_person_name': False,
+            'verified_date': False
+        })
+        return res
+
 
     @api.depends('invoice_line_ids.gst', 'invoice_line_ids.price_subtotal')
     def _compute_tax_split(self):
@@ -223,7 +252,12 @@ class AccountMove(models.Model):
         return res
 
     def action_post(self):
+        for move in self:
+            if move.move_type == 'in_invoice' and not move.is_verified:
+                raise ValidationError(_("Supplier Invoice '%s' must be verified before confirmation.") % (move.name or move.supplier_invoice or move.id))
+
         res = super(AccountMove, self).action_post()
+
 
         for move in self:
             if move.move_type == 'in_invoice' and move.global_discount > 0:

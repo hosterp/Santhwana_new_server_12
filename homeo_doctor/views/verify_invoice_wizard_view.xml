@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_supplier_invoice_verify_wizard_form" model="ir.ui.view">
+        <field name="name">supplier.invoice.verify.wizard.form</field>
+        <field name="model">supplier.invoice.verify.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Verify Supplier Invoice">
+                <sheet>
+                    <group>
+                        <field name="move_id" invisible="1"/>
+                        <field name="employee_id" string="Verify Person Name" readonly="1" force_save="1" options="{'no_create': True, 'no_open': True}"/>
+                        <field name="password" string="Billing Password" password="True"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Verify" name="action_verify" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_supplier_invoice_verify_wizard" model="ir.actions.act_window">
+        <field name="name">Verify Supplier Invoice</field>
+        <field name="res_model">supplier.invoice.verify.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

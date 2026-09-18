@@ -114,7 +114,9 @@
         "report/revenue_report_wizard.xml",
         "views/custom_title.xml",
         "views/account_move_view.xml",
+        "views/verify_invoice_wizard_view.xml",
         "views/register_paymeny.xml",
+
         "views/intent.xml",
         "views/casualty.xml",
         "views/stock_entry_view.xml",

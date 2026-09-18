@@ -45,3 +45,5 @@ from .import patient_wallet
 from . import doctor_list_menu
 from . import doctor_list_two
 from . import zero_stock_report
+from . import verify_invoice_wizard
+

@@ -19,8 +19,28 @@
             </xpath>
 
 
+            <xpath expr="//header" position="inside">
+                <field name="is_verified" invisible="1"/>
+                <button name="action_verify_invoice"
+                        string="Verify"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': ['|', ('move_type', '!=', 'in_invoice'), '|', ('state', '!=', 'draft'), ('is_verified', '=', True)]}"/>
+            </xpath>
+            <xpath expr="//button[@name='action_post'][1]" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|', ('state', '!=', 'draft'), ('auto_post', '=', True), ('move_type', '!=', 'entry')]}</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_post'][2]" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|', ('state', '!=', 'draft'), ('move_type', '=', 'entry'), '&amp;', ('move_type', '=', 'in_invoice'), ('is_verified', '=', False)]}</attribute>
+            </xpath>
+
+
+            <xpath expr="//button[@name='button_draft']" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', ('state', 'not in', ('posted', 'cancel')), '&amp;', ('move_type', '=', 'in_invoice'), ('state', '=', 'posted')]}</attribute>
+            </xpath>
+
             <xpath expr="//sheet/group" position="after">
-                <group col="3">
+                <group col="4">
                     <group>
                         <field name="uhid"
                                attrs="{'invisible': [('move_type', 'not in', ('out_invoice', 'out_refund', 'out_receipt'))]}"/>
@@ -57,11 +77,14 @@
                                attrs="{'invisible': [('move_type', 'not in', ('out_invoice', 'out_refund', 'out_receipt'))]}"/>
                     </group>
                     <group>
-
+                        <field name="is_verified" attrs="{'invisible': [('move_type', '!=', 'in_invoice')]}" readonly="1"/>
+                        <field name="verified_person_name" attrs="{'invisible': ['|', ('move_type', '!=', 'in_invoice'), ('is_verified', '=', False)]}" string="Verified By" readonly="1"/>
+                        <field name="verified_date" attrs="{'invisible': ['|', ('move_type', '!=', 'in_invoice'), ('is_verified', '=', False)]}" string="Verified Date" readonly="1"/>
                     </group>
                 </group>
 
             </xpath>
+
             <field name="amount_by_group" position="attributes">
                 <attribute name="invisible">1</attribute>
             </field>
