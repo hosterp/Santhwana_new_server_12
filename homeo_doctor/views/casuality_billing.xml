@@ -10,6 +10,7 @@
                         <field name="status" widget="statusbar"/>
                         <button name="action_cancel" type="object" string="Cancel"
                                 class="btn btn-danger"
+                                groups="base.group_system,homeo_doctor.group_billing_cancel"
                                 attrs="{'invisible': [('status', '=', 'cancelled')]}"/>
                         <button name='patient_challan_new_dmp' string="Casualty Challan/DMP" type="object"
                                 class="oe_highlight"

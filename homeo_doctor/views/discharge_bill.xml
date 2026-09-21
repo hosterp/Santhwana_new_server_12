@@ -3117,7 +3117,9 @@
                         <!--                        <button name="action_observation" type="object" string="Observation" class="oe_highlight"/>-->
 
                         <button name="action_cancel" type="object" string="Cancelled"
-                                class="btn btn-danger" attrs="{'invisible': [('status', 'in', ['discharged', 'cancelled'])]}"/>
+                                class="btn btn-danger"
+                                groups="base.group_system,homeo_doctor.group_billing_cancel"
+                                attrs="{'invisible': [('status', 'in', ['discharged', 'cancelled'])]}"/>
                         <!-- Re-Open: revert a cancelled bill to a normal unpaid payable bill -->
                         <!-- Hidden for now (not needed). -->
                         <button name="action_reopen" type="object" string="Re-Open"

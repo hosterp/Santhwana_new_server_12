@@ -30,6 +30,7 @@
                         string="Cancel Appointment"
                         type="object"
                         attrs="{'invisible': [('status', 'in', ['cancelled'])]}"
+                        groups="base.group_system,homeo_doctor.group_billing_cancel"
                         class="btn btn-sm btn-primary"
                 />
                 <button name='patient_challan_new' string="Patient Challan/DMP" type="object" class="oe_highlight"

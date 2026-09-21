@@ -10,6 +10,7 @@
                         <field name="status" widget="statusbar"/>
                         <button name="action_cancel" type="object" string="Cancel"
                                 class="btn btn-danger"
+                                groups="base.group_system,homeo_doctor.group_billing_cancel"
                                 attrs="{'invisible': [('status', '=', 'cancelled')]}"/>
                         <!--                        <button name="action_create_admission" type="object" string="Admit" class="oe_highlight"/>-->
                         <!--                        <button name="action_observation" type="object" string="Observation" class="oe_highlight"/>-->

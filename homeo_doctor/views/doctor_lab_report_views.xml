@@ -85,6 +85,7 @@
                                 class="btn-primary"/>
                         <button name="action_cancel" type="object" string="Cancel"
                                 class="btn btn-danger"
+                                groups="base.group_system,homeo_doctor.group_billing_cancel"
                                 attrs="{'invisible': [('status', '=', 'cancelled')]}"/>
                     </header>
 

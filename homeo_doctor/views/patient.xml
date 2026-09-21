@@ -200,7 +200,8 @@
                         </button>
                         <button name="admit_reception" type="object" string="Proceed to Admit" attrs="{'invisible': [('status', 'in', ['admitted','proceed_admit','proceed_discharge'])]}"/>
                         <button name="action_discharged_patient_reg" type="object" string="Discharged" invisible="1"/>
-                        <button name="cancel_appointment" type="object" string="Cancel Appointment"/>
+                        <button name="cancel_appointment" type="object" string="Cancel Appointment"
+                                groups="base.group_system,homeo_doctor.group_billing_cancel"/>
                         <button name="action_view_consultations" type="object" string="View All  Consultations"
                                 invisible="1"/>
 
