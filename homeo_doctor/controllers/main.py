@@ -872,28 +872,40 @@ class VendorBillExcelController(http.Controller):
         header_format = workbook.add_format({
             'bold': True,
             'border': 1,
-            'align': 'center'
+            'align': 'center',
+            'valign': 'vcenter',
         })
         cell_format = workbook.add_format({'border': 1})
+        amount_format = workbook.add_format({'border': 1, 'num_format': '#,##0.00'})
 
         headers = [
-            'Supplier Name', 'Invoice No', 'Phone', 'Email',
-            'GST', 'DL', 'Bill Date', 'PO Number'
+            'Sl. No.', 'Bill Date', 'Bill No.', 'Supplier Name', 'Invoice No',
+            'GST No.', 'Amount', 'Created By', 'Verified By', 'Status',
         ]
 
         for col, header in enumerate(headers):
             sheet.write(0, col, header, header_format)
 
+        sheet.set_column(0, 0, 8)
+        sheet.set_column(1, 1, 12)
+        sheet.set_column(2, 2, 16)
+        sheet.set_column(3, 5, 22)
+        sheet.set_column(6, 6, 14)
+        sheet.set_column(7, 8, 20)
+        sheet.set_column(9, 9, 14)
+
         row = 1
         for rec in records:
-            sheet.write(row, 0, rec.supplier_name.name if rec.supplier_name else '', cell_format)
-            sheet.write(row, 1, rec.supplier_invoice or '', cell_format)
-            sheet.write(row, 2, rec.supplier_phone or '', cell_format)
-            sheet.write(row, 3, rec.supplier_email or '', cell_format)
-            sheet.write(row, 4, rec.supplier_gst or '', cell_format)
-            sheet.write(row, 5, rec.supplier_dl or '', cell_format)
-            sheet.write(row, 6, rec.supplier_bill_date.strftime('%d-%m-%Y') if rec.supplier_bill_date else '', cell_format)
-            sheet.write(row, 7, rec.po_number.name if rec.po_number else '', cell_format)
+            sheet.write(row, 0, row, cell_format)
+            sheet.write(row, 1, rec.supplier_bill_date.strftime('%d-%m-%Y') if rec.supplier_bill_date else '', cell_format)
+            sheet.write(row, 2, rec.name or '', cell_format)
+            sheet.write(row, 3, rec.supplier_name.name if rec.supplier_name else '', cell_format)
+            sheet.write(row, 4, rec.supplier_invoice or '', cell_format)
+            sheet.write(row, 5, rec.supplier_gst or '', cell_format)
+            sheet.write_number(row, 6, rec.amount_total or 0.0, amount_format)
+            sheet.write(row, 7, rec.create_uid.name if rec.create_uid else '', cell_format)
+            sheet.write(row, 8, rec.verified_person_name or (rec.verified_by.name if rec.verified_by else ''), cell_format)
+            sheet.write(row, 9, 'Stock Added' if rec.state == 'posted' else 'Draft', cell_format)
             row += 1
 
         workbook.close()

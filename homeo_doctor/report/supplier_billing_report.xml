@@ -49,19 +49,30 @@
                         <table class="table table-condensed">
                             <thead>
                                 <tr>
+                                    <th>Sl. No.</th>
+                                    <th>Bill Date</th>
+                                    <th>Bill No.</th>
                                     <th>Supplier Name</th>
                                     <th>Invoice No</th>
-                                    <th>Phone No</th>
-                                    <th>Email Id</th>
                                     <th>GST No</th>
-                                    <th>DL/REG No</th>
-                                    <th>Bill Date</th>
-                                    <th>PO Number</th>
+                                    <th class="text-right">Amount</th>
+                                    <th>Created By</th>
+                                    <th>Verified By</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <t t-foreach="data['bills']" t-as="bill">
                                     <tr>
+                                        <td>
+                                            <t t-esc="bill['sl_no']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['bill_date']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['bill_number']"/>
+                                        </td>
                                         <td>
                                             <t t-esc="bill['supplier_name']"/>
                                         </td>
@@ -69,22 +80,19 @@
                                             <t t-esc="bill['supplier_invoice']"/>
                                         </td>
                                         <td>
-                                            <t t-esc="bill['supplier_phone']"/>
-                                        </td>
-                                        <td>
-                                            <t t-esc="bill['supplier_email']"/>
-                                        </td>
-                                        <td>
                                             <t t-esc="bill['supplier_gst']"/>
                                         </td>
-                                        <td>
-                                            <t t-esc="bill['supplier_dl']"/>
+                                        <td class="text-right">
+                                            <t t-esc="'{:,.2f}'.format(bill['amount'])"/>
                                         </td>
                                         <td>
-                                            <t t-esc="bill['bill_date']"/>
+                                            <t t-esc="bill['created_by']"/>
                                         </td>
                                         <td>
-                                            <t t-esc="bill['po_number']"/>
+                                            <t t-esc="bill['verified_by']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="bill['status']"/>
                                         </td>
                                     </tr>
                                 </t>
@@ -103,7 +111,7 @@
             <field name="margin_bottom">10</field>
             <field name="margin_left">7</field>
             <field name="margin_right">7</field>
-            <field name="orientation">Portrait</field>
+            <field name="orientation">Landscape</field>
             <field name="header_line" eval="False"/>
         </record>
         <report

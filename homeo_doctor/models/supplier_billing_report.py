@@ -28,14 +28,16 @@ class InInvoiceReportWizard(models.TransientModel):
         bills = []
         for rec in records:
             bills.append({
+                'sl_no': len(bills) + 1,
+                'bill_date': rec.supplier_bill_date.strftime('%d-%m-%Y') if rec.supplier_bill_date else '',
+                'bill_number': rec.name or '',
                 'supplier_name': rec.supplier_name.name if rec.supplier_name else '',
                 'supplier_invoice': rec.supplier_invoice or '',
-                'supplier_phone': rec.supplier_phone or '',
-                'supplier_email': rec.supplier_email or '',
                 'supplier_gst': rec.supplier_gst or '',
-                'supplier_dl': rec.supplier_dl or '',
-                'bill_date': rec.supplier_bill_date.strftime('%d-%m-%Y') if rec.supplier_bill_date else '',
-                'po_number': rec.po_number.name if rec.po_number else '',
+                'amount': rec.amount_total,
+                'created_by': rec.create_uid.name if rec.create_uid else '',
+                'verified_by': rec.verified_person_name or (rec.verified_by.name if rec.verified_by else ''),
+                'status': 'Stock Added' if rec.state == 'posted' else 'Draft',
             })
             # print(bills,'billsbillsbillsbillsbillsbillsbillsbillsbillsbillsbillsbillsbillsbillsbillsbillsbillsbillsbillsbillsbills')
         data = {
