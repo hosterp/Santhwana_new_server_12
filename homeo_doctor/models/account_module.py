@@ -252,9 +252,9 @@ class AccountMove(models.Model):
         return res
 
     def action_post(self):
-        for move in self:
-            if move.move_type == 'in_invoice' and not move.is_verified:
-                raise ValidationError(_("Supplier Invoice '%s' must be verified before confirmation.") % (move.name or move.supplier_invoice or move.id))
+        # for move in self:
+        #     if move.move_type == 'in_invoice' and not move.is_verified:
+        #         raise ValidationError(_("Supplier Invoice '%s' must be verified before confirmation.") % (move.name or move.supplier_invoice or move.id))
 
         res = super(AccountMove, self).action_post()
 

@@ -25,13 +25,13 @@
                         string="Verify"
                         type="object"
                         class="oe_highlight"
-                        attrs="{'invisible': ['|', ('move_type', '!=', 'in_invoice'), '|', ('state', '!=', 'draft'), ('is_verified', '=', True)]}"/>
+                        attrs="{'invisible': ['|', ('move_type', '!=', 'in_invoice'), '|', ('state', '!=', 'posted'), ('is_verified', '=', True)]}"/>
             </xpath>
             <xpath expr="//button[@name='action_post'][1]" position="attributes">
                 <attribute name="attrs">{'invisible': ['|', '|', ('state', '!=', 'draft'), ('auto_post', '=', True), ('move_type', '!=', 'entry')]}</attribute>
             </xpath>
             <xpath expr="//button[@name='action_post'][2]" position="attributes">
-                <attribute name="attrs">{'invisible': ['|', '|', ('state', '!=', 'draft'), ('move_type', '=', 'entry'), '&amp;', ('move_type', '=', 'in_invoice'), ('is_verified', '=', False)]}</attribute>
+                <attribute name="attrs">{'invisible': ['|', ('state', '!=', 'draft'), ('move_type', '=', 'entry')]}</attribute>
             </xpath>
 
 
