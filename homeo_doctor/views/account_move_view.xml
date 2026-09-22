@@ -409,4 +409,20 @@
     <record id="purchase.menu_purchase_rfq" model="ir.ui.menu">
         <field name="name">Purchase Orders</field>
     </record>
+
+     <record id="view_move_form_inherit_billing_cancel" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.billing.cancel</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//button[@name='button_cancel']" position="attributes">
+                <attribute name="groups">
+                    base.group_system,homeo_doctor.group_billing_cancel
+                </attribute>
+            </xpath>
+
+        </field>
+    </record>
+
 </odoo>
