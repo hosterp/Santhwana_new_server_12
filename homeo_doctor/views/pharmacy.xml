@@ -724,14 +724,14 @@
                                         <field name="manf_date"/>
                                         <!--                                        <field name="packing"/>-->
                                         <field name="exp_date"/>
-                                        <field name="mfc" readonly="1"/>
+                                        <field name="mfc" />
                                         <field name="qty"/>
-                                        <field name="supplier_rate" string="Rate" readonly="1"/>
-                                        <field name="per_ped" string="MRP" readonly="1"/>
-                                        <field name="gst" readonly="1"/>
+                                        <field name="supplier_rate" string="Rate" />
+                                        <field name="per_ped" string="MRP"/>
+                                        <field name="gst" />
                                         <!--                                        <field name="discount"/>-->
                                         <field name="stock_in_hand"/>
-                                        <field name="rate" sum="Total" string="Amount" readonly="1"/>
+                                        <field name="rate" sum="Total" string="Amount" />
                                     </tree>
                                 </field>
                             </page>
