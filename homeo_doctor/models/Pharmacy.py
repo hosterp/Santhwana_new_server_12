@@ -441,6 +441,33 @@ class PharmacyDescription(models.Model):
     def action_print_pharmacy_disc_bill(self):
         return self.env.ref('homeo_doctor.action_pharmacy_report').report_action(self)
 
+    def get_prescription_line_chunks(self, first_chunk_size=13, subsequent_chunk_size=22):
+        self.ensure_one()
+        lines = list(self.prescription_line_ids)
+        if not lines:
+            return [[]]
+
+        chunks = []
+        remaining = lines
+        page_capacity = first_chunk_size
+        while remaining:
+            chunk = []
+            used_capacity = 0
+            for line in remaining:
+                medicine_name = line.products_id.product_id.display_name if line.products_id and line.products_id.product_id else ''
+                line_capacity = 2 if len(medicine_name) > 18 else 1
+
+                if chunk and used_capacity + line_capacity > page_capacity:
+                    break
+
+                chunk.append(line)
+                used_capacity += line_capacity
+
+            chunks.append(chunk)
+            remaining = remaining[len(chunk):]
+            page_capacity = subsequent_chunk_size
+        return chunks
+
     def view_prescription_details(self):
         """
         Open a view of prescription details for this pharmacy record
