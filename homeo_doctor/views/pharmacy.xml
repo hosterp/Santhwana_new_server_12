@@ -72,8 +72,7 @@
 
                             .page {
                             width: 297mm; /* Landscape width */
-                            height: 210mm; /* Landscape height */
-                            padding: 10mm;
+                                                        padding: 10mm;
                             box-sizing: border-box;
                             }
                             body, table {
@@ -109,23 +108,26 @@
                             padding: 3px 5px;
                             }
                             .footer {
-                            position: fixed; /* stays at the bottom of every page */
-                            bottom: 5mm; /* distance from bottom */
-                            left: 0; /* start from left edge */
-                            width: 100%; /* full width of page */
-                            text-align: left; /* align text to the left */
+                            width: 100%;
+                            text-align: center;
                             font-size: 10pt;
-                            line-height: 1.2; /* adjust spacing if needed */
+                            line-height: 1.2;
+                            margin-top: 10px;
+                            white-space: normal;
+                            overflow-wrap: anywhere;
                             }
 
                         </style>
 
+                        <t t-set="chunks" t-value="o.get_prescription_line_chunks(15, 20)"/>
+                        <t t-set="running_counter" t-value="1"/>
+                        <t t-foreach="chunks" t-as="chunk">
+                            <div class="page"
+                                 t-att-style="'width: 100%; height: 195mm; min-height: 195mm; max-height: 195mm; display: flex; flex-direction: column; justify-content: space-between; margin: 0 auto; padding: 2px 5px; box-sizing: border-box;' + ('' if chunk_last else ' page-break-after: always; break-after: page;')">
 
-                        <div class="page"
-                             style="width: 100%; min-height: 18cm; margin: 0 auto; padding: 5px; box-sizing: border-box;">
 
-
-                            <!-- Header: spacing minimized -->
+                            <!-- Header: first page only -->
+                            <t t-if="chunk_first">
                             <div style="max-width: 700px; margin: 0 auto; display: flex; align-items: center; margin-bottom: 10px; font-family: Arial, sans-serif;">
                                 <!-- Logo on the left -->
                                 <div style="flex: 0 0 60px; margin-right: 10px;">
@@ -300,6 +302,7 @@
 
                                 </div>
                             </div>
+                            </t><!-- /chunk_first header -->
 
                             <!-- Prescription Table -->
                             <div class="mb-4">
@@ -307,7 +310,7 @@
 
                                 <table style="width: 100%;  border-collapse: collapse; font-size: 13px; table-layout: fixed;">
                                     <colgroup>
-                                        <col style="width: 3%;"/>    <!-- Sl No -->
+                                        <col style="width: 5%;"/>    <!-- Sl No -->
                                         <col style="width: 18%;"/>   <!-- Particulars -->
                                         <col style="width: 4%;"/>    <!-- Qty -->
                                         <col style="width: 11%;"/>    <!-- Batch -->
@@ -375,53 +378,62 @@
                                         <td colspan="14" style="border-top: 2px solid #000; padding: 0;"></td>
                                     </tr>
                                     <tbody>
-                                        <t t-set="counter" t-value="1"/>
-                                        <t t-foreach="o.prescription_line_ids" t-as="medicine">
+                                        <t t-set="counter" t-value="sum(len(page_chunk) for page_chunk in chunks[:chunk_index]) + 1"/>
+                                        <t t-foreach="chunk" t-as="medicine">
                                             <tr>
-                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                <td style="text-align: center; padding: 3px; font-size: 12px; ">
                                                     <t t-esc="counter"/>
                                                     <t t-set="counter" t-value="counter + 1"/>
                                                 </td>
-                                                <td style="padding: 8px;  font-size: 12px; ">
-                                                    <span t-esc="medicine.products_id.product_id.display_name if medicine.products_id and medicine.products_id.product_id else ''"/>
+                                                <td style="padding: 3px;  font-size: 12px; ">
+                                                    <t t-set="medicine_name"
+                                                       t-value="medicine.products_id.product_id.display_name if medicine.products_id and medicine.products_id.product_id else ''"/>
+                                                    <t t-if="len(medicine_name) &gt; 18">
+                                                        <t t-esc="medicine_name[:18]"/>
+                                                        <br/>
+                                                        <t t-esc="medicine_name[18:]"/>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <t t-esc="medicine_name"/>
+                                                    </t>
 
                                                 </td>
-                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                <td style="text-align: center; padding: 3px; font-size: 12px; ">
                                                     <span t-field="medicine.qty"/>
                                                 </td>
-                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                <td style="text-align: center; padding: 3px; font-size: 12px; ">
                                                     <span t-field="medicine.batch"/>
                                                 </td>
-                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                <td style="text-align: center; padding: 3px; font-size: 12px; ">
                                                     <span t-field="medicine.exp_date"
                                                           t-options='{"widget": "date", "format": "MM/yy"}'/>
                                                 </td>
-                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                <td style="text-align: center; padding: 3px; font-size: 12px; ">
                                                     <span t-field="medicine.hsn"/>
                                                 </td>
 
-                                                <!--                                                <td style="text-align: center; padding: 8px; border: 1px solid black;">-->
+                                                <!--                                                <td style="text-align: center; padding: 3px; border: 1px solid black;">-->
                                                 <!--                                                    <span t-field="medicine.manf_date"-->
                                                 <!--                                                          t-options='{"widget": "date", "format": "MM/yy"}'/>-->
                                                 <!--                                                </td>-->
-                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                <td style="text-align: center; padding: 3px; font-size: 12px; ">
                                                     <span t-field="medicine.per_ped"/>
                                                 </td>
-                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                <td style="text-align: center; padding: 3px; font-size: 12px; ">
                                                     <span t-field="medicine.per_ped"/>
                                                 </td>
-                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                <td style="text-align: center; padding: 3px; font-size: 12px; white-space: nowrap;">
                                                     <span t-field="medicine.mfc"/>
                                                 </td>
 
-                                                <!--                                                <td style="text-align: center; padding: 8px;font-size: 17px; ">-->
+                                                <!--                                                <td style="text-align: center; padding: 3px;font-size: 17px; ">-->
                                                 <!--                                                    <span t-field="medicine.per_ped"/>-->
                                                 <!--                                                </td>-->
-                                                <td style="text-align: center; padding: 8px; font-size: 12px; ">
+                                                <td style="text-align: center; padding: 3px; font-size: 12px; ">
                                                     <span t-esc="medicine.gst"/>
 
                                                 </td>
-                                                <!--                                                <td style="text-align: center; padding: 8px; font-size: 17px; ">-->
+                                                <!--                                                <td style="text-align: center; padding: 3px; font-size: 17px; ">-->
                                                 <!--                                                    <span t-esc="medicine.gst / 2.0"/>-->
 
                                                 <!--                                                </td>-->
@@ -429,25 +441,30 @@
                                                    t-value="medicine.rate * (medicine.gst / 2.0) / 100"/>
                                                 <t t-set="sgst_amt"
                                                    t-value="medicine.rate * (medicine.gst / 2.0) / 100"/>
-                                                <td style="text-align: center; padding: 8px; font-size: 12px;">
+                                                <td style="text-align: center; padding: 3px; font-size: 12px;">
                                                     <t t-esc="'%.2f' % (cgst_amt + sgst_amt)"/>
 
                                                 </td>
-                                                <!--                                                <td style="text-align: center; padding: 8px; font-size: 17px;">-->
+                                                <!--                                                <td style="text-align: center; padding: 3px; font-size: 17px;">-->
                                                 <!--                                                    <t t-esc="'%.2f' % sgst_amt"/>-->
                                                 <!--                                                </td>-->
 
-                                                <td style="text-align: right; padding: 8px;font-size: 12px; ">
+                                                <td style="text-align: right; padding: 3px;font-size: 12px; ">
                                                     <span t-field="medicine.rate"
                                                           t-options='{"widget": "monetary", "display_currency": user.company_id.currency_id}'/>
                                                 </td>
                                             </tr>
                                         </t>
 
-                                        <tr>
-                                            <td colspan="14" style="border-top: 2px solid #000; padding: 0;"></td>
+                                        <!-- Continuation indicator for non-last pages -->
+                                        <tr t-if="not chunk_last">
+                                            <td colspan="14" style="border-top: 1px solid #bbb; padding: 6px; text-align: right; font-style: italic; font-size: 11px;">
+                                                Continued on next page...
+                                            </td>
                                         </tr>
-                                        <tr>
+
+                                        <!-- Render Totals & Amount in Words ONLY on LAST page -->
+                                        <tr t-if="chunk_last">
                                             <!-- colspan should equal the number of columns in your table (10 in your case) -->
                                             <td colspan="14" style="padding: 0; border-top: 1px solid #bbb;">
                                                 <div style="display: flex; justify-content: space-between; align-items: flex-start;padding: 10px 0; font-size: 12px;">
@@ -467,7 +484,7 @@
                                                 </div>
                                             </td>
                                         </tr>
-                                        <tr style="page-break-inside: avoid;">
+                                        <tr t-if="chunk_last" style="page-break-inside: avoid;">
                                             <td colspan="14" style="padding: 12px 8px 0; border-top: 1px solid #bbb;">
                                                 <div style="display: flex; justify-content: space-between; font-size: 12px;">
                                                     <!-- Col 1: Prepared By -->
@@ -586,7 +603,7 @@
                             <!--                                </div>-->
                             <!--                            </div>-->
                             <div class="footer"
-                                 style="white-space: nowrap; text-align: center; font-size: 12px; transform: scale(0.9); transform-origin: center;">
+                                 style="margin-top: auto; padding-top: 5px; white-space: normal; overflow-wrap: anywhere; text-align: center; font-size: 10px; transform: translateX(-5mm);">
                                 Email: santhwanatvpm@gmail.com | NABH Pre Accredited Hospital | ISO 9001-2015 CERTIFIED
                                 |
                                 D.L. NOS: 1-378/20-2002, 1-379/21-2002 | GSTIN: 32AAICS1884P1ZS | CIN:
@@ -597,7 +614,8 @@
                     </t>
                 </t>
             </t>
-        </template>
+        </t>
+    </template>
 
         <record id="paperformat_a4_landscape" model="report.paperformat">
             <field name="name">A4 Landscape</field>
