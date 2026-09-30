@@ -4385,7 +4385,7 @@ class DischargeBilling(models.Model):
 
         Every bill (Cash, Credit, OP and IP) is fetched so the tree views show
         them. Whether a bill is *added to the Total Amount* is decided separately
-        by ``_count_in_total`` (only IP credit bills are added).
+        by ``_count_in_total`` (IP credit for all; OP credit only for VSSC).
         """
         Model = self.env[model_name]
         if date_field not in Model._fields:
@@ -4394,21 +4394,29 @@ class DischargeBilling(models.Model):
         return self._discharge_date_range_domain(date_field, admitted_date, end_date)
 
     def _count_in_total(self, bill):
-        """Only IP *credit* department bills are added to the discharge Total
-        Amount. OP bills and Cash bills are still shown in the tree views but are
-        NOT added to the total.
+        """Which department bills enter the discharge Total Amount.
+
+        Normal patients: only IP *credit* bills. OP and cash stay on the
+        tree views but are not added to the total.
+
+        VSSC patients: IP *and* OP *credit* bills are added. Cash bills are
+        still excluded.
         """
-        # OP bills never count toward the discharge total.
+        is_op = False
         if 'bill_type' in bill._fields:
             bt = bill.bill_type
             if isinstance(bt, str) and bt == 'op':
-                return False
+                is_op = True
         elif 'op_category' in bill._fields:
             oc = bill.op_category
             if oc:
                 name = oc if isinstance(oc, str) else (getattr(oc, 'name', '') or '')
                 if (name or '').strip().lower() == 'op':
-                    return False
+                    is_op = True
+
+        # Non-VSSC: OP never counts. VSSC: OP credit may count (checked below).
+        if is_op and not self.vssc_boolean:
+            return False
 
         # Cash bills are excluded; only credit bills are added to the total.
         # (Pharmacy stores the mode in the misspelled field ``payment_mathod``.)
@@ -4422,14 +4430,18 @@ class DischargeBilling(models.Model):
         return mode == 'credit'
 
     def _bill_amount(self, bill):
-        if 'total_amount' in bill._fields:
-            return bill.total_amount or 0
+        # Prefer net_amount so discounted department totals match the discharge
+        # trees / PDF (e.g. casualty shows net_amount, not total_amount).
+        if 'net_amount' in bill._fields:
+            return bill.net_amount or 0
         if 'total_bill_amount' in bill._fields:
             return bill.total_bill_amount or 0
+        if 'total_amount' in bill._fields:
+            return bill.total_amount or 0
         return 0
 
     def _credit_total(self, bills):
-        """Sum of the bills that count toward the discharge total (IP credit)."""
+        """Sum of department bills that count toward the discharge total."""
         return sum(self._bill_amount(b) for b in bills if self._count_in_total(b))
 
     @api.model
@@ -4570,8 +4582,8 @@ class DischargeBilling(models.Model):
             rec._assign_computed_x2many(rec, 'paid_casualty_ids', paid_casualty)
             rec._assign_computed_x2many(rec, 'unpaid_casualty_ids', unpaid_casualty)
 
-            # Tree views show ALL bills (the x2many fields above), but only IP
-            # credit bills are summed into the totals (Cash / OP excluded).
+            # Tree views show ALL bills; totals use _count_in_total (IP credit
+            # for all patients; OP credit only for VSSC; cash always excluded).
             rec.paid_lab_total = rec._credit_total(paid_lab)
             rec.unpaid_lab_total = rec._credit_total(unpaid_lab)
             rec.paid_total = (
