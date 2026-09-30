@@ -121,7 +121,8 @@
                         </p>
 
 
-                        <table style="width:100%; border-collapse: collapse;" border="1">
+                        <t t-raw="doc.op_collection_pdf_html()"/>
+                        <table t-if="False" style="display:none;">
                             <thead>
                                 <t t-set="payment_modes" t-value="['cash','card','upi','credit','cheque']"/>
                                 <tr>
@@ -144,33 +145,19 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Group lines by doctor -->
-                                <!-- Group lines by doctor -->
-                                <!-- Initialize grouped dictionary -->
-                                <t t-set="grouped" t-value="{}"/>
+                                <t t-set="grouped_list" t-value="(grouped_by_doc or {}).get(doc.id) or doc.get_lines_grouped_by_doctor()"/>
+                                <t t-set="grand" t-value="(grand_by_doc or {}).get(doc.id) or doc.get_report_grand_totals()"/>
+                                <t t-set="sl" t-value="0"/>
 
-                                <!-- Loop through lines -->
-                                <t t-foreach="doc.line_ids" t-as="line">
-                                    <t t-set="doctor_id" t-value="line.doctor_id.id or 0"/>
-
-                                    <!-- Rebuild grouped dict safely -->
-                                    <t t-set="grouped"
-                                       t-value="grouped | dict({doctor_id: (grouped[doctor_id] if doctor_id in grouped else []) + [line]})"/>
-                                </t>
-
-                                <!-- Loop through grouped doctors -->
-                                <t t-foreach="grouped.items()" t-as="g">
-                                    <t t-set="doctor" t-value="env['doctor.profile'].browse(g[0])"/>
-                                    <t t-set="lines" t-value="g[1]"/>
-
-                                    <!-- Doctor Header -->
+                                <t t-foreach="grouped_list" t-as="group">
                                     <tr style="background:#ddd;">
-                                        <td colspan="7">
+                                        <td colspan="10">
                                             <strong>
-                                                <t t-esc="doctor.name or 'No Doctor'"/>
+                                                <t t-esc="group['doctor_name'] or 'No Doctor'"/>
                                             </strong>
                                         </td>
                                     </tr>
+                                    <t t-set="lines" t-value="group['lines']"/>
 
                                     <!-- Lines per doctor -->
                                     <t t-foreach="lines" t-as="line">
@@ -229,24 +216,24 @@
                                         <td></td>
                                         <td style="text-align:right;">
                                             <strong>
-                                                <t t-esc="sum(l.consultation_fee for l in lines)"/>
+                                                <t t-esc="group['sum_consultation']"/>
                                             </strong>
                                         </td>
                                         <td style="text-align:right;">
                                             <strong>
-                                                <t t-esc="sum(l.cash_amount for l in lines)"/>
+                                                <t t-esc="group['sum_cash']"/>
                                             </strong>
                                         </td>
 
                                         <td style="text-align:right;">
                                             <strong>
-                                                <t t-esc="sum(l.credit_amount for l in lines)"/>
+                                                <t t-esc="group['sum_credit']"/>
                                             </strong>
                                         </td>
                                         <td></td>
                                         <td style="text-align:right;">
                                             <strong>
-                                                <t t-esc="sum(l.total_amount for l in lines)"/>
+                                                <t t-esc="group['sum_total']"/>
                                             </strong>
                                         </td>
 
@@ -270,19 +257,19 @@
                                     <td style="text-align:right;">
                                         <strong>
                                             Consultation:
-                                            <t t-esc="sum(line.consultation_fee for line in doc.line_ids)"/>
+                                            <t t-esc="grand['consultation']"/>
                                         </strong>
                                     </td>
                                     <td style="text-align:right;">
                                         <strong>
                                             Cash :
-                                            <t t-esc="sum(line.cash_amount for line in doc.line_ids)"/>
+                                            <t t-esc="grand['cash']"/>
                                         </strong>
                                     </td>
                                     <td style="text-align:right;">
                                         <strong>
                                             Credit:
-                                            <t t-esc="sum(line.credit_amount for line in doc.line_ids)"/>
+                                            <t t-esc="grand['credit']"/>
                                         </strong>
                                     </td>
                                     <td>
@@ -291,7 +278,7 @@
                                     <td style="text-align:right;">
                                         <strong>
                                             Grand Total:
-                                            <t t-esc="sum(line.total_amount for line in doc.line_ids)"/>
+                                            <t t-esc="grand['total']"/>
                                         </strong>
                                     </td>
                                 </tr>
