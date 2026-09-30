@@ -4530,25 +4530,17 @@ class DischargeBilling(models.Model):
             unpaid_pharmacy = _fetch('pharmacy', ('status', '=', 'unpaid'))
             paid_lab = _fetch('lab', ('status', '=', 'paid'))
 
+            # Unpaid labs only. Paid credit labs already sit in paid_lab.
+            # The old VSSC branch also pulled paid+credit into unpaid_lab, so
+            # grant_total = paid_total + unpaid_total counted those labs twice
+            # (e.g. UHID 26/0018856: inflated 28141 instead of 24571).
             l_model, l_pat, l_dis, l_date = specs['lab']
-            if not rec.vssc_boolean:
-                unpaid_lab = rec._search_discharge_dept_bills(
-                    l_model, l_pat, l_dis,
-                    [('status', '=', 'unpaid'), ('mode_of_payment', '=', 'credit')],
-                    l_date, admitted_date, end_date,
-                )
-            else:
-                unpaid_lab = rec._search_discharge_dept_bills(
-                    l_model, l_pat, l_dis,
-                    [
-                        '|',
-                        ('status', '=', 'unpaid'),
-                        '&',
-                        ('status', '=', 'paid'),
-                        ('mode_of_payment', '=', 'credit'),
-                    ],
-                    l_date, admitted_date, end_date,
-                )
+            unpaid_lab = rec._search_discharge_dept_bills(
+                l_model, l_pat, l_dis,
+                [('status', '=', 'unpaid'), ('mode_of_payment', '=', 'credit')],
+                l_date, admitted_date, end_date,
+            )
+            unpaid_lab = unpaid_lab - paid_lab
 
             paid_ip = _fetch('ip', ('status', '=', 'paid'))
             unpaid_ip = _fetch('ip', ('status', '=', 'unpaid'))
