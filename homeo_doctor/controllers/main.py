@@ -369,78 +369,19 @@ class PatientReportController(http.Controller):
     def download_excel_report(self, **kwargs):
         date_from = kwargs.get('date_from')
         date_to = kwargs.get('date_to')
-        doctor_id = kwargs.get('doctor_id')
+        doctor_id = kwargs.get('doctor_id') or False
 
-        report_data = []
-        user_tz = pytz.timezone(request.env.user.tz or 'Asia/Kolkata')
+        Wizard = request.env['patient.report.wizard'].sudo()
+        wiz = Wizard.create({
+            'date_from': date_from,
+            'date_to': date_to,
+            'doctor_id': int(doctor_id) if doctor_id else False,
+        })
+        report_rows = wiz._fetch_op_report_rows()
 
-        date_from_dt = None
-        date_to_dt = None
-
-        if date_from:
-            date_from_dt = Datetime.to_datetime(date_from).replace(hour=0, minute=0, second=0)
-        if date_to:
-            date_to_dt = Datetime.to_datetime(date_to).replace(hour=23, minute=59, second=59)
-        # -------------------------------
-        # 1️⃣ Build domain for patient.reg
-        # -------------------------------
-        domain_reg = []
-        if date_from:
-            domain_reg.append(('time', '>=', date_from_dt))
-        if date_to:
-            domain_reg.append(('time', '<=', date_to_dt))
-        if doctor_id:
-            domain_reg.append(('doc_name', '=', int(doctor_id)))
-        domain_reg.append(('status', '!=', 'cancelled'))
-
-        patients_reg = request.env['patient.reg'].sudo().search(domain_reg,order='bill_number asc')
-
-        for p in patients_reg:
-            report_data.append({
-                'reference_no': p.reference_no,
-                'date': p.time,
-                'patient_name': p.patient_id,
-                'age': p.age,
-                'gender': p.gender,
-                'phone': p.phone_number,
-                'doctor': p.doc_name.name,
-                'consultation_fee': p.register_total_amount or 0,
-                'bill_number': p.bill_number,
-            })
-
-        # ---------------------------------------
-        # 2️⃣ Build domain for patient.appointment
-        # ---------------------------------------
-        domain_app = []
-        if date_from:
-            domain_app.append(('appointment_date', '>=', date_from_dt))
-        if date_to:
-            domain_app.append(('appointment_date', '<=', date_to_dt))
-        if doctor_id:
-            domain_app.append(('doctor_ids', '=', int(doctor_id)))
-        domain_app.append(('status', '!=', 'cancelled'))
-        patients_app = request.env['patient.appointment'].sudo().search(domain_app,order='payment_receipt_number asc')
-
-        for a in patients_app:
-            report_data.append({
-                'reference_no': a.patient_id.reference_no,
-                'date': a.appointment_date,
-                'patient_name': a.patient_name,
-                'age': a.age,
-                'gender': a.gender,
-                'phone': a.phone_number,
-                'doctor': a.doctor_ids.name if a.doctor_ids else '',
-                'consultation_fee': a.register_total_amount or 0,
-                'bill_number': a.payment_receipt_number,
-            })
-
-        # --------------------------------
-        # 3️⃣ Generate Excel in memory
-        # --------------------------------
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         sheet = workbook.add_worksheet('Patient Report')
-
         bold = workbook.add_format({'bold': True})
 
         headers = [
@@ -453,55 +394,45 @@ class PatientReportController(http.Controller):
             'Gender',
             'Mobile',
             'Doctor',
-            'Total'
+            'Total',
         ]
-
-        # Write headers
         for col, header in enumerate(headers):
             sheet.write(0, col, header, bold)
 
-        # -------------------------------
-        # 4️⃣ Fill Data
-        # -------------------------------
         row = 1
         sl_no = 1
         total_fee = 0
-        report_data = sorted(report_data, key=lambda x: x['date'])
-
-        for rec in report_data:
+        for rec in report_rows:
+            fee = rec.get('consultation_fee') or 0
+            appt_date = rec.get('appt_date')
             sheet.write(row, 0, sl_no)
-            sheet.write(row, 1, rec['bill_number'])
-            sheet.write(row, 2, rec['reference_no'])
-            sheet.write(row, 3, rec['date'].strftime('%Y-%m-%d') if rec['date'] else '')
-            sheet.write(row, 4, rec['patient_name'])
-            sheet.write(row, 5, rec['age'])
-            sheet.write(row, 6, rec['gender'])
-            sheet.write(row, 7, rec['phone'])
-            sheet.write(row, 8, rec['doctor'])
-            sheet.write(row, 9, rec['consultation_fee'])
-
-            total_fee += rec['consultation_fee']
+            sheet.write(row, 1, rec.get('bill_number') or '')
+            sheet.write(row, 2, rec.get('reference_no') or '')
+            sheet.write(row, 3, appt_date.strftime('%Y-%m-%d') if appt_date else '')
+            sheet.write(row, 4, rec.get('patient_name') or '')
+            sheet.write(row, 5, rec.get('age') or 0)
+            sheet.write(row, 6, rec.get('gender') or '')
+            sheet.write(row, 7, rec.get('phone_number') or '')
+            sheet.write(row, 8, rec.get('doctor_name') or '')
+            sheet.write(row, 9, fee)
+            total_fee += fee
             row += 1
             sl_no += 1
 
-        # -------------------------------
-        # 5️⃣ Total Row
-        # -------------------------------
         sheet.write(row, 8, 'Total', bold)
         sheet.write(row, 9, total_fee, bold)
 
         workbook.close()
         output.seek(0)
-
         filename = f"Patient_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-
         return request.make_response(
             output.read(),
             headers=[
                 ('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
-                ('Content-Disposition', f'attachment; filename="{filename}"')
-            ]
+                ('Content-Disposition', f'attachment; filename="{filename}"'),
+            ],
         )
+
 # class AuthLogin(http.Controller):
 #     @http.route('/web/login', type='http', auth="public", website=True)
 #     def web_login(self, redirect=None, **kw):
