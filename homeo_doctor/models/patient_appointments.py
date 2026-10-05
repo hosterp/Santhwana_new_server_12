@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 from odoo.addons.test_convert.tests.test_env import record
 import logging
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 class PatientAppointment(models.Model):
     _name = 'patient.appointment'
@@ -82,9 +82,32 @@ class PatientAppointment(models.Model):
         if self.vssc_boolean:
             self.register_mode_payment = 'credit'
 
+    def _is_print_blocked(self):
+        self.ensure_one()
+        return (not self.vssc_boolean) and self.status in ('draft', 'unpaid', 'cancelled')
+
+    def _check_print_allowed(self):
+        """Show Odoo warning popup when print is blocked."""
+        self.ensure_one()
+        if self._is_print_blocked():
+            status_label = dict(self._fields['status'].selection).get(self.status, self.status)
+            raise UserError(_(
+                "Print Not Allowed\n\n"
+                "This bill status is %s.\n"
+                "Printing is only allowed after payment.\n"
+                "(Draft / Unpaid / Cancelled cannot be printed. VSSC can print anytime.)"
+            ) % status_label)
+
     def patient_challan_new(self):
+        self._check_print_allowed()
+        if self.vssc_boolean:
+            self._ensure_payment_receipt_number()
         return self.env.ref('homeo_doctor.action_report_patient_appointment').report_action(self)
+
     def patient_challan_new_normal(self):
+        self._check_print_allowed()
+        if self.vssc_boolean:
+            self._ensure_payment_receipt_number()
         return self.env.ref('homeo_doctor.action_report_patient_appointment_a5_print').report_action(self)
 
     def amount_to_text_indian(self):
@@ -185,6 +208,25 @@ class PatientAppointment(models.Model):
         default='/',
     )
 
+    def _ensure_payment_receipt_number(self):
+        """Assign payment receipt / bill number (used on Pay and for VSSC draft)."""
+        for appointment in self:
+            if appointment.payment_receipt_number and appointment.payment_receipt_number != '/':
+                continue
+            today = fields.Date.context_today(self)
+            raw_seq = self.env['ir.sequence'].with_context(
+                ir_sequence_date=today
+            ).next_by_code('payment.receipt')
+            padded_seq = str(raw_seq).zfill(4)
+            if today.month >= 4:
+                start_year = today.year
+                end_year = today.year + 1
+            else:
+                start_year = today.year - 1
+                end_year = today.year
+            fiscal_suffix = f"{start_year % 100:02d}-{end_year % 100:02d}"
+            appointment.payment_receipt_number = f"{padded_seq}/{fiscal_suffix}"
+
     def action_confirm_payment(self):
         if self.register_staff_name and self.register_staff_password:
             employee = self.register_staff_name
@@ -197,36 +239,7 @@ class PatientAppointment(models.Model):
         else:
             raise ValidationError("Please enter both staff name and password.")
         for appointment in self:
-            if not appointment.payment_receipt_number or appointment.payment_receipt_number == '/':
-                # Fetch next from sequence 'payment.receipt'
-                today = fields.Date.context_today(self)
-                # raw_seq = self.env['ir.sequence'].next_by_code('payment.receipt') or '0'
-                raw_seq = self.env['ir.sequence'].with_context(
-                    ir_sequence_date=today
-                ).next_by_code('payment.receipt')
-                # Zero-pad to 4 digits
-                padded_seq = str(raw_seq).zfill(4)
-
-                # Compute fiscal year suffix (e.g. if today is June 2025 → "25-26")
-                # today = datetime.date.today()
-                # year_start = today.year % 100
-                # year_end = (today.year + 1) % 100
-                # fiscal_suffix = f"{year_start:02d}-{year_end:02d}"
-
-                #james
-                # today = datetime.date.today()
-                # today = fields.Date.context_today(self)
-
-                if today.month >= 4:  # April–December
-                    start_year = today.year
-                    end_year = today.year + 1
-                else:  # January–March
-                    start_year = today.year - 1
-                    end_year = today.year
-
-                fiscal_suffix = f"{start_year % 100:02d}-{end_year % 100:02d}"
-
-                appointment.payment_receipt_number = f"{padded_seq}/{fiscal_suffix}"
+            appointment._ensure_payment_receipt_number()
 
             # Update appointment with payment information
             appointment.write({
@@ -945,6 +958,9 @@ class PatientAppointment(models.Model):
                 vals['token_no'] = ", ".join(token_numbers)
         res = super(PatientAppointment, self).create(vals)
         res.password_validation()
+        # VSSC revisit: assign bill/receipt number even while still Draft
+        if res.vssc_boolean:
+            res._ensure_payment_receipt_number()
         return res
 
     @api.model

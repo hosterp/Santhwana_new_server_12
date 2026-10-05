@@ -399,13 +399,32 @@ class PatientRegistration(models.Model):
                             continue
         return res
 
+    def _is_print_blocked(self):
+        self.ensure_one()
+        return (not self.vssc_boolean) and self.status in ('draft', 'unpaid', 'cancelled')
+
+    def _check_print_allowed(self):
+        """Show Odoo warning popup when print is blocked."""
+        self.ensure_one()
+        if self._is_print_blocked():
+            status_label = dict(self._fields['status'].selection).get(self.status, self.status)
+            raise UserError(_(
+                "Print Not Allowed\n\n"
+                "This bill status is %s.\n"
+                "Printing is only allowed after payment.\n"
+                "(Draft / Unpaid / Cancelled cannot be printed. VSSC can print anytime.)"
+            ) % status_label)
+
     def patient_challan_new(self):
+        self._check_print_allowed()
         return self.env.ref('homeo_doctor.patient_challan_report').report_action(self)
+
     def patient_challan_new_normal(self):
+        self._check_print_allowed()
         return self.env.ref('homeo_doctor.report_patient_challan_action').report_action(self)
 
-
     def patient_advance_challan_new(self):
+        self._check_print_allowed()
         return self.env.ref('homeo_doctor.patient_challan_advance_report').report_action(self)
 
     def get_grouped_general_lines(self):
