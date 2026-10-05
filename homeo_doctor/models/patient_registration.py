@@ -410,12 +410,28 @@ class PatientRegistration(models.Model):
 
     def get_grouped_general_lines(self):
         grouped = defaultdict(lambda: {'quantity': 0, 'total_amt': 0})
-        for line in self.unpaid_general_ids.mapped('general_bill_line_ids'):
+        bills = self.get_consolidated_pdf_bills(
+            self.unpaid_general_ids, self.paid_general_ids,
+        )
+        for line in bills.mapped('general_bill_line_ids'):
             key = line.particulars.display_name
             grouped[key]['quantity'] += line.quantity or 0
             grouped[key]['total_amt'] += line.total_amt or 0
         return [{'name': k, 'quantity': v['quantity'], 'total_amt': v['total_amt']}
                 for k, v in grouped.items()]
+
+    def get_consolidated_pdf_bills(self, unpaid_bills, paid_bills=None):
+        """Department bills on the patient consolidated PDF.
+
+        Normal (non-VSSC): unpaid only — paid IP/lab/pharmacy settled in stay
+        must not reappear. VSSC: paid + unpaid (same as discharge bill).
+        """
+        self.ensure_one()
+        if paid_bills is None:
+            paid_bills = unpaid_bills.browse()
+        if not self.vssc_boolean:
+            return unpaid_bills
+        return unpaid_bills | paid_bills
 
     @api.onchange('vssc_boolean')
     def _onchange_vssc_id(self):
@@ -608,29 +624,34 @@ class PatientRegistration(models.Model):
 
             rec.paid_lab_ids = paid_lab
             rec.unpaid_lab_ids = unpaid_lab
-            rec.paid_lab_total = sum(l.total_bill_amount for l in paid_lab)
-            rec.unpaid_lab_total = sum(l.total_bill_amount for l in unpaid_lab)
+            rec.unpaid_lab_total = sum(l.total_bill_amount or 0.0 for l in unpaid_lab)
 
             # -----------------------------
-            # Totals
+            # Totals — normal: unpaid only (paid dept bills already settled).
+            # VSSC: paid + unpaid (IP credit style, same as discharge bill).
             # -----------------------------
-            rec.paid_total = (
-                    sum(p.total_amount or 0.0 for p in rec.paid_general_ids) +
-                    sum(p.total_amount or 0.0 for p in rec.paid_pharmacy_ids) +
-                    sum(p.total_amount or 0.0 for p in rec.paid_ip_ids) -
-                    sum(p.room_rent_total or 0.0 for p in rec.paid_ip_ids) +
-                    rec.paid_lab_total
-            )
-
             rec.unpaid_total = (
                     sum(u.total_amount or 0.0 for u in rec.unpaid_general_ids) +
                     sum(u.total_amount or 0.0 for u in rec.unpaid_pharmacy_ids) +
                     sum(u.total_amount or 0.0 for u in rec.unpaid_ip_ids) +
                     rec.unpaid_lab_total
             )
+            if rec.vssc_boolean:
+                rec.paid_lab_total = sum(l.total_bill_amount or 0.0 for l in paid_lab)
+                rec.paid_total = (
+                        sum(p.total_amount or 0.0 for p in rec.paid_general_ids) +
+                        sum(p.total_amount or 0.0 for p in rec.paid_pharmacy_ids) +
+                        sum(p.total_amount or 0.0 for p in rec.paid_ip_ids) -
+                        sum(p.room_rent_total or 0.0 for p in rec.paid_ip_ids) +
+                        rec.paid_lab_total
+                )
+                rec.paid_room_rent = sum(p.room_rent_total or 0.0 for p in rec.paid_ip_ids)
+            else:
+                rec.paid_lab_total = 0.0
+                rec.paid_total = 0.0
+                rec.paid_room_rent = 0.0
 
             rec.grant_total = rec.paid_total + rec.unpaid_total + (rec.room_rent or 0.0)
-            rec.paid_room_rent = sum(p.room_rent_total or 0.0 for p in rec.paid_ip_ids)
 
     # @api.depends('reference_no')
     # def _compute_unpaid_general(self):

@@ -297,8 +297,9 @@
                                             </tr>
                                         </t>
 
-                                        <!-- IP Bills (if any) -->
-                                        <t t-if="o.paid_ip_ids">
+                                        <!-- IP Bills — normal: unpaid only; VSSC: paid + unpaid -->
+                                        <t t-set="pdf_ip" t-value="o.get_consolidated_pdf_bills(o.unpaid_ip_ids, o.paid_ip_ids)"/>
+                                        <t t-if="pdf_ip">
                                             <t t-set="sl" t-value="sl + 1"/>
                                             <tr style="height: 55px;">
                                                 <td style="padding: 18px; border: 2px solid #ddd; vertical-align: middle;">
@@ -308,11 +309,11 @@
                                                     <strong style="font-size: 18px;">IP Bills</strong>
                                                 </td>
                                                 <td style="padding: 18px; border: 2px solid #ddd; text-align: center; font-weight: bold; vertical-align: middle; font-size: 17px;">
-                                                    <span t-esc="len(o.paid_ip_ids)"/>
+                                                    <span t-esc="len(pdf_ip)"/>
                                                 </td>
                                                 <td style="padding: 18px; border: 2px solid #ddd; text-align: right; font-weight: bold; vertical-align: middle; font-size: 17px;">
                                                     ₹
-                                                    <span t-esc="'{:,.2f}'.format(sum(o.paid_ip_ids.mapped('total_amount')) - sum(o.paid_ip_ids.mapped('room_rent_total')))"/>
+                                                    <span t-esc="'{:,.2f}'.format(sum(pdf_ip.mapped('total_amount')) - sum(pdf_ip.mapped('room_rent_total')))"/>
                                                 </td>
                                             </tr>
                                         </t>
@@ -384,7 +385,7 @@
                                         </t>
 
                                         <!-- Show message if no bills -->
-                                        <t t-if="not o.room_category_new and not o.nurse_charge and not o.doctor_visiting_charge and not o.service_charge and not o.paid_ip_ids and not o.unpaid_general_ids and not o.unpaid_lab_ids and not o.unpaid_pharmacy_ids">
+                                        <t t-if="not o.room_category_new and not o.nurse_charge and not o.doctor_visiting_charge and not o.service_charge and not pdf_ip and not o.unpaid_general_ids and not o.unpaid_lab_ids and not o.unpaid_pharmacy_ids">
                                             <tr style="height: 80px;">
                                                 <td colspan="4"
                                                     style="padding: 25px; border: 2px solid #ddd; text-align: center; font-style: italic; color: #666; font-size: 20px; vertical-align: middle;">
@@ -406,7 +407,7 @@
                                                                                                           (o.nurse_charge or 0) +
                                                                                                           (o.doctor_visiting_charge or 0) +
                                                                                                           (o.service_charge or 0) +
-                                                                                                          ((sum(o.paid_ip_ids.mapped('total_amount')) - sum(o.paid_ip_ids.mapped('room_rent_total'))) if o.paid_ip_ids else 0) +
+                                                                                                          ((sum(pdf_ip.mapped('total_amount')) - sum(pdf_ip.mapped('room_rent_total'))) if pdf_ip else 0) +
                                                                                                           (sum(o.unpaid_general_ids.mapped('total_amount')) if o.unpaid_general_ids else 0) +
                                                                                                           (sum(o.unpaid_lab_ids.mapped('total_bill_amount')) if o.unpaid_lab_ids else 0) +
                                                                                                           (sum(o.unpaid_pharmacy_ids.mapped('total_amount')) if o.unpaid_pharmacy_ids else 0))"/>

@@ -4119,7 +4119,9 @@ class DischargeBilling(models.Model):
     paid_ip_ids = fields.Many2many(
         'ip.part.billing', string="Paid IP Bills", compute="_compute_all_totals", compute_sudo=True
     )
-    unpaid_ip_ids = fields.One2many(
+    # Many2many (not One2many): IP bills have no inverse link to discharge.billing.
+    # A One2many without inverse never held unpaid IDs, so the PDF fell back to paid IP only.
+    unpaid_ip_ids = fields.Many2many(
         'ip.part.billing', string="Unpaid IP Bills", compute="_compute_all_totals", compute_sudo=True
     )
     # unpaid_ot_ids = fields.One2many(
@@ -4609,18 +4611,25 @@ class DischargeBilling(models.Model):
                 rec, 'unpaid_casualty_ids', rec._filter_discharge_tree_bills(unpaid_casualty))
 
             # Totals: IP credit only. OP / cash never enter Total Amount.
-            rec.paid_lab_total = rec._credit_total(paid_lab)
+            # Normal (non-VSSC): unpaid credit only — paid dept bills (incl. IP)
+            # were already settled during stay and must not re-enter discharge.
+            # VSSC: paid + unpaid IP credit (OP excluded by _count_in_total).
             rec.unpaid_lab_total = rec._credit_total(unpaid_lab)
-            rec.paid_total = (
-                rec._credit_total(paid_general)
-                + rec._credit_total(paid_pharmacy)
-                + rec._credit_total(paid_ip)
-                + rec._credit_total(paid_ot)
-                + rec._credit_total(paid_audiology)
-                + rec._credit_total(paid_xray)
-                + rec._credit_total(paid_casualty)
-                + rec.paid_lab_total
-            )
+            if rec.vssc_boolean:
+                rec.paid_lab_total = rec._credit_total(paid_lab)
+                rec.paid_total = (
+                    rec._credit_total(paid_general)
+                    + rec._credit_total(paid_pharmacy)
+                    + rec._credit_total(paid_ip)
+                    + rec._credit_total(paid_ot)
+                    + rec._credit_total(paid_audiology)
+                    + rec._credit_total(paid_xray)
+                    + rec._credit_total(paid_casualty)
+                    + rec.paid_lab_total
+                )
+            else:
+                rec.paid_lab_total = 0.0
+                rec.paid_total = 0.0
             rec.unpaid_total = (
                 rec._credit_total(unpaid_general)
                 + rec._credit_total(unpaid_pharmacy)
@@ -5166,17 +5175,18 @@ class DischargeBilling(models.Model):
     def get_consolidated_pdf_bills(self, unpaid_bills, paid_bills=None):
         """Department bills printed on the consolidated PDF.
 
-        Always include paid + unpaid IP department bills so IP credit labs (and
-        other dept bills) already marked paid during the stay still print on the
-        consolidated bill *before* Pay. VSSC still omits OP bills.
+        Normal (non-VSSC): unpaid bills only (all departments) — paid IP / lab /
+        pharmacy / etc. settled during the stay must not reappear.
+        VSSC: paid + unpaid IP credit bills; OP bills omitted.
         """
         self.ensure_one()
         if paid_bills is None:
             paid_bills = unpaid_bills.browse()
+        # Normal discharge: consolidated bill shows unpaid only.
+        if not self.vssc_boolean:
+            return unpaid_bills
         bills = unpaid_bills | paid_bills
-        if self.vssc_boolean:
-            bills = bills.filtered(lambda b: not self._is_op_department_bill(b))
-        return bills
+        return bills.filtered(lambda b: not self._is_op_department_bill(b))
 
     def get_discharge_report_totals(self):
         """Totals for consolidated PDF — gross before deductions, net after.

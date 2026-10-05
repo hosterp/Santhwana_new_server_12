@@ -404,8 +404,9 @@
                                             </tr>
                                         </t>
 
-                                        <!-- IP Bills (if any) -->
-                                        <t t-if="o.paid_ip_ids">
+                                        <!-- IP Bills (if any) — normal excludes paid IP; VSSC keeps them -->
+                                        <t t-set="pdf_ip" t-value="o.get_consolidated_pdf_bills(o.unpaid_ip_ids, o.paid_ip_ids)"/>
+                                        <t t-if="pdf_ip">
                                             <t t-set="sl" t-value="sl + 1"/>
                                             <tr style="height: 35px;">
                                                 <td style="text-align:center;">
@@ -415,11 +416,11 @@
                                                     <strong style="font-size: 18px;">IP Bills</strong>
                                                 </td>
                                                 <td style="text-align:center;">
-                                                    <span t-esc="len(o.paid_ip_ids)"/>
+                                                    <span t-esc="len(pdf_ip)"/>
                                                 </td>
                                                 <td style="text-align:center;">
                                                     ₹
-                                                    <span t-esc="'{:,.2f}'.format(sum(o.paid_ip_ids.mapped('total_amount')) - sum(o.paid_ip_ids.mapped('room_rent_total')))"/>
+                                                    <span t-esc="'{:,.2f}'.format(sum(pdf_ip.mapped('total_amount')) - sum(pdf_ip.mapped('room_rent_total')))"/>
                                                 </td>
                                             </tr>
                                         </t>
@@ -450,31 +451,50 @@
                                             </t>
                                         </t>
 
-                                        <!-- Lab Bills (if any) -->
+                                        <!-- Lab Bills (unpaid only for normal via get_consolidated_pdf_bills) -->
+                                        <t t-set="pdf_lab" t-value="o.get_consolidated_pdf_bills(o.unpaid_lab_ids, o.paid_lab_ids)"/>
+                                        <t t-if="pdf_lab">
+                                            <t t-set="sl" t-value="sl + 1"/>
+                                            <tr style="height: 35px;">
+                                                <td style="text-align:center;">
+                                                    <t t-esc="sl"/>
+                                                </td>
+                                                <td style="text-align:center;">
+                                                    <strong style="font-size: 18px;">Lab Bills</strong>
+                                                </td>
+                                                <td style="text-align:center;">
+                                                    <span t-esc="len(pdf_lab)"/>
+                                                </td>
+                                                <td style="text-align:center;">
+                                                    ₹
+                                                    <span t-esc="'{:,.2f}'.format(sum(pdf_lab.mapped('total_bill_amount')))"/>
+                                                </td>
+                                            </tr>
+                                        </t>
 
-
-                                        <!-- Pharmacy Bills (if any) -->
-                                        <!--                                        <t t-if="o.unpaid_pharmacy_ids">-->
-                                        <!--                                            <t t-set="sl" t-value="sl + 1"/>-->
-                                        <!--                                            <tr style="height: 35px;">-->
-                                        <!--                                                <td style="padding: 8px; border: 2px solid #ddd; vertical-align: middle;">-->
-                                        <!--                                                    <t t-esc="sl"/>-->
-                                        <!--                                                </td>-->
-                                        <!--                                                <td style="padding: 8px; border: 2px solid #ddd; vertical-align: middle; font-size: 17px;">-->
-                                        <!--                                                    Pharmacy Charges-->
-                                        <!--                                                </td>-->
-                                        <!--                                                <td style="padding: 8px; border: 2px solid #ddd; text-align: center; font-weight: bold; vertical-align: middle; font-size: 17px;">-->
-                                        <!--                                                    <span t-esc="len(o.unpaid_pharmacy_ids)"/>-->
-                                        <!--                                                </td>-->
-                                        <!--                                                <td style="padding: 8px; border: 2px solid #ddd; text-align: right; font-weight: bold; vertical-align: middle; font-size: 17px;">-->
-                                        <!--                                                    ₹-->
-                                        <!--                                                    <span t-esc="'{:,.2f}'.format(sum(o.unpaid_pharmacy_ids.mapped('total_amount')))"/>-->
-                                        <!--                                                </td>-->
-                                        <!--                                            </tr>-->
-                                        <!--                                        </t>-->
+                                        <!-- Pharmacy Bills -->
+                                        <t t-set="pdf_pharmacy" t-value="o.get_consolidated_pdf_bills(o.unpaid_pharmacy_ids, o.paid_pharmacy_ids)"/>
+                                        <t t-if="pdf_pharmacy">
+                                            <t t-set="sl" t-value="sl + 1"/>
+                                            <tr style="height: 35px;">
+                                                <td style="text-align:center;">
+                                                    <t t-esc="sl"/>
+                                                </td>
+                                                <td style="text-align:center;">
+                                                    <strong style="font-size: 18px;">Pharmacy Charges</strong>
+                                                </td>
+                                                <td style="text-align:center;">
+                                                    <span t-esc="len(pdf_pharmacy)"/>
+                                                </td>
+                                                <td style="text-align:center;">
+                                                    ₹
+                                                    <span t-esc="'{:,.2f}'.format(sum(pdf_pharmacy.mapped('total_amount')))"/>
+                                                </td>
+                                            </tr>
+                                        </t>
 
                                         <!-- Show message if no bills -->
-                                        <t t-if="not o.room_category_new and not o.nurse_charge and not o.doctor_visiting_charge and not o.service_charge and not o.paid_ip_ids and not o.unpaid_general_ids and not o.unpaid_lab_ids and not o.unpaid_pharmacy_ids">
+                                        <t t-if="not o.room_category_new and not o.nurse_charge and not o.doctor_visiting_charge and not o.service_charge and not pdf_ip and not o.unpaid_general_ids and not pdf_lab and not pdf_pharmacy">
                                             <tr style="height: 80px;">
                                                 <td colspan="4"
                                                     style="padding: 25px;  text-align: center; font-style: italic; color: #666; font-size: 20px; vertical-align: middle;">
@@ -494,8 +514,10 @@
     (nursing_amount or 0) +
     (doctor_amount or 0) +
     (service_amount or 0) +
-    ((sum(o.paid_ip_ids.mapped('total_amount')) - sum(o.paid_ip_ids.mapped('room_rent_total'))) if o.paid_ip_ids else 0) +
-    (sum(o.unpaid_general_ids.mapped('total_amount')) if o.unpaid_general_ids else 0)
+    ((sum(pdf_ip.mapped('total_amount')) - sum(pdf_ip.mapped('room_rent_total'))) if pdf_ip else 0) +
+    (sum(o.unpaid_general_ids.mapped('total_amount')) if o.unpaid_general_ids else 0) +
+    (sum(pdf_lab.mapped('total_bill_amount')) if pdf_lab else 0) +
+    (sum(pdf_pharmacy.mapped('total_amount')) if pdf_pharmacy else 0)
 "/>
 
                                             <!-- Display total -->
