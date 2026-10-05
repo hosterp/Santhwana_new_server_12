@@ -551,6 +551,15 @@ class PharmacyPrescriptionLine(models.Model):
         return False
 
     def _get_available_stock_qty(self):
+        """Stock available for this line — selected batch only when set.
+
+        Never sum other batches: same product on multiple lines must share the
+        exact ``products_id`` stock.entry, otherwise cancel/restore can put qty
+        back on the wrong batch.
+        """
+        self.ensure_one()
+        if self.products_id:
+            return float(self.products_id.quantity or 0.0)
         product = self._get_product()
         if not product:
             return 0.0
@@ -561,13 +570,15 @@ class PharmacyPrescriptionLine(models.Model):
         return sum(entries.mapped('quantity'))
 
     def _get_stock_entries_for_deduct(self, product):
-        if self.products_id and self.products_id.quantity > 0:
-            other_entries = self.env['stock.entry'].search([
-                ('product_id', '=', product.id),
-                ('id', '!=', self.products_id.id),
-                ('quantity', '>', 0),
-            ], order='exp_date asc, id asc')
-            return self.products_id | other_entries
+        """Entries used for deduction — stick to the line's selected batch.
+
+        Previously, once ``products_id.quantity`` hit 0 (e.g. another line on
+        the same bill already took that batch), deduction spilled into a
+        different batch. Cancel then restored onto the original batch, so stock
+        moved incorrectly between batches.
+        """
+        if self.products_id:
+            return self.products_id
         return self.env['stock.entry'].search([
             ('product_id', '=', product.id),
             ('quantity', '>', 0),
@@ -582,19 +593,28 @@ class PharmacyPrescriptionLine(models.Model):
         for entry in self._get_stock_entries_for_deduct(product):
             if remaining <= 0:
                 break
-            if entry.quantity >= remaining:
-                entry.quantity -= remaining
+            available = float(entry.quantity or 0.0)
+            if available >= remaining:
+                entry.quantity = available - remaining
                 remaining = 0
             else:
-                remaining -= entry.quantity
+                remaining -= available
                 entry.quantity = 0
         if remaining > 0:
+            batch_hint = ''
+            if self.products_id and self.products_id.batch:
+                batch_hint = ' (batch %s)' % self.products_id.batch
             raise ValidationError(
-                "Not enough stock for %s. Short by %s unit(s)."
-                % (product.display_name, int(remaining))
+                "Not enough stock for %s%s. Short by %s unit(s)."
+                % (product.display_name, batch_hint, int(remaining))
             )
 
     def _restore_stock_quantity(self, qty):
+        """Return deducted qty to the same stock.entry this line sold from.
+
+        Prefer ``products_id`` so two lines with the same product/batch each
+        restore onto that entry — never onto a different batch found by search.
+        """
         self.ensure_one()
         if qty <= 0:
             return
@@ -602,6 +622,13 @@ class PharmacyPrescriptionLine(models.Model):
         if not product:
             return
         StockEntry = self.env['stock.entry']
+
+        # 1) Exact line selection (correct for same-batch multi-line cancel).
+        if self.products_id:
+            self.products_id.quantity = float(self.products_id.quantity or 0.0) + qty
+            return
+
+        # 2) Fallback when products_id is missing (legacy / broken lines).
         entry = False
         if self.batch:
             entry = StockEntry.search([
@@ -613,7 +640,7 @@ class PharmacyPrescriptionLine(models.Model):
                 ('product_id', '=', product.id),
             ], order='exp_date asc, id asc', limit=1)
         if entry:
-            entry.quantity += qty
+            entry.quantity = float(entry.quantity or 0.0) + qty
         else:
             StockEntry.create({
                 'product_id': product.id,
@@ -629,6 +656,26 @@ class PharmacyPrescriptionLine(models.Model):
                 'state': 'confirmed',
             })
 
+    def _sibling_pending_qty_same_batch(self):
+        """Pending (not yet deducted) qty on other lines of this bill for the
+        same stock.entry — so multi-line same-batch sales do not oversell."""
+        self.ensure_one()
+        if not self.products_id:
+            return 0.0
+        bill = self._get_pharmacy_bill()
+        if not bill:
+            return 0.0
+        pending = 0.0
+        for sib in bill._get_all_prescription_lines():
+            if sib.id == self.id:
+                continue
+            if sib.products_id != self.products_id:
+                continue
+            need = float(sib.qty or 0) - float(sib.qty_deducted or 0)
+            if need > 0:
+                pending += need
+        return pending
+
     def _check_stock_availability(self, extra_qty=0):
         self.ensure_one()
         if not self.products_id or not self.qty:
@@ -636,12 +683,13 @@ class PharmacyPrescriptionLine(models.Model):
         needed = (self.qty or 0) - (self.qty_deducted or 0) + extra_qty
         if needed <= 0:
             return
-        available = self._get_available_stock_qty()
+        available = self._get_available_stock_qty() - self._sibling_pending_qty_same_batch()
         if available < needed:
             product_name = self._get_product().display_name if self._get_product() else 'Medicine'
+            batch_hint = (' (batch %s)' % self.products_id.batch) if self.products_id.batch else ''
             raise ValidationError(
-                "Not enough stock for %s. Available: %s, Required: %s."
-                % (product_name, int(available), int(needed))
+                "Not enough stock for %s%s. Available: %s, Required: %s."
+                % (product_name, batch_hint, int(max(available, 0)), int(needed))
             )
 
     def sync_stock_deduction(self):
