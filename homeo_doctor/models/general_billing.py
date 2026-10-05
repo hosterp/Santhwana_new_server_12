@@ -4384,8 +4384,8 @@ class DischargeBilling(models.Model):
         """All department bills within the admission → discharge window.
 
         Every bill (Cash, Credit, OP and IP) is fetched so the tree views show
-        them. Whether a bill is *added to the Total Amount* is decided separately
-        by ``_count_in_total`` (only IP credit bills are added).
+        them unchanged. Whether a bill is *added to the Total Amount* is decided
+        separately by ``_count_in_total``.
         """
         Model = self.env[model_name]
         if date_field not in Model._fields:
@@ -4393,22 +4393,31 @@ class DischargeBilling(models.Model):
 
         return self._discharge_date_range_domain(date_field, admitted_date, end_date)
 
-    def _count_in_total(self, bill):
-        """Only IP *credit* department bills are added to the discharge Total
-        Amount. OP bills and Cash bills are still shown in the tree views but are
-        NOT added to the total.
-        """
-        # OP bills never count toward the discharge total.
+    def _is_op_department_bill(self, bill):
+        """True when the department bill is marked OP (not IP/admitted)."""
         if 'bill_type' in bill._fields:
             bt = bill.bill_type
             if isinstance(bt, str) and bt == 'op':
-                return False
-        elif 'op_category' in bill._fields:
+                return True
+        if 'op_category' in bill._fields:
             oc = bill.op_category
             if oc:
                 name = oc if isinstance(oc, str) else (getattr(oc, 'name', '') or '')
                 if (name or '').strip().lower() == 'op':
-                    return False
+                    return True
+        return False
+
+    def _count_in_total(self, bill):
+        """Which department bills enter the discharge Total Amount.
+
+        Tree views always show every fetched bill (no filtering here).
+
+        VSSC: only IP *credit* amounts. OP credit / cash never enter the total.
+        Non-VSSC: unchanged — IP credit only (OP and cash stay on trees only).
+        """
+        # OP bills never count toward the discharge total (VSSC included).
+        if self._is_op_department_bill(bill):
+            return False
 
         # Cash bills are excluded; only credit bills are added to the total.
         # (Pharmacy stores the mode in the misspelled field ``payment_mathod``.)
@@ -4422,14 +4431,17 @@ class DischargeBilling(models.Model):
         return mode == 'credit'
 
     def _bill_amount(self, bill):
-        if 'total_amount' in bill._fields:
-            return bill.total_amount or 0
+        # Prefer net_amount so discounted department totals match the trees/PDF.
+        if 'net_amount' in bill._fields and bill.net_amount is not False:
+            return bill.net_amount or 0
         if 'total_bill_amount' in bill._fields:
             return bill.total_bill_amount or 0
+        if 'total_amount' in bill._fields:
+            return bill.total_amount or 0
         return 0
 
     def _credit_total(self, bills):
-        """Sum of the bills that count toward the discharge total (IP credit)."""
+        """Sum of IP credit bills that count toward the discharge total."""
         return sum(self._bill_amount(b) for b in bills if self._count_in_total(b))
 
     @api.model
@@ -4530,25 +4542,16 @@ class DischargeBilling(models.Model):
             unpaid_pharmacy = _fetch('pharmacy', ('status', '=', 'unpaid'))
             paid_lab = _fetch('lab', ('status', '=', 'paid'))
 
+            # Unpaid credit labs only. Never pull paid credit labs into unpaid —
+            # that double-counts them in grant_total (paid_total + unpaid_total).
+            # Tree views still show paid_lab_ids + unpaid_lab_ids separately.
             l_model, l_pat, l_dis, l_date = specs['lab']
-            if not rec.vssc_boolean:
-                unpaid_lab = rec._search_discharge_dept_bills(
-                    l_model, l_pat, l_dis,
-                    [('status', '=', 'unpaid'), ('mode_of_payment', '=', 'credit')],
-                    l_date, admitted_date, end_date,
-                )
-            else:
-                unpaid_lab = rec._search_discharge_dept_bills(
-                    l_model, l_pat, l_dis,
-                    [
-                        '|',
-                        ('status', '=', 'unpaid'),
-                        '&',
-                        ('status', '=', 'paid'),
-                        ('mode_of_payment', '=', 'credit'),
-                    ],
-                    l_date, admitted_date, end_date,
-                )
+            unpaid_lab = rec._search_discharge_dept_bills(
+                l_model, l_pat, l_dis,
+                [('status', '=', 'unpaid'), ('mode_of_payment', '=', 'credit')],
+                l_date, admitted_date, end_date,
+            )
+            unpaid_lab = unpaid_lab - paid_lab
 
             paid_ip = _fetch('ip', ('status', '=', 'paid'))
             unpaid_ip = _fetch('ip', ('status', '=', 'unpaid'))
@@ -4561,6 +4564,8 @@ class DischargeBilling(models.Model):
             paid_casualty = _fetch('casualty', ('status', '=', 'paid'))
             unpaid_casualty = _fetch('casualty', ('status', '=', 'unpaid'))
 
+            # Tree views: always show ALL fetched bills (cash / OP / IP).
+            # Do not filter trees for VSSC — only the Total Amount is restricted.
             rec._assign_computed_x2many(rec, 'paid_general_ids', paid_general)
             rec._assign_computed_x2many(rec, 'unpaid_general_ids', unpaid_general)
             rec._assign_computed_x2many(rec, 'paid_pharmacy_ids', paid_pharmacy)
@@ -4578,8 +4583,8 @@ class DischargeBilling(models.Model):
             rec._assign_computed_x2many(rec, 'paid_casualty_ids', paid_casualty)
             rec._assign_computed_x2many(rec, 'unpaid_casualty_ids', unpaid_casualty)
 
-            # Tree views show ALL bills (the x2many fields above), but only IP
-            # credit bills are summed into the totals (Cash / OP excluded).
+            # Totals: IP credit only. OP credit / cash never enter Total Amount
+            # (VSSC and non-VSSC). Trees above remain unfiltered.
             rec.paid_lab_total = rec._credit_total(paid_lab)
             rec.unpaid_lab_total = rec._credit_total(unpaid_lab)
             rec.paid_total = (
@@ -4983,16 +4988,9 @@ class DischargeBilling(models.Model):
             lab_domain.append(('date', '<=', end_date))
         if bills_settled:
             lab_domain.append(('status', '=', 'paid'))
-        elif not self.vssc_boolean:
-            lab_domain.extend([('status', '=', 'unpaid'), ('mode_of_payment', '=', 'credit')])
         else:
-            lab_domain.extend([
-                '|',
-                ('status', '=', 'unpaid'),
-                '&',
-                ('status', '=', 'paid'),
-                ('mode_of_payment', '=', 'credit'),
-            ])
+            # Unpaid credit only — never mix paid credit into unpaid (double-count).
+            lab_domain.extend([('status', '=', 'unpaid'), ('mode_of_payment', '=', 'credit')])
 
         pharmacy_domain = [('uhid_id', '=', self.mrd_no.id)]
         if bills_settled:
@@ -5140,6 +5138,25 @@ class DischargeBilling(models.Model):
         self.ensure_one()
         return sum(self.general_bill_line_ids.mapped('total_amt') or [0.0])
 
+    def get_consolidated_pdf_bills(self, unpaid_bills, paid_bills=None):
+        """Department bills printed on the consolidated PDF.
+
+        Form tree views are unchanged. For VSSC only, OP bills are omitted from
+        the PDF (same rule as Total Amount — IP credit only). After the
+        discharge is settled, paid department bills are used so IP credit lines
+        still print.
+        """
+        self.ensure_one()
+        if paid_bills is None:
+            paid_bills = unpaid_bills.browse()
+        if self.status in ('discharged', 'paid', 'cancelled'):
+            bills = unpaid_bills | paid_bills
+        else:
+            bills = unpaid_bills
+        if self.vssc_boolean:
+            bills = bills.filtered(lambda b: not self._is_op_department_bill(b))
+        return bills
+
     def get_discharge_report_totals(self):
         """Totals for consolidated PDF — gross before deductions, net after.
 
@@ -5286,7 +5303,10 @@ class DischargeBilling(models.Model):
             rec.balance = int(total) - int(rec.amount_paid or 0)
     def get_grouped_general_lines(self):
         grouped = defaultdict(lambda: {'quantity': 0, 'total_amt': 0})
-        for line in self.unpaid_general_ids.mapped('general_bill_line_ids'):
+        bills = self.get_consolidated_pdf_bills(
+            self.unpaid_general_ids, self.paid_general_ids,
+        )
+        for line in bills.mapped('general_bill_line_ids'):
             key = line.particulars.display_name
             grouped[key]['quantity'] += line.quantity or 0
             grouped[key]['total_amt'] += line.total_amt or 0
