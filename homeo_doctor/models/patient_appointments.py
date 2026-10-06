@@ -83,6 +83,7 @@ class PatientAppointment(models.Model):
             self.register_mode_payment = 'credit'
 
     def _is_print_blocked(self):
+        """Non-VSSC revisit: block draft / unpaid / cancelled. VSSC may print anytime."""
         self.ensure_one()
         return (not self.vssc_boolean) and self.status in ('draft', 'unpaid', 'cancelled')
 
