@@ -83,9 +83,9 @@ class PatientAppointment(models.Model):
             self.register_mode_payment = 'credit'
 
     def _is_print_blocked(self):
-        """Non-VSSC revisit: block draft / unpaid / cancelled. VSSC may print anytime."""
+        """Block revisit print until Pay is clicked (VSSC included)."""
         self.ensure_one()
-        return (not self.vssc_boolean) and self.status in ('draft', 'unpaid', 'cancelled')
+        return self.status not in ('confirmed', 'completed')
 
     def _check_print_allowed(self):
         """Show Odoo warning popup when print is blocked."""
@@ -95,20 +95,18 @@ class PatientAppointment(models.Model):
             raise UserError(_(
                 "Print Not Allowed\n\n"
                 "This bill status is %s.\n"
-                "Printing is only allowed after payment.\n"
-                "(Draft / Unpaid / Cancelled cannot be printed. VSSC can print anytime.)"
+                "Please click Pay before printing.\n"
+                "(Draft / Unpaid / Cancelled cannot be printed, including VSSC.)"
             ) % status_label)
 
     def patient_challan_new(self):
         self._check_print_allowed()
-        if self.vssc_boolean:
-            self._ensure_payment_receipt_number()
+        self._ensure_payment_receipt_number()
         return self.env.ref('homeo_doctor.action_report_patient_appointment').report_action(self)
 
     def patient_challan_new_normal(self):
         self._check_print_allowed()
-        if self.vssc_boolean:
-            self._ensure_payment_receipt_number()
+        self._ensure_payment_receipt_number()
         return self.env.ref('homeo_doctor.action_report_patient_appointment_a5_print').report_action(self)
 
     def amount_to_text_indian(self):
@@ -959,9 +957,6 @@ class PatientAppointment(models.Model):
                 vals['token_no'] = ", ".join(token_numbers)
         res = super(PatientAppointment, self).create(vals)
         res.password_validation()
-        # VSSC revisit: assign bill/receipt number even while still Draft
-        if res.vssc_boolean:
-            res._ensure_payment_receipt_number()
         return res
 
     @api.model

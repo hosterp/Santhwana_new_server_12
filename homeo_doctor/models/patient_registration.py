@@ -402,9 +402,17 @@ class PatientRegistration(models.Model):
         return res
 
     def _is_print_blocked(self):
-        """Non-VSSC OP: block draft / unpaid / cancelled. VSSC may print anytime."""
+        """Block OP print until Pay is clicked (VSSC included).
+
+        Pay sets ``register_bool``; VSSC stays ``unpaid`` after Pay, so we
+        cannot rely on status alone.
+        """
         self.ensure_one()
-        return (not self.vssc_boolean) and self.status in ('draft', 'unpaid', 'cancelled')
+        if self.status == 'cancelled':
+            return True
+        if self.register_bool or self.status == 'paid':
+            return False
+        return True
 
     def _check_print_allowed(self):
         """Show Odoo warning popup when print is blocked."""
@@ -414,8 +422,8 @@ class PatientRegistration(models.Model):
             raise UserError(_(
                 "Print Not Allowed\n\n"
                 "This bill status is %s.\n"
-                "Printing is only allowed after payment.\n"
-                "(Draft / Unpaid / Cancelled cannot be printed. VSSC can print anytime.)"
+                "Please click Pay before printing.\n"
+                "(Draft / Unpaid / Cancelled cannot be printed, including VSSC.)"
             ) % status_label)
 
     def patient_challan_new(self):

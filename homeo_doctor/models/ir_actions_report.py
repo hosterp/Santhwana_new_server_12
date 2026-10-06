@@ -10,8 +10,8 @@ class IrActionsReport(models.Model):
         raise UserError(_(
             "Print Not Allowed\n\n"
             "This bill status is %s.\n"
-            "Printing is only allowed after payment.\n"
-            "(Draft / Unpaid / Cancelled cannot be printed. VSSC can print anytime.)"
+            "Please click Pay before printing.\n"
+            "(Draft / Unpaid / Cancelled cannot be printed, including VSSC.)"
         ) % status_label)
 
     def _get_op_revisit_print_blocked_records(self, res_ids):
@@ -21,14 +21,13 @@ class IrActionsReport(models.Model):
             res_ids = res_ids.ids
         elif isinstance(res_ids, int):
             res_ids = [res_ids]
-        blocked_states = ('draft', 'unpaid', 'cancelled')
         for report in self:
             if report.model == 'patient.appointment':
                 recs = self.env['patient.appointment'].browse(res_ids).exists()
-                return recs.filtered(lambda r: not r.vssc_boolean and r.status in blocked_states)
+                return recs.filtered(lambda r: r._is_print_blocked())
             if report.model == 'patient.reg':
                 recs = self.env['patient.reg'].browse(res_ids).exists()
-                return recs.filtered(lambda r: not r.vssc_boolean and r.status in blocked_states)
+                return recs.filtered(lambda r: r._is_print_blocked())
         return self.env['patient.reg']
 
     def _check_op_revisit_print_blocked(self, res_ids):
@@ -38,7 +37,7 @@ class IrActionsReport(models.Model):
 
     def report_action(self, docids, data=None, config=True):
         self._check_op_revisit_print_blocked(docids)
-        # VSSC revisit: ensure bill/receipt number exists before opening challan
+        # After Pay only: ensure revisit receipt number exists for print
         if docids:
             ids = docids.ids if isinstance(docids, models.Model) else (
                 [docids] if isinstance(docids, int) else docids
@@ -46,7 +45,7 @@ class IrActionsReport(models.Model):
             for report in self:
                 if report.model == 'patient.appointment':
                     recs = self.env['patient.appointment'].browse(ids).exists()
-                    recs.filtered('vssc_boolean')._ensure_payment_receipt_number()
+                    recs.filtered(lambda r: not r._is_print_blocked())._ensure_payment_receipt_number()
         return super().report_action(docids, data=data, config=config)
 
     def _render_qweb_pdf(self, res_ids=None, data=None):
