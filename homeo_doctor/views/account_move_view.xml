@@ -327,7 +327,9 @@
             <xpath expr="//field[@name='amount_total_signed']" position="replace">
                 <field name="amount_total" invisible="1"/>
                 <field name="amount_total_with_gst"/>
+                <field name="is_verified"/>
             </xpath>
+
 
             <xpath expr="//field[@name='name']" position="after">
                 <field name="supplier_name"
