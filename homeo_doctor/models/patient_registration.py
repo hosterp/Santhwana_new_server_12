@@ -518,134 +518,114 @@ class PatientRegistration(models.Model):
     #         ])
     @api.depends('reference_no', 'admitted_date', 'vssc_boolean')
     def _compute_all_totals(self):
-        today = fields.Date.today()
-        # print(today, 'todaytodaytodaytodaytodaytodaytodaytodaytodaytodaytodaytodaytodaytodaytoday')
+        empty_general = self.env['general.billing']
+        empty_pharmacy = self.env['pharmacy.description']
+        empty_ip = self.env['ip.part.billing']
+        empty_lab = self.env['doctor.lab.report']
         for rec in self:
-            # Initialize
-            rec.paid_total = 0.0
-            rec.unpaid_total = 0.0
-            rec.grant_total = 0.0
-            rec.paid_lab_total = 0.0
-            rec.unpaid_lab_total = 0.0
-            paid_general = 0.0
-            unpaid_general = 0.0
-            today = fields.Date.today()
-            # -----------------------------
-            # General Billing
-            # -----------------------------
+            # Always assign every computed field (OP / not-yet-admitted have no admitted_date).
+            paid_general = empty_general
+            unpaid_general = empty_general
+            paid_pharmacy = empty_pharmacy
+            unpaid_pharmacy = empty_pharmacy
+            paid_ip = empty_ip
+            unpaid_ip = empty_ip
+            paid_lab = empty_lab
+            unpaid_lab = empty_lab
+
             end_date = rec.discharge_date or fields.Date.today()
             if rec.admitted_date:
-                today = fields.Date.today()
-
                 paid_general = self.env['general.billing'].search([
                     ('mrd_no', '=', rec.id),
                     ('status', '=', 'paid'),
                     ('bill_date', '>=', rec.admitted_date),
-                    ('bill_date', '<=',end_date),
-                    # ('bill_date', '<=', fields.Date.today()),
+                    ('bill_date', '<=', end_date),
                 ])
                 unpaid_general = self.env['general.billing'].search([
                     ('mrd_no', '=', rec.id),
                     ('status', '!=', 'paid'),
                     ('bill_date', '>=', rec.admitted_date),
                     ('bill_date', '<=', end_date),
-                    # ('bill_date', '<=', fields.Date.today()),
                 ])
-                rec.paid_general_ids = paid_general
-                rec.unpaid_general_ids = unpaid_general
+                paid_pharmacy = self.env['pharmacy.description'].search([
+                    ('uhid_id', '=', rec.id),
+                    ('status', '=', 'paid'),
+                    ('date', '>=', rec.admitted_date),
+                    ('date', '<=', end_date),
+                ])
+                unpaid_pharmacy = self.env['pharmacy.description'].search([
+                    ('uhid_id', '=', rec.id),
+                    ('status', '=', 'unpaid'),
+                    ('date', '>=', rec.admitted_date),
+                    ('date', '<=', end_date),
+                ])
+                paid_ip = self.env['ip.part.billing'].search([
+                    ('mrd_no', '=', rec.id),
+                    ('status', '=', 'paid'),
+                    ('bill_date', '>=', rec.admitted_date),
+                    ('bill_date', '<=', end_date),
+                ])
+                unpaid_ip = self.env['ip.part.billing'].search([
+                    ('mrd_no', '=', rec.id),
+                    ('status', '=', 'unpaid'),
+                    ('bill_date', '>=', rec.admitted_date),
+                    ('bill_date', '<=', end_date),
+                ])
+                paid_lab = self.env['doctor.lab.report'].search([
+                    ('user_ide', '=', rec.id),
+                    ('status', '=', 'paid'),
+                    ('date', '>=', rec.admitted_date),
+                    ('date', '<=', end_date),
+                ])
+                if not rec.vssc_boolean:
+                    unpaid_lab = self.env['doctor.lab.report'].search([
+                        ('user_ide', '=', rec.id),
+                        ('status', '=', 'unpaid'),
+                        ('mode_of_payment', '=', 'credit'),
+                        ('date', '>=', rec.admitted_date),
+                        ('date', '<=', end_date),
+                    ])
+                else:
+                    unpaid_lab = self.env['doctor.lab.report'].search([
+                        ('user_ide', '=', rec.id),
+                        '|',
+                        ('status', '!=', 'paid'),
+                        '&',
+                        ('status', '=', 'paid'),
+                        ('mode_of_payment', '=', 'credit'),
+                        ('status', '!=', 'credit'),
+                        ('date', '>=', rec.admitted_date),
+                        ('date', '<=', end_date),
+                    ])
 
-            # -----------------------------
-            # Pharmacy Billing
-            # -----------------------------
-            paid_pharmacy = self.env['pharmacy.description'].search([
-                ('uhid_id', '=', rec.id),
-                ('status', '=', 'paid'),
-                ('date', '>=', rec.admitted_date),
-                ('date', '<=', end_date),
-                # ('date', '<=', today),
-            ])
-            unpaid_pharmacy = self.env['pharmacy.description'].search([
-                ('uhid_id', '=', rec.id),
-                ('status', '=', 'unpaid'),
-                ('date', '>=', rec.admitted_date),
-                ('date', '<=', end_date),
-                # ('date', '<=', today),
-            ])
+            rec.paid_general_ids = paid_general
+            rec.unpaid_general_ids = unpaid_general
             rec.paid_pharmacy_ids = paid_pharmacy
             rec.unpaid_pharmacy_ids = unpaid_pharmacy
-            paid_ip = self.env['ip.part.billing'].search([
-                ('mrd_no', '=', rec.id),
-                ('status', '=', 'paid'),
-                ('bill_date', '>=', rec.admitted_date),
-                ('bill_date', '<=', end_date),
-                # ('bill_date', '<=', today),
-            ])
-            unpaid_ip = self.env['ip.part.billing'].search([
-                ('mrd_no', '=', rec.id),
-                ('status', '=', 'unpaid'),
-                ('bill_date', '>=', rec.admitted_date),
-                ('bill_date', '<=', end_date),
-                # ('bill_date', '<=', today),
-            ])
             rec.paid_ip_ids = paid_ip
             rec.unpaid_ip_ids = unpaid_ip
-            # -----------------------------
-            # Lab Billing (Both Paid & Unpaid)
-            # -----------------------------
-            paid_lab = self.env['doctor.lab.report'].search([
-                ('user_ide', '=', rec.id),
-                ('status', '=', 'paid'),
-                ('date', '>=', rec.admitted_date),
-                ('date', '<=', end_date),
-                # ('date', '<=', today),
-            ])
-            if not rec.vssc_boolean:
-                unpaid_lab = self.env['doctor.lab.report'].search([
-                    ('user_ide', '=', rec.id),
-                    ('status', '=', 'unpaid'),
-                    ('mode_of_payment', '=', 'credit'),
-                    ('date', '>=', rec.admitted_date),
-                    ('date', '<=', end_date),
-                    # ('date', '<=', today),
-                ])
-            else:
-                unpaid_lab = self.env['doctor.lab.report'].search([
-                    ('user_ide', '=', rec.id),
-                    '|',
-                    ('status', '!=', 'paid'),
-                    '&',
-                    ('status', '=', 'paid'),
-                    ('mode_of_payment', '=', 'credit'),
-                    ('status', '!=', 'credit'),
-                    ('date', '>=', rec.admitted_date),
-                    ('date', '<=', end_date),
-                    # ('date', '<=', today),
-                ])
-
             rec.paid_lab_ids = paid_lab
             rec.unpaid_lab_ids = unpaid_lab
             rec.unpaid_lab_total = sum(l.total_bill_amount or 0.0 for l in unpaid_lab)
 
-            # -----------------------------
-            # Totals — normal: unpaid only (paid dept bills already settled).
-            # VSSC: paid + unpaid (IP credit style, same as discharge bill).
-            # -----------------------------
+            # Normal: unpaid only (paid dept bills already settled).
+            # VSSC: paid + unpaid.
             rec.unpaid_total = (
-                    sum(u.total_amount or 0.0 for u in rec.unpaid_general_ids) +
-                    sum(u.total_amount or 0.0 for u in rec.unpaid_pharmacy_ids) +
-                    sum(u.total_amount or 0.0 for u in rec.unpaid_ip_ids) +
-                    rec.unpaid_lab_total
+                sum(u.total_amount or 0.0 for u in unpaid_general) +
+                sum(u.total_amount or 0.0 for u in unpaid_pharmacy) +
+                sum(u.total_amount or 0.0 for u in unpaid_ip) +
+                rec.unpaid_lab_total
             )
             if rec.vssc_boolean:
                 rec.paid_lab_total = sum(l.total_bill_amount or 0.0 for l in paid_lab)
                 rec.paid_total = (
-                        sum(p.total_amount or 0.0 for p in rec.paid_general_ids) +
-                        sum(p.total_amount or 0.0 for p in rec.paid_pharmacy_ids) +
-                        sum(p.total_amount or 0.0 for p in rec.paid_ip_ids) -
-                        sum(p.room_rent_total or 0.0 for p in rec.paid_ip_ids) +
-                        rec.paid_lab_total
+                    sum(p.total_amount or 0.0 for p in paid_general) +
+                    sum(p.total_amount or 0.0 for p in paid_pharmacy) +
+                    sum(p.total_amount or 0.0 for p in paid_ip) -
+                    sum(p.room_rent_total or 0.0 for p in paid_ip) +
+                    rec.paid_lab_total
                 )
-                rec.paid_room_rent = sum(p.room_rent_total or 0.0 for p in rec.paid_ip_ids)
+                rec.paid_room_rent = sum(p.room_rent_total or 0.0 for p in paid_ip)
             else:
                 rec.paid_lab_total = 0.0
                 rec.paid_total = 0.0
