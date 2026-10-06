@@ -4397,16 +4397,22 @@ class DischargeBilling(models.Model):
 
     def _is_op_department_bill(self, bill):
         """True when the department bill is marked OP (not IP/admitted)."""
-        if 'bill_type' in bill._fields:
-            bt = bill.bill_type
-            if isinstance(bt, str) and bt == 'op':
-                return True
-        if 'op_category' in bill._fields:
-            oc = bill.op_category
-            if oc:
-                name = oc if isinstance(oc, str) else (getattr(oc, 'name', '') or '')
-                if (name or '').strip().lower() == 'op':
+        def _is_op_value(val):
+            if not val:
+                return False
+            if isinstance(val, str):
+                return val.strip().lower() == 'op'
+            # Many2one / record: match display name or common code fields.
+            for attr in ('name', 'code', 'display_name'):
+                raw = getattr(val, attr, None) or ''
+                if isinstance(raw, str) and raw.strip().lower() == 'op':
                     return True
+            return False
+
+        if 'bill_type' in bill._fields and _is_op_value(bill.bill_type):
+            return True
+        if 'op_category' in bill._fields and _is_op_value(bill.op_category):
+            return True
         return False
 
     def _filter_discharge_tree_bills(self, bills):
@@ -5175,16 +5181,17 @@ class DischargeBilling(models.Model):
     def get_consolidated_pdf_bills(self, unpaid_bills, paid_bills=None):
         """Department bills printed on the consolidated PDF.
 
-        Normal (non-VSSC): unpaid bills only (all departments) — paid IP / lab /
-        pharmacy / etc. settled during the stay must not reappear.
-        VSSC: paid + unpaid IP credit bills; OP bills omitted.
+        Normal (non-VSSC): unpaid only — includes OP unpaid; paid dept bills
+        (including OP paid) settled during the stay must not reappear.
+        VSSC: paid + unpaid IP department bills; OP (paid and unpaid) omitted.
         """
         self.ensure_one()
         if paid_bills is None:
             paid_bills = unpaid_bills.browse()
-        # Normal discharge: consolidated bill shows unpaid only.
+        # Normal: unpaid only (OP unpaid stays; OP paid / paid IP stay out).
         if not self.vssc_boolean:
             return unpaid_bills
+        # VSSC: paid + unpaid, never OP.
         bills = unpaid_bills | paid_bills
         return bills.filtered(lambda b: not self._is_op_department_bill(b))
 

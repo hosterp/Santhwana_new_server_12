@@ -2456,7 +2456,7 @@
                                                 <!--                                                 </td> -->
                                                 <!--                                             </tr> -->
                                                 <!--                                         </t> -->
-                                                <!--  IP Bills (if any) — VSSC PDF omits OP via get_consolidated_pdf_bills -->
+                                                <!--  IP Bills — normal: unpaid only (incl. OP unpaid); VSSC: no OP -->
                                                 <t t-set="pdf_ip" t-value="o.get_consolidated_pdf_bills(o.unpaid_ip_ids, o.paid_ip_ids)"/>
                                                 <t t-if="pdf_ip">
                                                     <t t-set="sl" t-value="sl + 1"/>
@@ -2476,7 +2476,7 @@
                                                         </td>
                                                     </tr>
                                                 </t>
-                                                <!--  General Bills (if any) — grouped lines already OP-filtered for VSSC -->
+                                                <!--  General Bills — normal includes OP unpaid; VSSC omits OP -->
                                                 <t t-set="pdf_general_lines" t-value="o.get_grouped_general_lines()"/>
                                                 <t t-if="pdf_general_lines">
                                                     <t t-foreach="pdf_general_lines" t-as="line">
