@@ -1481,26 +1481,31 @@ class CasualityBilling(models.Model):
                 else:
                      rec.doctor = rec.mrd_no.doctor.id
             else:
-                # 1. Try Consultation log
-                reg_log = self.env['patient.registration'].search([
-                    '|', ('user_id', '=', rec.mrd_no.id), ('patient_id', '=', rec.mrd_no.id),
-                    ('date', '<=', bill_date)
-                ], order='date desc', limit=1)
-                
-                if reg_log and reg_log.doctor:
-                    rec.doctor = reg_log.doctor.id
+                # Same as General/OT: same-day revisit appointment first, then consultation.
+                appt_today = self.env['patient.appointment'].search([
+                    ('patient_id', '=', rec.mrd_no.id),
+                    ('appointment_date', '=', bill_date),
+                    ('status', '=', 'confirmed'),
+                ], order='id desc', limit=1)
+                if appt_today and appt_today.doctor_ids:
+                    rec.doctor = appt_today.doctor_ids[0].id
                 else:
-                    # 2. Try Appointment fallback
-                    appt = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.mrd_no.id),
-                        ('appointment_date', '<=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='appointment_date desc', limit=1)
-                    if appt and appt.doctor_ids:
-                        rec.doctor = appt.doctor_ids[0].id
+                    reg_log = self.env['patient.registration'].search([
+                        '|', ('user_id', '=', rec.mrd_no.id), ('patient_id', '=', rec.mrd_no.id),
+                        ('date', '=', bill_date),
+                    ], order='id desc', limit=1)
+                    if reg_log and reg_log.doctor:
+                        rec.doctor = reg_log.doctor.id
                     else:
-                        # 3. Use master registration doctor
-                        rec.doctor = rec.mrd_no.doc_name.id
+                        appt = self.env['patient.appointment'].search([
+                            ('patient_id', '=', rec.mrd_no.id),
+                            ('appointment_date', '<=', bill_date),
+                            ('status', '=', 'confirmed'),
+                        ], order='appointment_date desc, id desc', limit=1)
+                        if appt and appt.doctor_ids:
+                            rec.doctor = appt.doctor_ids[0].id
+                        else:
+                            rec.doctor = rec.mrd_no.doc_name.id
 
     # @api.depends('mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'bill_date')
     # def _compute_doctor_name(self):
@@ -1551,17 +1556,17 @@ class CasualityBilling(models.Model):
                     bill_date = bill_date.date()
 
                 # Determine Priority based on Bill Type
-                # Lookup Consultation (Revisit)
+                # Lookup Consultation (Revisit) — newest same-day consultation wins.
                 reg_log = self.env['patient.registration'].search([
                     '|', '|', ('user_id', '=', rec.mrd_no.id), ('patient_id', '=', rec.mrd_no.id), ('patient_name', '=', rec.patient_name),
                     ('date', '=', bill_date)
-                ], order='date desc', limit=1)
+                ], order='id desc', limit=1)
                 
                 if not reg_log:
                     reg_log = self.env['patient.registration'].search([
                         '|', '|', ('user_id', '=', rec.mrd_no.id), ('patient_id', '=', rec.mrd_no.id), ('patient_name', '=', rec.patient_name),
                         ('date', '<', bill_date)
-                    ], order='date desc', limit=1)
+                    ], order='date desc, id desc', limit=1)
 
                 if rec.bill_type == 'admitted':
                     # 1️⃣ IP Priority: Admission logs
