@@ -32,48 +32,11 @@ class PatientRegistration(models.Model):
     doc_name =fields.Char(string='Doctor')
     doctor_id = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", store=True, readonly=False)
 
-    def _resolve_op_doctor_for_date(self, patient, bill_date):
-        """Same priority as General/OT/Audiology: same-day revisit first."""
+    def _resolve_op_doctor_for_date(self, patient, bill_date, as_of=None):
+        """Same-day revisit first; as_of freezes doctor on bills created before a later revisit."""
         if not patient or not bill_date:
             return False
-        if isinstance(bill_date, datetime):
-            bill_date = bill_date.date()
-
-        appt_today = self.env['patient.appointment'].search([
-            ('patient_id', '=', patient.id),
-            ('appointment_date', '=', bill_date),
-            ('status', '=', 'confirmed'),
-        ], order='id desc', limit=1)
-        if appt_today and appt_today.doctor_ids:
-            return appt_today.doctor_ids[0].id
-
-        reg = self.env['patient.registration'].search([
-            '|', ('user_id', '=', patient.id), ('patient_id', '=', patient.id),
-            ('date', '=', bill_date),
-        ], order='id desc', limit=1)
-        if reg and reg.doctor:
-            return reg.doctor.id
-
-        reg_prev = self.env['patient.registration'].search([
-            '|', ('user_id', '=', patient.id), ('patient_id', '=', patient.id),
-            ('date', '<', bill_date),
-        ], order='date desc, id desc', limit=1)
-        if reg_prev and reg_prev.doctor:
-            return reg_prev.doctor.id
-
-        appt_prev = self.env['patient.appointment'].search([
-            ('patient_id', '=', patient.id),
-            ('appointment_date', '<', bill_date),
-            ('status', '=', 'confirmed'),
-        ], order='appointment_date desc, id desc', limit=1)
-        if appt_prev and appt_prev.doctor_ids:
-            return appt_prev.doctor_ids[0].id
-
-        if patient.doc_name:
-            return patient.doc_name.id
-        if patient.doctor:
-            return patient.doctor.id
-        return False
+        return patient.resolve_op_doctor_as_of(bill_date, as_of=as_of)
 
     @api.onchange('user_ide', 'date')
     def _onchange_user_ide_update_doctor(self):
@@ -90,7 +53,9 @@ class PatientRegistration(models.Model):
                     elif rec.user_ide.doc_name:
                         doctor = rec.user_ide.doc_name.id
                 if not doctor:
-                    doctor = rec._resolve_op_doctor_for_date(rec.user_ide, bill_date)
+                    # New form: latest revisit. Existing: freeze at bill create time.
+                    as_of = rec.create_date if isinstance(rec.id, int) else None
+                    doctor = rec._resolve_op_doctor_for_date(rec.user_ide, bill_date, as_of=as_of)
 
             rec.doctor_id = doctor
 
@@ -102,7 +67,8 @@ class PatientRegistration(models.Model):
                 bill_date = rec.date
                 if isinstance(bill_date, datetime):
                     bill_date = bill_date.date()
-                doctor = rec._resolve_op_doctor_for_date(rec.user_ide, bill_date)
+                as_of = rec.create_date if isinstance(rec.id, int) else None
+                doctor = rec._resolve_op_doctor_for_date(rec.user_ide, bill_date, as_of=as_of)
 
             rec.doctor_id = doctor
     registration_fee = fields.Float(string="Registration Fee", default=50.0)

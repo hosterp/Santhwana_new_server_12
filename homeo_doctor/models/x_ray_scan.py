@@ -58,9 +58,12 @@ class X_RAY_Scan(models.Model):
                         rec.doctor_id = dis_doctor
                         return
 
-                # 1️⃣ Priority 1: Linked Consultant (Highest Accuracy)
+                as_of = rec.create_date if isinstance(rec.id, int) else None
+
+                # 1️⃣ Linked consultant only if it existed when bill was created
                 if rec.patient_id and rec.patient_id.doctor:
-                    doctor = rec.patient_id.doctor.id
+                    if not as_of or not rec.patient_id.create_date or rec.patient_id.create_date <= as_of:
+                        doctor = rec.patient_id.doctor.id
 
                 # 2️⃣ Priority 2: IP Context Search
                 if not doctor and rec.bill_type == 'admitted':
@@ -98,32 +101,9 @@ class X_RAY_Scan(models.Model):
                     if history and history.doctor:
                         doctor = history.doctor.id
 
-                # 4️⃣ Priority 4: OP Context Search
+                # OP: latest revisit for new bills; freeze at create_date for saved bills
                 if not doctor:
-                    reg = self.env['patient.registration'].search([
-                        ('patient_id', '=', rec.user_ide.id),
-                        ('date', '<=', bill_date),
-                        ('status', 'not in', ['admitted', 'proceed_discharge'])
-                    ], order='date desc', limit=1)
-                    if reg and reg.doctor:
-                        doctor = reg.doctor.id
-
-                # 5️⃣ Priority 5: Latest Consultation (Any)
-                if not doctor:
-                    if rec.user_ide.doctor:
-                        doctor = rec.user_ide.doctor.id
-                    elif rec.user_ide.doc_name:
-                        doctor = rec.user_ide.doc_name.id
-
-                # 6️⃣ Priority 6: Appointments
-                if not doctor:
-                    appt = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.user_ide.id),
-                        ('appointment_date', '<=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='appointment_date desc', limit=1)
-                    if appt and appt.doctor_ids:
-                        doctor = appt.doctor_ids[0].id
+                    doctor = rec.user_ide.resolve_op_doctor_as_of(bill_date, as_of=as_of)
 
             rec.doctor_id = doctor
 
@@ -175,9 +155,12 @@ class X_RAY_Scan(models.Model):
                         rec.doctor_id = doctor
                         continue
 
-                # 1️⃣ Priority 1: Linked Consultant (Explicit)
+                as_of = rec.create_date if isinstance(rec.id, int) else None
+
+                # 1️⃣ Linked consultant only if it existed when bill was created
                 if rec.patient_id and rec.patient_id.doctor:
-                    doctor = rec.patient_id.doctor.id
+                    if not as_of or not rec.patient_id.create_date or rec.patient_id.create_date <= as_of:
+                        doctor = rec.patient_id.doctor.id
 
                 # 2️⃣ Priority 2: IP Context Search
                 if not doctor and rec.bill_type == 'admitted':
@@ -213,34 +196,9 @@ class X_RAY_Scan(models.Model):
                     if history and history.doctor:
                         doctor = history.doctor.id
 
-                # 4️⃣ Priority 4: OP Fallback
+                # OP: latest revisit for new bills; freeze at create_date for saved bills
                 if not doctor:
-                    reg = self.env['patient.registration'].search([
-                        ('patient_id', '=', rec.user_ide.id),
-                        ('date', '<=', bill_date),
-                        ('status', 'not in', ['admitted', 'proceed_discharge'])
-                    ], order='date desc', limit=1)
-                    if reg and reg.doctor:
-                        doctor = reg.doctor.id
-
-                # 5️⃣ Priority 5: Latest Consultation (Any)
-                if not doctor:
-                    if rec.user_ide.doctor:
-                        doctor = rec.user_ide.doctor.id
-                    elif rec.user_ide.doc_name:
-                        doctor = rec.user_ide.doc_name.id
-
-                # 6️⃣ Priority 6: Appointments
-                if not doctor:
-                    appt = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.user_ide.id),
-                        ('appointment_date', '<=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='appointment_date desc', limit=1)
-                    if appt and appt.doctor_ids:
-                        doctor = appt.doctor_ids[0].id
-
-            rec.doctor_id = doctor
+                    doctor = rec.user_ide.resolve_op_doctor_as_of(bill_date, as_of=as_of)
 
             rec.doctor_id = doctor
     scan_registered_date = fields.Date(string="Registered Date", default=fields.Date.context_today)

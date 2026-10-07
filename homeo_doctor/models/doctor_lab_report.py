@@ -197,56 +197,12 @@ class DoctorLabReport(models.Model):
                         if historical_admission and historical_admission.doctor:
                             doctor = historical_admission.doctor.id
                 
-                # Fallback / OP Logic — same-day revisit appointment wins over first reg.
+                # OP: latest revisit for new bills; freeze at create_date for saved bills.
                 if not doctor:
-                    appt_today = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.user_ide.id),
-                        ('appointment_date', '=', bill_date),
-                        ('status', '=', 'confirmed'),
-                    ], order='id desc', limit=1)
-                    if appt_today and appt_today.doctor_ids:
-                        doctor = appt_today.doctor_ids[0].id
-
-                if not doctor:
-                    reg = self.env['patient.registration'].search([
-                        '|', ('user_id', '=', rec.user_ide.id), ('patient_id', '=', rec.user_ide.id),
-                        ('date', '=', bill_date),
-                        ('status', 'not in', ['admitted', 'proceed_discharge']),
-                    ], order='id desc', limit=1)
-                    if reg:
-                        target_doctor = reg.doctor.id
-                        if not target_doctor and reg.doctor_id:
-                            f_doc = self.env['doctor.profile'].search(
-                                [('name', '=', reg.doctor_id)], limit=1)
-                            if f_doc:
-                                target_doctor = f_doc.id
-                        if target_doctor:
-                            doctor = target_doctor
-
-                if not doctor:
-                    reg_prev = self.env['patient.registration'].search([
-                        '|', ('user_id', '=', rec.user_ide.id), ('patient_id', '=', rec.user_ide.id),
-                        ('date', '<', bill_date),
-                        ('status', 'not in', ['admitted', 'proceed_discharge']),
-                    ], order='date desc, id desc', limit=1)
-                    if reg_prev and reg_prev.doctor:
-                        doctor = reg_prev.doctor.id
-
-                if not doctor:
-                    appt_prev = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.user_ide.id),
-                        ('appointment_date', '<', bill_date),
-                        ('status', '=', 'confirmed'),
-                    ], order='appointment_date desc, id desc', limit=1)
-                    if appt_prev and appt_prev.doctor_ids:
-                        doctor = appt_prev.doctor_ids[0].id
-
-                # Master Record Fallback (Context-specific)
-                if not doctor:
-                    if rec.bill_type == 'admitted':
+                    as_of = rec.create_date if isinstance(rec.id, int) else None
+                    doctor = rec.user_ide.resolve_op_doctor_as_of(bill_date, as_of=as_of)
+                    if not doctor and rec.bill_type == 'admitted':
                         doctor = rec.user_ide.doctor.id
-                    else:
-                        doctor = rec.user_ide.doc_name.id
 
             rec.doctor_id = doctor
 
@@ -315,47 +271,11 @@ class DoctorLabReport(models.Model):
                         if historical_admission and historical_admission.doctor:
                             doctor = historical_admission.doctor.id
                 
-                # OP Logic — same-day revisit appointment wins over first registration.
+                # OP: latest revisit for new bills; freeze at create_date for saved bills.
                 if not doctor:
-                    appt_today = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.user_ide.id),
-                        ('appointment_date', '=', bill_date),
-                        ('status', '=', 'confirmed'),
-                    ], order='id desc', limit=1)
-                    if appt_today and appt_today.doctor_ids:
-                        doctor = appt_today.doctor_ids[0].id
-
-                if not doctor:
-                    reg = self.env['patient.registration'].search([
-                        '|', ('user_id', '=', rec.user_ide.id), ('patient_id', '=', rec.user_ide.id),
-                        ('date', '=', bill_date),
-                    ], order='id desc', limit=1)
-                    if reg and reg.doctor:
-                        doctor = reg.doctor.id
-
-                if not doctor:
-                    reg_prev = self.env['patient.registration'].search([
-                        '|', ('user_id', '=', rec.user_ide.id), ('patient_id', '=', rec.user_ide.id),
-                        ('date', '<', bill_date),
-                    ], order='date desc, id desc', limit=1)
-                    if reg_prev and reg_prev.doctor:
-                        doctor = reg_prev.doctor.id
-
-                if not doctor:
-                    appt_prev = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.user_ide.id),
-                        ('appointment_date', '<', bill_date),
-                        ('status', '=', 'confirmed'),
-                    ], order='appointment_date desc, id desc', limit=1)
-                    if appt_prev and appt_prev.doctor_ids:
-                        doctor = appt_prev.doctor_ids[0].id
-
-                if not doctor:
-                    if rec.bill_type == 'admitted' and rec.user_ide.doctor:
-                        doctor = rec.user_ide.doctor.id
-                    elif rec.user_ide.doc_name:
-                        doctor = rec.user_ide.doc_name.id
-                    elif rec.user_ide.doctor:
+                    as_of = rec.create_date if isinstance(rec.id, int) else None
+                    doctor = rec.user_ide.resolve_op_doctor_as_of(bill_date, as_of=as_of)
+                    if not doctor and rec.bill_type == 'admitted' and rec.user_ide.doctor:
                         doctor = rec.user_ide.doctor.id
 
             rec.doctor_id = doctor

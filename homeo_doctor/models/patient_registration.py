@@ -176,6 +176,67 @@ class PatientRegistration(models.Model):
         now = datetime.now(india)
         return now.strftime('%I:%M %p')
 
+    def resolve_op_doctor_as_of(self, bill_date, as_of=None):
+        """OP doctor for a bill date, ignoring revisits created after as_of.
+
+        New bills (as_of empty) use the latest same-day confirmed revisit.
+        Existing bills pass create_date so later revisit doctor B does not
+        rewrite pharmacy/lab/casualty (etc.) bills that already used doctor A.
+        """
+        self.ensure_one()
+        if not bill_date:
+            return False
+        if isinstance(bill_date, datetime):
+            bill_date = bill_date.date()
+
+        def _with_as_of(domain):
+            domain = list(domain)
+            if as_of:
+                domain.append(('create_date', '<=', as_of))
+            return domain
+
+        appt_today = self.env['patient.appointment'].search(_with_as_of([
+            ('patient_id', '=', self.id),
+            ('appointment_date', '=', bill_date),
+            ('status', '=', 'confirmed'),
+        ]), order='id desc', limit=1)
+        if appt_today and appt_today.doctor_ids:
+            return appt_today.doctor_ids[0].id
+
+        reg = self.env['patient.registration'].search(_with_as_of([
+            '|', ('user_id', '=', self.id), ('patient_id', '=', self.id),
+            ('date', '=', bill_date),
+            ('status', 'not in', ['cancelled', 'admitted', 'proceed_discharge']),
+        ]), order='id desc', limit=1)
+        if reg and reg.doctor:
+            return reg.doctor.id
+        if reg and reg.doctor_id:
+            f_doc = self.env['doctor.profile'].search([('name', '=', reg.doctor_id)], limit=1)
+            if f_doc:
+                return f_doc.id
+
+        reg_prev = self.env['patient.registration'].search(_with_as_of([
+            '|', ('user_id', '=', self.id), ('patient_id', '=', self.id),
+            ('date', '<', bill_date),
+            ('status', 'not in', ['cancelled', 'admitted', 'proceed_discharge']),
+        ]), order='date desc, id desc', limit=1)
+        if reg_prev and reg_prev.doctor:
+            return reg_prev.doctor.id
+
+        appt_prev = self.env['patient.appointment'].search(_with_as_of([
+            ('patient_id', '=', self.id),
+            ('appointment_date', '<', bill_date),
+            ('status', '=', 'confirmed'),
+        ]), order='appointment_date desc, id desc', limit=1)
+        if appt_prev and appt_prev.doctor_ids:
+            return appt_prev.doctor_ids[0].id
+
+        if self.doc_name:
+            return self.doc_name.id
+        if self.doctor:
+            return self.doctor.id
+        return False
+
     def write(self, vals):
         if self.env.context.get('no_sync'):
             return super(PatientRegistration, self).write(vals)
