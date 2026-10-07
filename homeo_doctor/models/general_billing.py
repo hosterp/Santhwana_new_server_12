@@ -5271,7 +5271,11 @@ class DischargeBilling(models.Model):
         # still uses the live calculation below — no data is written here.
         if len(self) > 1:
             for rec in self:
-                rec.total_amount = float(rec.net_amount or rec.settled_total_amount or 0.0)
+                # Prefer frozen settled total after Pay/Discharge — live grant_total
+                # drops to 0 once unpaid dept bills are marked paid on discharge.
+                rec.total_amount = float(
+                    rec.settled_total_amount or rec.net_amount or 0.0
+                )
                 rec.room_rent = 0.0
             return
 
@@ -5283,14 +5287,21 @@ class DischargeBilling(models.Model):
                 continue
 
             if rec.status == 'discharged':
-                # Total = gross − discount, then subtract the advance ONLY for
-                # non-credit bills. Credit bills are billed in full to the
-                # insurance/company so the advance is kept separate (not deducted);
-                # cash / card / upi / cheque bills are paid by the patient, so the
-                # advance stored on the bill is subtracted from the total.
-                total = rec._calculate_discharge_amounts()['settled_amount']
-                if rec.mode_pay != 'credit':
-                    total -= (rec.amount_in_advance or 0)
+                # Discharge freezes the displayed total in settled_total_amount
+                # (after Pay that already applied the advance rule). Do NOT
+                # recalculate from grant_total — marking unpaid dept bills paid
+                # zeroes unpaid_total for non-VSSC and would show Total = 0.
+                if rec.settled_total_amount:
+                    total = float(rec.settled_total_amount)
+                elif rec.net_amount:
+                    total = float(rec.net_amount)
+                elif rec.balance:
+                    # Pre-fix leftover: balance was set while unpaid (total − paid)
+                    total = float(rec.balance)
+                else:
+                    total = rec._calculate_discharge_amounts()['settled_amount']
+                    if rec.mode_pay != 'credit':
+                        total -= (rec.amount_in_advance or 0)
                 rec.total_amount = total
                 rec.net_amount = int(total)
                 room_rent, _extras = rec._get_room_rent_and_extras()
@@ -5298,11 +5309,17 @@ class DischargeBilling(models.Model):
                 continue
 
             if rec.status == 'paid':
-                # Same rule as discharged: credit bills keep the advance separate,
-                # non-credit (cash/card/upi/cheque) bills subtract the stored advance.
-                total = rec._calculate_discharge_amounts()['settled_amount']
-                if rec.mode_pay != 'credit':
-                    total -= (rec.amount_in_advance or 0)
+                # Pay freezes settled_amount (gross − discount). Display still
+                # nets advance for non-credit. Prefer frozen value so a later
+                # recompute cannot drift before Discharge.
+                if rec.settled_total_amount:
+                    total = float(rec.settled_total_amount)
+                    if rec.mode_pay != 'credit':
+                        total -= (rec.amount_in_advance or 0)
+                else:
+                    total = rec._calculate_discharge_amounts()['settled_amount']
+                    if rec.mode_pay != 'credit':
+                        total -= (rec.amount_in_advance or 0)
                 rec.total_amount = total
                 rec.net_amount = int(total)
                 rec.room_rent = rec._get_room_rent_and_extras()[0]
