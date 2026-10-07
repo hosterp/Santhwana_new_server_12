@@ -120,11 +120,9 @@ class PatientAppointment(models.Model):
             # Update this appointment's status
 
             appointment.write({
-
                 'status': 'cancelled',
-
-                'button_visible': False
-
+                'button_visible': False,
+                'fee_applied': False,
             })
 
             # Find all patient.registration records created from this appointment
@@ -300,7 +298,7 @@ class PatientAppointment(models.Model):
             last_fee_appointment = self.env['patient.appointment'].search([
                 ('patient_id', '=', patient.id),
                 ('registration_fee', '>', 0),
-
+                ('status', '!=', 'cancelled'),
             ], order='appointment_date desc', limit=1)
             last_fee_date = last_fee_appointment.appointment_date.date() if last_fee_appointment and hasattr(
                 last_fee_appointment.appointment_date, 'date') else last_fee_appointment.appointment_date
@@ -340,7 +338,10 @@ class PatientAppointment(models.Model):
 
     def action_cancel(self):
         for record in self:
-            record.status = 'cancelled'
+            record.write({
+                'status': 'cancelled',
+                'fee_applied': False,
+            })
 
     @api.onchange('departments')
     def _onchange_departments(self):
@@ -423,9 +424,11 @@ class PatientAppointment(models.Model):
                     last_reg_doctor_name = str(last_reg.doc_name) if last_reg.doc_name else ""
 
             # --- Find last paid consultation for SAME doctor ---
+            # Cancelled bills must not block a new same-doctor fee.
             domain_same_doc = [
                 ('patient_id', '=', patient_id_int),
                 ('fee_applied', '=', True),
+                ('status', '!=', 'cancelled'),
                 ('appointment_date', '<=', record.appointment_date),
             ]
 
