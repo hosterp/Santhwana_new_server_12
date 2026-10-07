@@ -109,19 +109,22 @@ class PharmacyDescription(models.Model):
                     bill_date = bill_date.date()
 
                 # ── IP LOGIC ───────────────────────────────────────────────
+                # IP form doctor (Salim) wins over OP revisit (Abraham).
                 if rec.op_category == 'admitted':
-                    admission_log = self.env['hospital.admitted.patient'].sudo().search([
-                        ('patient_id', '=', rec.uhid_id.id),
-                        ('admission_date', '<=', bill_date)
-                    ], order='admission_date desc', limit=1)
-                    if admission_log:
-                        adm_dis_date = admission_log.discharge_date
-                        if isinstance(adm_dis_date, datetime):
-                            adm_dis_date = adm_dis_date.date()
-                        if not adm_dis_date or bill_date <= adm_dis_date:
-                            if admission_log.attending_doctor:
-                                doctor = admission_log.attending_doctor.id
-
+                    if rec.uhid_id.doctor:
+                        doctor = rec.uhid_id.doctor.id
+                    if not doctor:
+                        admission_log = self.env['hospital.admitted.patient'].sudo().search([
+                            ('patient_id', '=', rec.uhid_id.id),
+                            ('admission_date', '<=', bill_date)
+                        ], order='admission_date desc', limit=1)
+                        if admission_log:
+                            adm_dis_date = admission_log.discharge_date
+                            if isinstance(adm_dis_date, datetime):
+                                adm_dis_date = adm_dis_date.date()
+                            if not adm_dis_date or bill_date <= adm_dis_date:
+                                if admission_log.attending_doctor:
+                                    doctor = admission_log.attending_doctor.id
                     if not doctor:
                         historical_admission = self.env['discharged.patient.record'].sudo().search([
                             ('patient_id', '=', rec.uhid_id.reference_no),
@@ -131,8 +134,8 @@ class PharmacyDescription(models.Model):
                         if historical_admission and historical_admission.doctor:
                             doctor = historical_admission.doctor.id
 
-                # ── OP / FALLBACK (same as General/OT/Audiology) ───────────
-                # Same-day revisit appointment must win over first registration.
+                # ── OP / FALLBACK ─────────────────────────────────────────
+                # Same-day revisit wins for OP only (never override IP doctor above).
                 if not doctor:
                     appt_today = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.uhid_id.id),

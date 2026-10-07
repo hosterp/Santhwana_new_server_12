@@ -140,24 +140,22 @@ class GeneralBilling(models.Model):
                     bill_date = bill_date.date()
 
                 if rec.bill_type == 'admitted':
-                    # Priority 1: Admission Logs (IP Priority)
-                    admission_log = self.env['hospital.admitted.patient'].sudo().search([
-                        ('patient_id', '=', rec.mrd_no.id),
-                        ('admission_date', '<=', bill_date)
-                    ], order='admission_date desc', limit=1)
-                    
-                    if admission_log:
-                        adm_dis_date = admission_log.discharge_date
-                        if isinstance(adm_dis_date, datetime):
-                            adm_dis_date = adm_dis_date.date()
-                        
-                        # Match if within bounds OR if IP bill for a now discharged patient
-                        if not adm_dis_date or bill_date <= adm_dis_date or (rec.mrd_no.status == 'discharged' and rec.bill_type == 'admitted'):
-                            if admission_log.attending_doctor:
-                                doctor = admission_log.attending_doctor.id
-
-                    # Priority 2: Discharged History Records (Only for IP bills)
-                    if not doctor and rec.bill_type == 'admitted':
+                    # IP form doctor first (Salim), never later OP revisit (Abraham).
+                    if rec.mrd_no.doctor:
+                        doctor = rec.mrd_no.doctor.id
+                    if not doctor:
+                        admission_log = self.env['hospital.admitted.patient'].sudo().search([
+                            ('patient_id', '=', rec.mrd_no.id),
+                            ('admission_date', '<=', bill_date)
+                        ], order='admission_date desc', limit=1)
+                        if admission_log:
+                            adm_dis_date = admission_log.discharge_date
+                            if isinstance(adm_dis_date, datetime):
+                                adm_dis_date = adm_dis_date.date()
+                            if not adm_dis_date or bill_date <= adm_dis_date or (rec.mrd_no.status == 'discharged'):
+                                if admission_log.attending_doctor:
+                                    doctor = admission_log.attending_doctor.id
+                    if not doctor:
                         historical_admission = self.env['discharged.patient.record'].sudo().search([
                             ('patient_id', '=', rec.mrd_no.reference_no),
                             ('admitted_date', '<=', datetime.combine(bill_date, datetime.max.time())),
@@ -166,9 +164,8 @@ class GeneralBilling(models.Model):
                         if historical_admission and historical_admission.doctor:
                             doctor = historical_admission.doctor.id
                 
-                # Fallback / OP Logic
+                # OP Logic (skipped when IP doctor already set)
                 if not doctor:
-                    # 1️⃣ Priority: Appointment for TODAY
                     appt_today = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('appointment_date', '=', bill_date),
@@ -178,17 +175,14 @@ class GeneralBilling(models.Model):
                         doctor = appt_today.doctor_ids[0].id
 
                 if not doctor:
-                    # 2️⃣ Priority: Consultation log for TODAY
                     reg_today = self.env['patient.registration'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('date', '=', bill_date),
-                        # ('status', 'not in', ['admitted', 'proceed_discharge']) # Removed to allow picking doctor even if admitted
                     ], order='id desc', limit=1)
                     if reg_today and reg_today.doctor:
                         doctor = reg_today.doctor.id
 
                 if not doctor:
-                    # 3️⃣ Priority: Historical Consultation log
                     reg_prev = self.env['patient.registration'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('date', '<', bill_date),
@@ -198,7 +192,6 @@ class GeneralBilling(models.Model):
                         doctor = reg_prev.doctor.id
 
                 if not doctor:
-                    # 4️⃣ Priority: Historical Appointment
                     appt_prev = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('appointment_date', '<', bill_date),
@@ -208,7 +201,6 @@ class GeneralBilling(models.Model):
                         doctor = appt_prev.doctor_ids[0].id
 
                 if not doctor:
-                    # 5️⃣ Priority: Master Record (Context-specific)
                     if rec.bill_type == 'admitted':
                         doctor = rec.mrd_no.doctor.id
                     else:
@@ -238,36 +230,33 @@ class GeneralBilling(models.Model):
                 if isinstance(bill_date, datetime):
                     bill_date = bill_date.date()
 
-                # 2️⃣ Priority 2: Admission logs (Highest priority for IP services)
-                if not doctor and rec.bill_type == 'admitted':
-                    admission_log = self.env['hospital.admitted.patient'].sudo().search([
-                        ('patient_id', '=', rec.mrd_no.id),
-                        ('admission_date', '<=', bill_date)
-                    ], order='admission_date desc', limit=1)
-                    
-                    if admission_log:
-                        adm_dis_date = admission_log.discharge_date
-                        if isinstance(adm_dis_date, datetime):
-                            adm_dis_date = adm_dis_date.date()
-                        
-                        # Match if within bounds OR if IP bill for a now discharged patient
-                        if not adm_dis_date or bill_date <= adm_dis_date or (rec.mrd_no.status == 'discharged' and rec.bill_type == 'admitted'):
-                            if admission_log.attending_doctor:
-                                doctor = admission_log.attending_doctor.id
-
-                # 3️⃣ Priority 3: Discharged History Records (Only for IP bills)
-                if not doctor and rec.bill_type == 'admitted':
-                    historical_admission = self.env['discharged.patient.record'].sudo().search([
-                        ('patient_id', '=', rec.mrd_no.reference_no),
-                        ('admitted_date', '<=', datetime.combine(bill_date, datetime.max.time())),
-                        ('discharge_date', '>=', datetime.combine(bill_date, datetime.min.time()))
-                    ], limit=1)
-                    if historical_admission and historical_admission.doctor:
-                        doctor = historical_admission.doctor.id
+                if rec.bill_type == 'admitted':
+                    # IP form doctor first (Salim), never later OP revisit (Abraham).
+                    if rec.mrd_no.doctor:
+                        doctor = rec.mrd_no.doctor.id
+                    if not doctor:
+                        admission_log = self.env['hospital.admitted.patient'].sudo().search([
+                            ('patient_id', '=', rec.mrd_no.id),
+                            ('admission_date', '<=', bill_date)
+                        ], order='admission_date desc', limit=1)
+                        if admission_log:
+                            adm_dis_date = admission_log.discharge_date
+                            if isinstance(adm_dis_date, datetime):
+                                adm_dis_date = adm_dis_date.date()
+                            if not adm_dis_date or bill_date <= adm_dis_date or (rec.mrd_no.status == 'discharged'):
+                                if admission_log.attending_doctor:
+                                    doctor = admission_log.attending_doctor.id
+                    if not doctor:
+                        historical_admission = self.env['discharged.patient.record'].sudo().search([
+                            ('patient_id', '=', rec.mrd_no.reference_no),
+                            ('admitted_date', '<=', datetime.combine(bill_date, datetime.max.time())),
+                            ('discharge_date', '>=', datetime.combine(bill_date, datetime.min.time()))
+                        ], limit=1)
+                        if historical_admission and historical_admission.doctor:
+                            doctor = historical_admission.doctor.id
                 
-                # Fallback / OP Logic
+                # OP Logic (skipped when IP doctor already set)
                 if not doctor:
-                    # 1️⃣ Priority: Appointment for TODAY
                     appt_today = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('appointment_date', '=', bill_date),
@@ -277,17 +266,14 @@ class GeneralBilling(models.Model):
                         doctor = appt_today.doctor_ids[0].id
 
                 if not doctor:
-                    # 2️⃣ Priority: Consultation log for TODAY
                     reg_today = self.env['patient.registration'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('date', '=', bill_date),
-                        # ('status', 'not in', ['admitted', 'proceed_discharge']) # Removed to allow picking doctor even if admitted
                     ], order='id desc', limit=1)
                     if reg_today and reg_today.doctor:
                         doctor = reg_today.doctor.id
 
                 if not doctor:
-                    # 3️⃣ Priority: Historical Consultation log
                     reg_prev = self.env['patient.registration'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('date', '<', bill_date),
@@ -297,7 +283,6 @@ class GeneralBilling(models.Model):
                         doctor = reg_prev.doctor.id
 
                 if not doctor:
-                    # 4️⃣ Priority: Historical Appointment
                     appt_prev = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('appointment_date', '<', bill_date),
@@ -306,7 +291,6 @@ class GeneralBilling(models.Model):
                     if appt_prev and appt_prev.doctor_ids:
                         doctor = appt_prev.doctor_ids[0].id
 
-                # 5️⃣ Priority 5: Fallback to Master Record doctor (Context-specific)
                 if not doctor:
                     if rec.bill_type == 'admitted':
                         doctor = rec.mrd_no.doctor.id
@@ -743,22 +727,21 @@ class IPPartBilling(models.Model):
                 if isinstance(bill_date, datetime):
                     bill_date = bill_date.date()
 
-                # IP Logic: Admission Logs
-                admission_log = self.env['hospital.admitted.patient'].sudo().search([
-                    ('patient_id', '=', rec.mrd_no.id),
-                    ('admission_date', '<=', bill_date)
-                ], order='admission_date desc', limit=1)
-
-                if admission_log:
-                    adm_dis_date = admission_log.discharge_date
-                    if isinstance(adm_dis_date, datetime):
-                        adm_dis_date = adm_dis_date.date()
-                    
-                    if not adm_dis_date or bill_date <= adm_dis_date:
-                        if admission_log.attending_doctor:
-                            doctor = admission_log.attending_doctor.id
-
-                # IP Fallback: Historical Snapshot
+                # IP form doctor first (Salim), never OP revisit (Abraham).
+                if rec.mrd_no.doctor:
+                    doctor = rec.mrd_no.doctor.id
+                if not doctor:
+                    admission_log = self.env['hospital.admitted.patient'].sudo().search([
+                        ('patient_id', '=', rec.mrd_no.id),
+                        ('admission_date', '<=', bill_date)
+                    ], order='admission_date desc', limit=1)
+                    if admission_log:
+                        adm_dis_date = admission_log.discharge_date
+                        if isinstance(adm_dis_date, datetime):
+                            adm_dis_date = adm_dis_date.date()
+                        if not adm_dis_date or bill_date <= adm_dis_date:
+                            if admission_log.attending_doctor:
+                                doctor = admission_log.attending_doctor.id
                 if not doctor:
                     historical_admission = self.env['discharged.patient.record'].sudo().search([
                         ('patient_id', '=', rec.mrd_no.reference_no),
@@ -767,21 +750,10 @@ class IPPartBilling(models.Model):
                     ], limit=1)
                     if historical_admission and historical_admission.doctor:
                         doctor = historical_admission.doctor.id
-
-                # Fallback to Consultation
                 if not doctor:
-                    reg = self.env['patient.registration'].search([
-                        ('patient_id', '=', rec.mrd_no.id),
-                        ('date', '<=', bill_date)
-                    ], order='date desc', limit=1)
-                    if reg and reg.doctor:
-                        doctor = reg.doctor.id
-
-                if not doctor:
-                    if rec.mrd_no.status == 'admitted':
-                        doctor = rec.mrd_no.doctor.id
-                    else:
-                        doctor = rec.mrd_no.doc_name.id
+                    doctor = rec.mrd_no.get_latest_op_doctor(as_of_date=bill_date)
+                if not doctor and rec.mrd_no.doc_name:
+                    doctor = rec.mrd_no.doc_name.id
 
             rec.doctor = doctor
 
@@ -802,22 +774,21 @@ class IPPartBilling(models.Model):
                 if isinstance(bill_date, datetime):
                     bill_date = bill_date.date()
 
-                # IP Logic: Admission Logs
-                admission_log = self.env['hospital.admitted.patient'].sudo().search([
-                    ('patient_id', '=', rec.mrd_no.id),
-                    ('admission_date', '<=', bill_date)
-                ], order='admission_date desc', limit=1)
-
-                if admission_log:
-                    adm_dis_date = admission_log.discharge_date
-                    if isinstance(adm_dis_date, datetime):
-                        adm_dis_date = adm_dis_date.date()
-                    
-                    if not adm_dis_date or bill_date <= adm_dis_date:
-                        if admission_log.attending_doctor:
-                            doctor = admission_log.attending_doctor.id
-
-                # IP Fallback: Historical Snapshot
+                # IP form doctor first (Salim), never OP revisit (Abraham).
+                if rec.mrd_no.doctor:
+                    doctor = rec.mrd_no.doctor.id
+                if not doctor:
+                    admission_log = self.env['hospital.admitted.patient'].sudo().search([
+                        ('patient_id', '=', rec.mrd_no.id),
+                        ('admission_date', '<=', bill_date)
+                    ], order='admission_date desc', limit=1)
+                    if admission_log:
+                        adm_dis_date = admission_log.discharge_date
+                        if isinstance(adm_dis_date, datetime):
+                            adm_dis_date = adm_dis_date.date()
+                        if not adm_dis_date or bill_date <= adm_dis_date:
+                            if admission_log.attending_doctor:
+                                doctor = admission_log.attending_doctor.id
                 if not doctor:
                     historical_admission = self.env['discharged.patient.record'].sudo().search([
                         ('patient_id', '=', rec.mrd_no.reference_no),
@@ -826,21 +797,10 @@ class IPPartBilling(models.Model):
                     ], limit=1)
                     if historical_admission and historical_admission.doctor:
                         doctor = historical_admission.doctor.id
-
-                # Fallback to Consultation
                 if not doctor:
-                    reg = self.env['patient.registration'].search([
-                        ('patient_id', '=', rec.mrd_no.id),
-                        ('date', '<=', bill_date)
-                    ], order='date desc', limit=1)
-                    if reg and reg.doctor:
-                        doctor = reg.doctor.id
-
-                if not doctor:
-                    if rec.mrd_no.status == 'admitted':
-                        doctor = rec.mrd_no.doctor.id
-                    else:
-                        doctor = rec.mrd_no.doc_name.id
+                    doctor = rec.mrd_no.get_latest_op_doctor(as_of_date=bill_date)
+                if not doctor and rec.mrd_no.doc_name:
+                    doctor = rec.mrd_no.doc_name.id
 
             rec.doctor = doctor
 

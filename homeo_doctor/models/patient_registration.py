@@ -176,6 +176,36 @@ class PatientRegistration(models.Model):
         now = datetime.now(india)
         return now.strftime('%I:%M %p')
 
+    def get_latest_op_doctor(self, as_of_date=None):
+        """Latest OP doctor for IP admit: revisit appointment, then consultation, then master.
+
+        Example: reg doctor A, same-day revisit doctor B → returns B for IP.
+        """
+        self.ensure_one()
+        bill_date = as_of_date or fields.Date.context_today(self)
+
+        appt = self.env['patient.appointment'].search([
+            ('patient_id', '=', self.id),
+            ('appointment_date', '<=', bill_date),
+            ('status', '=', 'confirmed'),
+        ], order='appointment_date desc, id desc', limit=1)
+        if appt and appt.doctor_ids:
+            return appt.doctor_ids[0].id
+
+        reg = self.env['patient.registration'].search([
+            '|', ('user_id', '=', self.id), ('patient_id', '=', self.id),
+            ('date', '<=', bill_date),
+            ('status', 'not in', ['cancelled']),
+        ], order='date desc, id desc', limit=1)
+        if reg and reg.doctor:
+            return reg.doctor.id
+
+        if self.doc_name:
+            return self.doc_name.id
+        if self.doctor:
+            return self.doctor.id
+        return False
+
     def write(self, vals):
         if self.env.context.get('no_sync'):
             return super(PatientRegistration, self).write(vals)
@@ -741,6 +771,10 @@ class PatientRegistration(models.Model):
         self.status = 'proceed_admit'
         self.admitted_date = fields.Datetime.now()
         self.bill_type = 'admitted'
+        # IP doctor = latest OP doctor (revisit B wins over first-reg A)
+        latest_doctor = self.get_latest_op_doctor()
+        if latest_doctor:
+            self.doctor = latest_doctor
 
     @api.onchange('register_amount_paid')
     def _onchange_register_amount_paid(self):
@@ -1263,6 +1297,10 @@ class PatientRegistration(models.Model):
             patient = registration_model.search([('reference_no', '=', rec.reference_no)], limit=1)
             if not patient:
                 raise UserError(f"No patient found with reference no: {rec.reference_no}")
+            # Prefer latest OP/revisit doctor for IP attending doctor.
+            ip_doctor = rec.get_latest_op_doctor() or (rec.doctor.id if rec.doctor else False)
+            if ip_doctor and (not rec.doctor or rec.doctor.id != ip_doctor):
+                rec.doctor = ip_doctor
             if rec.amount_in_advance >0:
                 wallet_rec=patient_wallet.create({
                     'uhid': patient.id,
@@ -1282,8 +1320,8 @@ class PatientRegistration(models.Model):
                 'room_number': rec.room_number_new.id,
                 'room_category_new': rec.room_category_new.id,
                 'bed_id': rec.bed_id.id,
-                'attending_doctor': rec.doctor.id,
-                'visited_doctor_ids': [(4, rec.doctor.id)] if rec.doctor else [],
+                'attending_doctor': ip_doctor,
+                'visited_doctor_ids': [(4, ip_doctor)] if ip_doctor else [],
             })
             advance_model.create({
                 'patient_id': rec.reference_no,
@@ -1291,7 +1329,7 @@ class PatientRegistration(models.Model):
                 'discharge_date': rec.discharge_date,
                 'admitted_date': rec.admitted_date,
                 'room_number': rec.room_number_new.id,
-                'doctor': rec.doctor.id,
+                'doctor': ip_doctor,
                 'total_amount': rec.admission_total_amount,
                 'room_category_new': rec.room_category_new.id,
                 'new_block': rec.new_block.id,

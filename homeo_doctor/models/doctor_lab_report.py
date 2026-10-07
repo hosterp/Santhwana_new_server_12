@@ -173,21 +173,21 @@ class DoctorLabReport(models.Model):
                         return
 
                 if rec.bill_type == 'admitted':
-                    # Priority 2: Admission Logs (IP Priority)
-                    admission_log = self.env['hospital.admitted.patient'].sudo().search([
-                        ('patient_id', '=', rec.user_ide.id),
-                        ('admission_date', '<=', bill_date)
-                    ], order='admission_date desc', limit=1)
-                    if admission_log:
-                        adm_dis_date = admission_log.discharge_date
-                        if isinstance(adm_dis_date, datetime):
-                            adm_dis_date = adm_dis_date.date()
-                        # Match if within bounds OR if IP bill for a now discharged patient
-                        if not adm_dis_date or bill_date <= adm_dis_date or (rec.user_ide.status == 'discharged' and rec.bill_type == 'admitted'):
-                            if admission_log.attending_doctor:
-                                doctor = admission_log.attending_doctor.id
-
-                    # Priority 3: Discharged History Records
+                    # IP form doctor first (Salim), never later OP revisit (Abraham).
+                    if rec.user_ide.doctor:
+                        doctor = rec.user_ide.doctor.id
+                    if not doctor:
+                        admission_log = self.env['hospital.admitted.patient'].sudo().search([
+                            ('patient_id', '=', rec.user_ide.id),
+                            ('admission_date', '<=', bill_date)
+                        ], order='admission_date desc', limit=1)
+                        if admission_log:
+                            adm_dis_date = admission_log.discharge_date
+                            if isinstance(adm_dis_date, datetime):
+                                adm_dis_date = adm_dis_date.date()
+                            if not adm_dis_date or bill_date <= adm_dis_date or (rec.user_ide.status == 'discharged'):
+                                if admission_log.attending_doctor:
+                                    doctor = admission_log.attending_doctor.id
                     if not doctor:
                         historical_admission = self.env['discharged.patient.record'].sudo().search([
                             ('patient_id', '=', rec.user_ide.reference_no),
@@ -197,7 +197,7 @@ class DoctorLabReport(models.Model):
                         if historical_admission and historical_admission.doctor:
                             doctor = historical_admission.doctor.id
                 
-                # Fallback / OP Logic — same-day revisit appointment wins over first reg.
+                # OP Logic (skipped when IP doctor already set)
                 if not doctor:
                     appt_today = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.user_ide.id),
@@ -293,19 +293,21 @@ class DoctorLabReport(models.Model):
                         continue
 
                 if rec.bill_type == 'admitted':
-                    # IP Logic
-                    admission_log = self.env['hospital.admitted.patient'].sudo().search([
-                        ('patient_id', '=', rec.user_ide.id),
-                        ('admission_date', '<=', bill_date)
-                    ], order='admission_date desc', limit=1)
-                    if admission_log:
-                        adm_dis_date = admission_log.discharge_date
-                        if isinstance(adm_dis_date, datetime):
-                            adm_dis_date = adm_dis_date.date()
-                        if not adm_dis_date or bill_date <= adm_dis_date or (rec.user_ide.status == 'discharged' and rec.bill_type == 'admitted'):
-                            if admission_log.attending_doctor:
-                                doctor = admission_log.attending_doctor.id
-                    
+                    # IP form doctor first (Salim), never later OP revisit (Abraham).
+                    if rec.user_ide.doctor:
+                        doctor = rec.user_ide.doctor.id
+                    if not doctor:
+                        admission_log = self.env['hospital.admitted.patient'].sudo().search([
+                            ('patient_id', '=', rec.user_ide.id),
+                            ('admission_date', '<=', bill_date)
+                        ], order='admission_date desc', limit=1)
+                        if admission_log:
+                            adm_dis_date = admission_log.discharge_date
+                            if isinstance(adm_dis_date, datetime):
+                                adm_dis_date = adm_dis_date.date()
+                            if not adm_dis_date or bill_date <= adm_dis_date or (rec.user_ide.status == 'discharged'):
+                                if admission_log.attending_doctor:
+                                    doctor = admission_log.attending_doctor.id
                     if not doctor:
                         historical_admission = self.env['discharged.patient.record'].sudo().search([
                             ('patient_id', '=', rec.user_ide.reference_no),
@@ -315,7 +317,7 @@ class DoctorLabReport(models.Model):
                         if historical_admission and historical_admission.doctor:
                             doctor = historical_admission.doctor.id
                 
-                # OP Logic — same-day revisit appointment wins over first registration.
+                # OP Logic (skipped when IP doctor already set)
                 if not doctor:
                     appt_today = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.user_ide.id),
