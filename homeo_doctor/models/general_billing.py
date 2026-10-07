@@ -1,4 +1,5 @@
 import base64
+import json
 from collections import defaultdict
 
 from num2words import num2words
@@ -4031,6 +4032,9 @@ class DischargeBilling(models.Model):
         compute='_compute_total_unpaid_amount',
         compute_sudo=True,
     )
+    # JSON map of model -> ids for unpaid dept bills marked paid by this discharge
+    # (Observation Discharge). Cancel only reverts these — not already-paid tree bills.
+    settled_dept_bill_ids = fields.Text(string='Settled Dept Bill Ids', copy=False)
     settled_total_amount = fields.Float(
         string='Settled Total Amount', copy=False, readonly=True,
         help='Total frozen at discharge so it does not drop after department bills are marked paid.',
@@ -5404,41 +5408,53 @@ class DischargeBilling(models.Model):
                 })
                 wallet_rec.action_add_amount()
 
-        all_bill_groups = [
-            rec.paid_general_ids,
-            rec.paid_pharmacy_ids,
-            rec.paid_lab_ids,
-            rec.paid_ot_ids,
-            rec.paid_audiology_ids,
-            rec.paid_xray_ids,
-            rec.paid_casualty_ids,
-        ]
-        for group in all_bill_groups:
+            # Only undo unpaid dept bills THIS discharge marked paid (Observation
+            # Discharge). Already-paid bills listed in paid_* trees stay paid.
+            rec._revert_discharge_settled_dept_bills()
 
+    def _mark_discharge_settled_dept_bills(self, bill_groups):
+        """Mark unpaid dept bills paid and remember them for cancel revert."""
+        self.ensure_one()
+        settled = {}
+        for group in bill_groups:
+            if not group:
+                continue
+            model_name = group._name
+            ids = settled.setdefault(model_name, [])
             for bill in group:
-
-                if bill.status != 'paid':
+                if bill.status == 'paid':
                     continue
+                bill.write({'status': 'paid'})
+                ids.append(bill.id)
+            if not ids and model_name in settled:
+                del settled[model_name]
+        self.settled_dept_bill_ids = json.dumps(settled) if settled else False
 
-                # Skip OP bills
-                if 'bill_type' in bill._fields and bill.bill_type == 'op':
-                    continue
+    def _revert_discharge_settled_dept_bills(self):
+        """Revert only bills stored in ``settled_dept_bill_ids`` back to unpaid.
 
-                if 'op_category' in bill._fields and bill.op_category == 'op':
-                    continue
-
-                bill.write({'status': 'unpaid'})
-
-                print('UPDATED:', bill)
-        # for group in all_bill_groups:
-        #     paid_bills = group.filtered(
-        #         lambda b: b.status == 'paid' and b.bill_type != 'op'  or
-        #         ('op_category' in b._fields and b.op_category != 'op')
-        #     )
-        #
-        #     paid_bills.write({'status': 'unpaid'})
-        #     print('jhdhjsfhjsdhfgjsdg',  paid_bills)
-        #
+        Does not touch already-paid department bills that appear in paid_* trees
+        for display only.
+        """
+        self.ensure_one()
+        raw = self.settled_dept_bill_ids
+        if not raw:
+            return
+        try:
+            settled = json.loads(raw)
+        except (TypeError, ValueError):
+            settled = {}
+        if not isinstance(settled, dict):
+            settled = {}
+        for model_name, ids in settled.items():
+            if model_name not in self.env or not ids:
+                continue
+            bills = self.env[model_name].browse(ids).exists().filtered(
+                lambda b: b.status == 'paid'
+            )
+            if bills:
+                bills.write({'status': 'unpaid'})
+        self.settled_dept_bill_ids = False
 
     def action_reopen(self):
         """Re-open a CANCELLED discharge bill so it can be paid again like a
@@ -5457,8 +5473,9 @@ class DischargeBilling(models.Model):
         - patient / admission status: restored to the proceed-discharge state so
           the bill behaves like a normal payable discharge bill again.
 
-        Department bills were reverted to 'unpaid' by cancel, which is already the
-        correct state for an unpaid re-opened bill, so they are left as-is.
+        Dept bills settled by this discharge were reverted to unpaid by cancel
+        (via ``settled_dept_bill_ids``). Already-paid stay-paid bills were never
+        touched. Reopen leaves both as-is.
         """
         for rec in self:
             # Guard against double-processing: only cancelled bills re-open.
@@ -5597,10 +5614,9 @@ class DischargeBilling(models.Model):
             if admitted_patient:
                 admitted_patient.status = 'discharged'
 
-            # 3️⃣ Mark captured unpaid department bills as paid
-            for group in bills_to_settle:
-                for bill in group:
-                    bill.status = 'paid'
+            # 3️⃣ Mark captured unpaid department bills as paid and remember
+            # their IDs so cancel can revert only these (not already-paid trees).
+            rec._mark_discharge_settled_dept_bills(bills_to_settle)
 
         return True
 
