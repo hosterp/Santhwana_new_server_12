@@ -66,8 +66,111 @@ class PatientAppointment(models.Model):
     upi_amount = fields.Float(string="UPI Amount")
     card_amount = fields.Float(string="Card Amount")
     vssc_boolean = fields.Boolean(related='patient_id.vssc_boolean', string='VSSC')
-    differance_appointment_days = fields.Integer("No of Days")
+    differance_appointment_days = fields.Integer(
+        "No of Days",
+        compute='_compute_differance_appointment_days',
+        store=True,
+        readonly=True,
+    )
     fee_applied = fields.Boolean(string="Fee Applied", default=False, store=True)
+
+    def _appointment_as_date(self, value):
+        if not value:
+            return None
+        if isinstance(value, datetime.datetime):
+            return value.date()
+        if isinstance(value, str):
+            return fields.Date.from_string(value)
+        return value
+
+    def _get_last_same_doctor_visit_date(self, doctor, appt_date, exclude_id=None):
+        """Latest prior visit date with this doctor (appointment or consultation / OP reg).
+
+        - Prior revisits count even if later cancelled (still a recorded visit).
+        - Consultation rows use appointment_date when set (create ``date`` can be earlier
+          and must not count as a separate prior visit for the same revisit).
+        """
+        self.ensure_one()
+        if not self.patient_id or not doctor or not appt_date:
+            return None
+
+        patient_id_int = self.patient_id.id
+        if isinstance(patient_id_int, models.NewId):
+            patient_id_int = patient_id_int.origin or 0
+        if not patient_id_int:
+            return None
+
+        appt_date = self._appointment_as_date(appt_date)
+        visit_dates = []
+
+        # Prior appointments with same doctor (include cancelled; exclude draft-only).
+        if exclude_id and isinstance(exclude_id, int):
+            domain = [
+                ('patient_id', '=', patient_id_int),
+                ('status', '!=', 'draft'),
+                ('doctor_ids', 'in', [doctor.id]),
+                '|',
+                ('appointment_date', '<', appt_date),
+                '&',
+                ('appointment_date', '=', appt_date),
+                ('id', '<', exclude_id),
+            ]
+        else:
+            domain = [
+                ('patient_id', '=', patient_id_int),
+                ('status', '!=', 'draft'),
+                ('doctor_ids', 'in', [doctor.id]),
+                ('appointment_date', '<', appt_date),
+            ]
+
+        last_appt = self.sudo().search(domain, order='appointment_date desc, id desc', limit=1)
+        if last_appt:
+            visit_dates.append(self._appointment_as_date(last_appt.appointment_date))
+
+        # Prior consultations: use appointment_date when set (create date can be earlier
+        # than the revisit date and must not steal the day count).
+        cons_candidates = []
+        for cons in self.env['patient.registration'].sudo().search([
+            '|', ('user_id', '=', patient_id_int), ('patient_id', '=', patient_id_int),
+            ('doctor', '=', doctor.id),
+            ('status', 'not in', ['cancelled', 'admitted', 'proceed_discharge']),
+        ], order='id desc', limit=50):
+            cons_visit = self._appointment_as_date(cons.appointment_date or cons.date)
+            if cons_visit and cons_visit < appt_date:
+                cons_candidates.append(cons_visit)
+        if cons_candidates:
+            visit_dates.append(max(cons_candidates))
+
+        # Original OP registration date if that doctor matches (and before this revisit).
+        patient = self.patient_id
+        reg_doctor = patient.doc_name
+        if reg_doctor and reg_doctor.id == doctor.id and patient.time:
+            reg_date = self._appointment_as_date(patient.time)
+            if reg_date and reg_date < appt_date:
+                visit_dates.append(reg_date)
+
+        visit_dates = [d for d in visit_dates if d]
+        return max(visit_dates) if visit_dates else None
+
+    @api.depends('appointment_date', 'doctor_ids', 'doctor_id', 'patient_id', 'status')
+    def _compute_differance_appointment_days(self):
+        """No of Days = calendar days since last visit with the same doctor."""
+        for record in self:
+            doctors = record.doctor_ids or record.doctor_id
+            if not doctors or not record.patient_id or not record.appointment_date:
+                record.differance_appointment_days = 0
+                continue
+
+            doctor = doctors[0]
+            appt_date = record._appointment_as_date(record.appointment_date)
+            real_id = record._origin.id if hasattr(record, '_origin') else record.id
+            base = record._get_last_same_doctor_visit_date(
+                doctor, appt_date, exclude_id=real_id if isinstance(real_id, int) else None)
+            if base and appt_date:
+                day_diff = (appt_date - base).days
+                record.differance_appointment_days = day_diff if day_diff > 0 else 0
+            else:
+                record.differance_appointment_days = 0
 
 
 
@@ -363,7 +466,6 @@ class PatientAppointment(models.Model):
     def _compute_consultation_fee(self):
         for record in self:
             record.consultation_fee = 0
-            record.differance_appointment_days = 0
 
             # Support both doctor_id and doctor_ids, prioritizing doctor_ids
             doctors = record.doctor_ids
@@ -377,120 +479,61 @@ class PatientAppointment(models.Model):
             fee_value = doctor.consultation_fee_doctor or 0
             fee_limit = int(doctor.consultation_fee_limit or 7)
             is_vssc = record.patient_id.vssc_boolean
+            appt_date = record._appointment_as_date(record.appointment_date)
 
-            # Normalize appointment date
-            appt_date = record.appointment_date
-            if hasattr(appt_date, 'date'):
-                appt_date = appt_date.date()
-            if isinstance(appt_date, str):
-                appt_date = fields.Date.from_string(appt_date)
-
-            # --- Get last registration ---
-            # Use patient's ID directly if available
             patient_id_int = record.patient_id.id
             if isinstance(patient_id_int, models.NewId):
                 patient_id_int = patient_id_int.origin or 0
 
-            last_reg = self.env['patient.reg'].sudo().search(
-                [('id', '=', patient_id_int)],
-                limit=1
-            )
-            # If search by ID fails or it's not the one we want, fallback to reference_no
-            if not last_reg or last_reg.reference_no != record.patient_id.reference_no:
-                last_reg = self.env['patient.reg'].sudo().search(
-                    [('reference_no', '=', record.patient_id.reference_no)],
-                    order='time desc', limit=1
-                )
+            last_reg = record.patient_id
+            last_reg_date = record._appointment_as_date(last_reg.time) if last_reg and last_reg.time else None
+            last_reg_doctor_id = last_reg.doc_name.id if last_reg and last_reg.doc_name else None
+            last_reg_doctor_name = last_reg.doc_name.name if last_reg and last_reg.doc_name else ""
 
-            last_reg_date = None
-            if last_reg and last_reg.time:
-                last_reg_date = last_reg.time.date() if hasattr(last_reg.time, 'date') else last_reg.time
-                if isinstance(last_reg_date, str):
-                    last_reg_date = fields.Date.from_string(last_reg_date)
+            curr_doc_name = doctor.name.strip().lower() if doctor.name else ""
+            prev_doc_name = last_reg_doctor_name.strip().lower() if last_reg_doctor_name else ""
+            is_same_doc_as_reg = (last_reg_doctor_id == doctor.id)
+            if not is_same_doc_as_reg and curr_doc_name and prev_doc_name:
+                is_same_doc_as_reg = (curr_doc_name == prev_doc_name)
 
-            # Extract doctor from registration
-            last_reg_doctor_id = None
-            last_reg_doctor_name = ""
-            if last_reg:
-                if hasattr(last_reg, 'doc_name') and hasattr(last_reg.doc_name, 'id'):
-                    last_reg_doctor_id = last_reg.doc_name.id
-                    last_reg_doctor_name = last_reg.doc_name.name
-                elif hasattr(last_reg, 'doctor_id') and hasattr(last_reg.doctor_id, 'id'):
-                    last_reg_doctor_id = last_reg.doctor_id.id
-                    last_reg_doctor_name = last_reg.doctor_id.name
-                else:
-                    last_reg_doctor_name = str(last_reg.doc_name) if last_reg.doc_name else ""
+            real_id = record._origin.id if hasattr(record, '_origin') else record.id
 
-            # --- Find last paid consultation for SAME doctor ---
-            # Cancelled bills must not block a new same-doctor fee.
-            domain_same_doc = [
+            # Keep No of Days in sync on form onchange (stored compute also runs on save).
+            visit_base = record._get_last_same_doctor_visit_date(
+                doctor, appt_date, exclude_id=real_id if isinstance(real_id, int) else None)
+            if visit_base and appt_date:
+                day_diff_display = (appt_date - visit_base).days
+                record.differance_appointment_days = day_diff_display if day_diff_display > 0 else 0
+            else:
+                record.differance_appointment_days = 0
+
+            # Free-window fee: last PAID same-doctor revisit, else same-doctor OP registration.
+            domain_paid = [
                 ('patient_id', '=', patient_id_int),
                 ('fee_applied', '=', True),
-                ('status', '!=', 'cancelled'),
+                ('status', 'in', ['confirmed', 'completed']),
                 ('appointment_date', '<=', record.appointment_date),
+                ('doctor_ids', 'in', [doctor.id]),
             ]
-
-            # Exclude current record correctly (works for NewId too)
-            real_id = record._origin.id if hasattr(record, '_origin') else record.id
             if real_id and isinstance(real_id, int):
-                domain_same_doc.append(('id', '!=', real_id))
+                domain_paid.append(('id', '!=', real_id))
 
-            # Filter by same doctor
-            domain_same_doc.append(('doctor_ids', 'in', doctor.ids))
+            last_paid = self.env['patient.appointment'].sudo().search(
+                domain_paid, order='appointment_date desc, id desc', limit=1)
 
-            last_same_doc_consult = self.env['patient.appointment'].sudo().search(domain_same_doc,
-                                                                                  order='appointment_date desc',
-                                                                                  limit=1)
+            fee_base_date = None
+            if last_paid:
+                fee_base_date = record._appointment_as_date(last_paid.appointment_date)
+            elif is_same_doc_as_reg:
+                fee_base_date = last_reg_date
 
-            base_date = None
-            base_source = ""
+            day_diff_fee = 9999
+            if fee_base_date and appt_date:
+                day_diff_fee = (appt_date - fee_base_date).days
+                if day_diff_fee < 0:
+                    day_diff_fee = 0
 
-            if last_same_doc_consult:
-                base_date = last_same_doc_consult.appointment_date
-                if hasattr(base_date, 'date'):
-                    base_date = base_date.date()
-                if isinstance(base_date, str):
-                    base_date = fields.Date.from_string(base_date)
-                base_source = "same doctor consult"
-            else:
-                base_date = last_reg_date
-                base_source = "registration"
-
-            # --- Compute day difference ---
-            day_diff = 9999  # Default large
-            if base_date and appt_date:
-                day_diff = (appt_date - base_date).days
-
-            if day_diff < 0:
-                day_diff = 0
-            record.differance_appointment_days = day_diff if day_diff < 9999 else 0
-
-            # --- FEE DECISION LOGIC ---
-            apply_fee = False
-
-            if not base_date:
-                apply_fee = True
-            elif last_same_doc_consult:
-                # Based on same doctor history
-                apply_fee = (day_diff > fee_limit)
-            elif last_reg:
-                # Based on initial registration
-                curr_doc_name = doctor.name.strip().lower() if doctor.name else ""
-                prev_doc_name = last_reg_doctor_name.strip().lower() if last_reg_doctor_name else ""
-
-                # Check if it is the same doctor (by ID or name)
-                is_same_doc = (last_reg_doctor_id == doctor.id)
-                if not is_same_doc and curr_doc_name and prev_doc_name:
-                    is_same_doc = (curr_doc_name == prev_doc_name)
-
-                if not is_same_doc:
-                    apply_fee = True  # Different doctor
-                else:
-                    apply_fee = (day_diff > fee_limit)
-            else:
-                apply_fee = True
-
-            # --- Final Fee ---
+            apply_fee = True if not fee_base_date else (day_diff_fee > fee_limit)
             final_fee_amount = 400 if is_vssc else fee_value
             record.consultation_fee = final_fee_amount if apply_fee else 0
             record.fee_applied = bool(record.consultation_fee > 0)
