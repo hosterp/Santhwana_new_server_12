@@ -235,9 +235,10 @@ class PatientRegistration(models.Model):
         admission_record.admission_boolean = True
         if admission_record.admission_boolean:
             admission_record.status = 'admitted'
-            # IP doctor = latest OP/revisit doctor (B), not only this consultation.
-            latest_doctor = admission_record.get_latest_op_doctor()
-            admission_record.doctor = latest_doctor or (self.doctor.id if self.doctor else False)
+            # Keep selected IP doctor; only default from OP/revisit / consultation if empty.
+            if not admission_record.doctor:
+                latest_doctor = admission_record.get_latest_op_doctor()
+                admission_record.doctor = latest_doctor or (self.doctor.id if self.doctor else False)
             admission_record.write({'admitted_date': fields.Datetime.now()})
 
         else:

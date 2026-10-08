@@ -206,6 +206,87 @@ class PatientRegistration(models.Model):
             return self.doctor.id
         return False
 
+    def resolve_op_doctor_as_of(self, bill_date, as_of=None):
+        """OP doctor for a bill date, ignoring revisits created after as_of.
+
+        New bills (as_of empty) use the latest same-day confirmed revisit.
+        Existing bills pass create_date so later revisit doctor B does not
+        rewrite pharmacy/lab/casualty (etc.) bills that already used doctor A.
+        Cancelled revisits (and their consultation rows) are never used.
+        """
+        self.ensure_one()
+        if not bill_date:
+            return False
+        if isinstance(bill_date, datetime):
+            bill_date = bill_date.date()
+
+        def _with_as_of(domain):
+            domain = list(domain)
+            if as_of:
+                domain.append(('create_date', '<=', as_of))
+            return domain
+
+        # Doctors from cancelled same-day revisits must not win via leftover consultations.
+        cancelled_doctor_ids = set()
+        cancelled_appts = self.env['patient.appointment'].search(_with_as_of([
+            ('patient_id', '=', self.id),
+            ('appointment_date', '=', bill_date),
+            ('status', '=', 'cancelled'),
+        ]))
+        for appt in cancelled_appts:
+            cancelled_doctor_ids.update(appt.doctor_ids.ids)
+            if appt.doctor_id:
+                cancelled_doctor_ids.add(appt.doctor_id.id)
+
+        appt_today = self.env['patient.appointment'].search(_with_as_of([
+            ('patient_id', '=', self.id),
+            ('appointment_date', '=', bill_date),
+            ('status', '=', 'confirmed'),
+        ]), order='id desc', limit=1)
+        if appt_today and appt_today.doctor_ids:
+            return appt_today.doctor_ids[0].id
+
+        regs_today = self.env['patient.registration'].search(_with_as_of([
+            '|', ('user_id', '=', self.id), ('patient_id', '=', self.id),
+            ('date', '=', bill_date),
+            ('status', 'not in', ['cancelled', 'admitted', 'proceed_discharge']),
+        ]), order='id desc')
+        for reg in regs_today:
+            if reg.doctor and reg.doctor.id in cancelled_doctor_ids:
+                continue
+            if reg.doctor:
+                return reg.doctor.id
+            if reg.doctor_id:
+                f_doc = self.env['doctor.profile'].search([('name', '=', reg.doctor_id)], limit=1)
+                if f_doc and f_doc.id not in cancelled_doctor_ids:
+                    return f_doc.id
+
+        reg_prev = self.env['patient.registration'].search(_with_as_of([
+            '|', ('user_id', '=', self.id), ('patient_id', '=', self.id),
+            ('date', '<', bill_date),
+            ('status', 'not in', ['cancelled', 'admitted', 'proceed_discharge']),
+        ]), order='date desc, id desc', limit=1)
+        if reg_prev and reg_prev.doctor:
+            return reg_prev.doctor.id
+
+        appt_prev = self.env['patient.appointment'].search(_with_as_of([
+            ('patient_id', '=', self.id),
+            ('appointment_date', '<', bill_date),
+            ('status', '=', 'confirmed'),
+        ]), order='appointment_date desc, id desc', limit=1)
+        if appt_prev and appt_prev.doctor_ids:
+            return appt_prev.doctor_ids[0].id
+
+        if self.doc_name and self.doc_name.id not in cancelled_doctor_ids:
+            return self.doc_name.id
+        if self.doctor and self.doctor.id not in cancelled_doctor_ids:
+            return self.doctor.id
+        if self.doc_name:
+            return self.doc_name.id
+        if self.doctor:
+            return self.doctor.id
+        return False
+
     def write(self, vals):
         if self.env.context.get('no_sync'):
             return super(PatientRegistration, self).write(vals)
@@ -771,10 +852,11 @@ class PatientRegistration(models.Model):
         self.status = 'proceed_admit'
         self.admitted_date = fields.Datetime.now()
         self.bill_type = 'admitted'
-        # IP doctor = latest OP doctor (revisit B wins over first-reg A)
-        latest_doctor = self.get_latest_op_doctor()
-        if latest_doctor:
-            self.doctor = latest_doctor
+        # Keep manually selected IP doctor; only default from OP/revisit if empty.
+        if not self.doctor:
+            latest_doctor = self.get_latest_op_doctor()
+            if latest_doctor:
+                self.doctor = latest_doctor
 
     @api.onchange('register_amount_paid')
     def _onchange_register_amount_paid(self):
@@ -1297,9 +1379,9 @@ class PatientRegistration(models.Model):
             patient = registration_model.search([('reference_no', '=', rec.reference_no)], limit=1)
             if not patient:
                 raise UserError(f"No patient found with reference no: {rec.reference_no}")
-            # Prefer latest OP/revisit doctor for IP attending doctor.
-            ip_doctor = rec.get_latest_op_doctor() or (rec.doctor.id if rec.doctor else False)
-            if ip_doctor and (not rec.doctor or rec.doctor.id != ip_doctor):
+            # IP doctor = what user selected on the form; OP/revisit only if empty.
+            ip_doctor = (rec.doctor.id if rec.doctor else False) or rec.get_latest_op_doctor()
+            if ip_doctor and not rec.doctor:
                 rec.doctor = ip_doctor
             if rec.amount_in_advance >0:
                 wallet_rec=patient_wallet.create({

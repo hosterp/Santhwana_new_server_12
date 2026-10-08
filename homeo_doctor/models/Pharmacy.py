@@ -135,54 +135,12 @@ class PharmacyDescription(models.Model):
                             doctor = historical_admission.doctor.id
 
                 # ── OP / FALLBACK ─────────────────────────────────────────
-                # Same-day revisit wins for OP only (never override IP doctor above).
+                # New bills: latest same-day revisit. Saved bills: freeze at
+                # create_date so later Sumesh revisit does not rewrite Abraham bills.
                 if not doctor:
-                    appt_today = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.uhid_id.id),
-                        ('appointment_date', '=', bill_date),
-                        ('status', '=', 'confirmed'),
-                    ], order='id desc', limit=1)
-                    if appt_today and appt_today.doctor_ids:
-                        doctor = appt_today.doctor_ids[0].id
-
-                if not doctor:
-                    reg = self.env['patient.registration'].search([
-                        '|', ('user_id', '=', rec.uhid_id.id), ('patient_id', '=', rec.uhid_id.id),
-                        ('date', '=', bill_date),
-                        ('status', 'not in', ['admitted', 'proceed_discharge']),
-                    ], order='id desc', limit=1)
-                    if reg and reg.doctor:
-                        doctor = reg.doctor.id
-                    elif reg and reg.doctor_id:
-                        f_doc = self.env['doctor.profile'].search(
-                            [('name', '=', reg.doctor_id)], limit=1)
-                        if f_doc:
-                            doctor = f_doc.id
-
-                if not doctor:
-                    reg_prev = self.env['patient.registration'].search([
-                        '|', ('user_id', '=', rec.uhid_id.id), ('patient_id', '=', rec.uhid_id.id),
-                        ('date', '<', bill_date),
-                        ('status', 'not in', ['admitted', 'proceed_discharge']),
-                    ], order='date desc, id desc', limit=1)
-                    if reg_prev and reg_prev.doctor:
-                        doctor = reg_prev.doctor.id
-
-                if not doctor:
-                    appt_prev = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.uhid_id.id),
-                        ('appointment_date', '<', bill_date),
-                        ('status', '=', 'confirmed'),
-                    ], order='appointment_date desc, id desc', limit=1)
-                    if appt_prev and appt_prev.doctor_ids:
-                        doctor = appt_prev.doctor_ids[0].id
-
-                if not doctor:
-                    if rec.op_category == 'admitted' and rec.uhid_id.doctor:
-                        doctor = rec.uhid_id.doctor.id
-                    elif rec.uhid_id.doc_name:
-                        doctor = rec.uhid_id.doc_name.id
-                    elif rec.uhid_id.doctor:
+                    as_of = rec.create_date if isinstance(rec.id, int) else None
+                    doctor = rec.uhid_id.resolve_op_doctor_as_of(bill_date, as_of=as_of)
+                    if not doctor and rec.op_category == 'admitted' and rec.uhid_id.doctor:
                         doctor = rec.uhid_id.doctor.id
 
             rec.doctor_name = doctor

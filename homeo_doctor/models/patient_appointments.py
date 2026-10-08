@@ -113,37 +113,38 @@ class PatientAppointment(models.Model):
 
         return ""
 
-    def cancel_appointment(self):
-
+    def _cancel_related_registrations(self):
+        """Cancel consultation rows created for this revisit (so bills stop using that doctor)."""
+        Registration = self.env['patient.registration']
         for appointment in self:
+            if not appointment.patient_id or not appointment.appointment_date:
+                continue
+            doctor_ids = appointment.doctor_ids.ids
+            if not doctor_ids and appointment.doctor_id:
+                doctor_ids = [appointment.doctor_id.id]
+            domain = [
+                '|',
+                ('user_id', '=', appointment.patient_id.id),
+                ('patient_id', '=', appointment.patient_id.id),
+                '|',
+                ('appointment_date', '=', appointment.appointment_date),
+                ('date', '=', appointment.appointment_date),
+                ('status', 'not in', ['cancelled']),
+            ]
+            if doctor_ids:
+                domain.append(('doctor', 'in', doctor_ids))
+            related = Registration.search(domain)
+            if related:
+                related.write({'status': 'cancelled'})
 
-            # Update this appointment's status
-
+    def cancel_appointment(self):
+        for appointment in self:
             appointment.write({
                 'status': 'cancelled',
                 'button_visible': False,
                 'fee_applied': False,
             })
-
-            # Find all patient.registration records created from this appointment
-
-            # by matching patient_id and appointment_date
-
-            related_registrations = self.env['patient.registration'].search([
-
-                ('patient_id', '=', appointment.patient_id.id),
-
-                ('appointment_date', '=', appointment.appointment_date),
-
-                ('doctor', 'in', appointment.doctor_ids.ids),
-
-                ('status', 'in', ['confirmed', 'completed'])
-
-            ])
-
-            if related_registrations:
-                related_registrations.write({'status': 'cancelled'})
-
+            appointment._cancel_related_registrations()
         return True
 
     @api.depends('registration_fee', 'consultation_fee')
@@ -337,11 +338,8 @@ class PatientAppointment(models.Model):
             #           """)
 
     def action_cancel(self):
-        for record in self:
-            record.write({
-                'status': 'cancelled',
-                'fee_applied': False,
-            })
+        # Same cleanup as Cancel Appointment button (linked consultations must go too).
+        return self.cancel_appointment()
 
     @api.onchange('departments')
     def _onchange_departments(self):
