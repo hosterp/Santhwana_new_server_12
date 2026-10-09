@@ -291,9 +291,17 @@ class DoctorBillingReportWizard(models.TransientModel):
     def _resolve_pharmacy_doctor(self, cache, row):
         """Match pharmacy.description._compute_doctor_name (report-only).
 
+        Prefer frozen ``stored_doctor`` (pharmacy.doctor_name) when present —
+        paid bills must not move between doctors when patient master doctor
+        changes later (fixes Oct8 vs Oct9 pharmacy swaps on the same period).
+
         ``row`` keys: patient_id, bill_date, bill_type (op_category), order_doctor,
-        doc_name, master_doctor.
+        doc_name, master_doctor, stored_doctor, bill_status.
         """
+        # Stable attribution: use doctor frozen on the pharmacy bill itself.
+        if row.get('stored_doctor'):
+            return row['stored_doctor']
+
         patient_id = row.get('patient_id')
         bill_date = row.get('bill_date')
         op_category = row.get('bill_type')
@@ -747,6 +755,8 @@ class DoctorBillingReportWizard(models.TransientModel):
                    p.uhid_id AS patient_id,
                    p.date AS bill_date,
                    p.op_category AS bill_type,
+                   p.status AS bill_status,
+                   p.doctor_name AS stored_doctor,
                    preg_order.doctor AS order_doctor,
                    pr.doc_name AS doc_name,
                    pr.doctor AS master_doctor,

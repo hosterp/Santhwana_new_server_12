@@ -2456,8 +2456,9 @@
                                                 <!--                                                 </td> -->
                                                 <!--                                             </tr> -->
                                                 <!--                                         </t> -->
-                                                <!--  IP Bills (if any)  -->
-                                                <t t-if="o.paid_ip_ids">
+                                                <!--  IP Bills — normal: unpaid only; VSSC: paid+unpaid, no OP -->
+                                                <t t-set="pdf_ip" t-value="o.get_consolidated_pdf_bills(o.unpaid_ip_ids, o.paid_ip_ids)"/>
+                                                <t t-if="pdf_ip">
                                                     <t t-set="sl" t-value="sl + 1"/>
                                                     <tr style="height: 35px;">
                                                         <td style="text-align:center;">
@@ -2467,17 +2468,18 @@
                                                             <strong style="font-size: 18px;">IP Bills</strong>
                                                         </td>
                                                         <td style="text-align:center;">
-                                                            <span t-esc="len(o.paid_ip_ids)"/>
+                                                            <span t-esc="len(pdf_ip)"/>
                                                         </td>
                                                         <td style="text-align:center;">
                                                             ₹
-                                                            <span t-esc="'{:,.2f}'.format(sum(o.paid_ip_ids.mapped('total_amount')) - sum(o.paid_ip_ids.mapped('room_rent_total')))"/>
+                                                            <span t-esc="'{:,.2f}'.format(sum(pdf_ip.mapped('total_amount')) - sum(pdf_ip.mapped('room_rent_total')))"/>
                                                         </td>
                                                     </tr>
                                                 </t>
-                                                <!--  General Bills (if any)  -->
-                                                <t t-if="o.unpaid_general_ids">
-                                                    <t t-foreach="o.get_grouped_general_lines()" t-as="line">
+                                                <!--  General Bills — normal includes OP unpaid; VSSC omits OP -->
+                                                <t t-set="pdf_general_lines" t-value="o.get_grouped_general_lines()"/>
+                                                <t t-if="pdf_general_lines">
+                                                    <t t-foreach="pdf_general_lines" t-as="line">
                                                         <t t-set="sl" t-value="sl + 1"/>
                                                         <tr>
                                                             <td style="text-align:center;">
@@ -2599,11 +2601,12 @@
                                             <!--                                     &lt;!&ndash;                                    </tfoot>&ndash;&gt; -->
                                         </table>
                                         <div class="content-body">
-                                            <t t-if="o.unpaid_casualty_ids">
+                                            <t t-set="pdf_casualty" t-value="o.get_consolidated_pdf_bills(o.unpaid_casualty_ids, o.paid_casualty_ids)"/>
+                                            <t t-if="pdf_casualty">
                                                 <p style="margin-top:20px;">
                                                     <strong>CASUALTY</strong>
                                                 </p>
-                                                <t t-foreach="o.unpaid_casualty_ids" t-as="line"
+                                                <t t-foreach="pdf_casualty" t-as="line"
                                                    t-foreach-index="line_index">
                                                     <tr>
                                                         <td style="text-align:left; padding-left:5px;font-size:14px;">
@@ -2661,11 +2664,12 @@
                                             </t>
                                         </div>
                                         <div class="content-body">
-                                            <t t-if="o.unpaid_xray_ids">
+                                            <t t-set="pdf_xray" t-value="o.get_consolidated_pdf_bills(o.unpaid_xray_ids, o.paid_xray_ids)"/>
+                                            <t t-if="pdf_xray">
                                                 <p style="margin-top:20px;">
                                                     <strong>XRAY</strong>
                                                 </p>
-                                                <t t-foreach="o.unpaid_xray_ids" t-as="line"
+                                                <t t-foreach="pdf_xray" t-as="line"
                                                    t-foreach-index="line_index">
                                                     <tr>
                                                         <td style="text-align:left; padding-left:5px;font-size:14px;">
@@ -2723,11 +2727,12 @@
                                             </t>
                                         </div>
                                         <div class="content-body">
-                                            <t t-if="o.unpaid_audiology_ids">
+                                            <t t-set="pdf_audiology" t-value="o.get_consolidated_pdf_bills(o.unpaid_audiology_ids, o.paid_audiology_ids)"/>
+                                            <t t-if="pdf_audiology">
                                                 <p style="margin-top:20px;">
                                                     <strong>AUDIOLOGY</strong>
                                                 </p>
-                                                <t t-foreach="o.unpaid_audiology_ids" t-as="line"
+                                                <t t-foreach="pdf_audiology" t-as="line"
                                                    t-foreach-index="line_index">
                                                     <tr>
                                                         <td style="text-align:left; padding-left:5px;font-size:14px;">
@@ -2785,11 +2790,12 @@
                                             </t>
                                         </div>
                                         <div class="content-body">
-                                            <t t-if="o.unpaid_ot_ids">
+                                            <t t-set="pdf_ot" t-value="o.get_consolidated_pdf_bills(o.unpaid_ot_ids, o.paid_ot_ids)"/>
+                                            <t t-if="pdf_ot">
                                                 <p style="margin-top:20px;">
                                                     <strong>OT</strong>
                                                 </p>
-                                                <t t-foreach="o.unpaid_ot_ids" t-as="line" t-foreach-index="line_index">
+                                                <t t-foreach="pdf_ot" t-as="line" t-foreach-index="line_index">
                                                     <tr>
                                                         <td style="text-align:left; padding-left:5px;font-size:14px;">
                                                             <span style="margin-right:40px;">
@@ -2846,11 +2852,12 @@
                                             </t>
                                         </div>
                                         <div class="content-body">
-                                            <t t-if="o.unpaid_lab_ids">
+                                            <t t-set="pdf_lab" t-value="o.get_consolidated_pdf_bills(o.unpaid_lab_ids, o.paid_lab_ids)"/>
+                                            <t t-if="pdf_lab">
                                                 <p style="margin-top:20px;">
                                                     <strong>LAB</strong>
                                                 </p>
-                                                <t t-foreach="o.unpaid_lab_ids" t-as="line"
+                                                <t t-foreach="pdf_lab" t-as="line"
                                                    t-foreach-index="line_index">
                                                     <tr>
                                                         <td style="text-align:left; padding-left:5px;font-size:14px;">
@@ -2908,11 +2915,12 @@
                                             </t>
                                         </div>
                                         <div class="content-body">
-                                            <t t-if="o.unpaid_pharmacy_ids">
+                                            <t t-set="pdf_pharmacy" t-value="o.get_consolidated_pdf_bills(o.unpaid_pharmacy_ids, o.paid_pharmacy_ids)"/>
+                                            <t t-if="pdf_pharmacy">
                                                 <strong>
                                                     <p>PHARMACY</p>
                                                 </strong>
-                                                <t t-foreach="o.unpaid_pharmacy_ids" t-as="line"
+                                                <t t-foreach="pdf_pharmacy" t-as="line"
                                                    t-foreach-index="line_index">
                                                     <tr>
                                                         <td style="text-align:left; padding-left:5px;font-size:14px;">
@@ -3293,10 +3301,11 @@
                                      attrs="{'invisible': [('status', 'in', ['unpaid'])]}">
                                     <div class="form-group row my-1">
                                         <label for="consolidated_pdf" class="col-md-5 col-form-label py-0 small">
-                                            Download Bill
+                                            Consolidated Bill PDF
                                         </label>
                                         <div class="col-md-7 field-container py-0">
-                                            <field name="consolidated_pdf"/>
+                                            <field name="consolidated_pdf"
+                                                    filename="consolidated_pdf_filename"/>
                                         </div>
                                     </div>
                                 </div>

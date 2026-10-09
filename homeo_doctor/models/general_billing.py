@@ -4383,9 +4383,9 @@ class DischargeBilling(models.Model):
     def _discharge_bill_date_domain(self, model_name, date_field, admitted_date, end_date):
         """All department bills within the admission → discharge window.
 
-        Every bill (Cash, Credit, OP and IP) is fetched so the tree views show
-        them. Whether a bill is *added to the Total Amount* is decided separately
-        by ``_count_in_total`` (only IP credit bills are added).
+        Bills are fetched broadly; ``_filter_discharge_tree_bills`` decides what
+        appears on bill-wise trees (all for non-VSSC; no OP for VSSC).
+        ``_count_in_total`` decides what enters the Total Amount.
         """
         Model = self.env[model_name]
         if date_field not in Model._fields:
@@ -4393,22 +4393,48 @@ class DischargeBilling(models.Model):
 
         return self._discharge_date_range_domain(date_field, admitted_date, end_date)
 
-    def _count_in_total(self, bill):
-        """Only IP *credit* department bills are added to the discharge Total
-        Amount. OP bills and Cash bills are still shown in the tree views but are
-        NOT added to the total.
-        """
-        # OP bills never count toward the discharge total.
-        if 'bill_type' in bill._fields:
-            bt = bill.bill_type
-            if isinstance(bt, str) and bt == 'op':
+    def _is_op_department_bill(self, bill):
+        """True when the department bill is marked OP (not IP/admitted)."""
+        def _is_op_value(val):
+            if not val:
                 return False
-        elif 'op_category' in bill._fields:
-            oc = bill.op_category
-            if oc:
-                name = oc if isinstance(oc, str) else (getattr(oc, 'name', '') or '')
-                if (name or '').strip().lower() == 'op':
-                    return False
+            if isinstance(val, str):
+                return val.strip().lower() == 'op'
+            # Many2one / record: match display name or common code fields.
+            for attr in ('name', 'code', 'display_name'):
+                raw = getattr(val, attr, None) or ''
+                if isinstance(raw, str) and raw.strip().lower() == 'op':
+                    return True
+            return False
+
+        if 'bill_type' in bill._fields and _is_op_value(bill.bill_type):
+            return True
+        if 'op_category' in bill._fields and _is_op_value(bill.op_category):
+            return True
+        return False
+
+    def _filter_discharge_tree_bills(self, bills):
+        """Bills shown on discharge bill-wise tree views.
+
+        VSSC: same set as consolidated / Total Amount — IP *credit* only
+        (OP and cash / card / upi / cheque stay out so a paid cash general bill
+        cannot appear on the form or inflate the printed bill).
+        Non-VSSC: show every fetched bill (cash / OP / IP) unchanged.
+        """
+        self.ensure_one()
+        if not self.vssc_boolean:
+            return bills
+        return bills.filtered(lambda b: self._count_in_total(b))
+
+    def _count_in_total(self, bill):
+        """Which department bills enter the discharge Total Amount.
+
+        VSSC: only IP *credit* amounts. OP credit / cash never enter the total.
+        Non-VSSC: unchanged — IP credit only (OP and cash stay on trees only).
+        """
+        # OP bills never count toward the discharge total (VSSC included).
+        if self._is_op_department_bill(bill):
+            return False
 
         # Cash bills are excluded; only credit bills are added to the total.
         # (Pharmacy stores the mode in the misspelled field ``payment_mathod``.)
@@ -4422,10 +4448,14 @@ class DischargeBilling(models.Model):
         return mode == 'credit'
 
     def _bill_amount(self, bill):
-        if 'total_amount' in bill._fields:
-            return bill.total_amount or 0
-        if 'total_bill_amount' in bill._fields:
-            return bill.total_bill_amount or 0
+        # Prefer the first non-zero amount field. Lab stores the header total in
+        # ``bill_amount`` while ``total_bill_amount`` is computed from lines and
+        # can be 0 when lines are missing — do not stop at a zero computed value.
+        for fname in ('total_amount', 'total_bill_amount', 'bill_amount'):
+            if fname in bill._fields:
+                val = bill[fname] or 0
+                if val:
+                    return val
         return 0
 
     def _credit_total(self, bills):
@@ -4530,25 +4560,16 @@ class DischargeBilling(models.Model):
             unpaid_pharmacy = _fetch('pharmacy', ('status', '=', 'unpaid'))
             paid_lab = _fetch('lab', ('status', '=', 'paid'))
 
+            # Unpaid credit labs only. For VSSC, do NOT also pull paid credit
+            # labs into unpaid — that duplicated every paid lab under both trees
+            # and double-counted them in grant_total.
             l_model, l_pat, l_dis, l_date = specs['lab']
-            if not rec.vssc_boolean:
-                unpaid_lab = rec._search_discharge_dept_bills(
-                    l_model, l_pat, l_dis,
-                    [('status', '=', 'unpaid'), ('mode_of_payment', '=', 'credit')],
-                    l_date, admitted_date, end_date,
-                )
-            else:
-                unpaid_lab = rec._search_discharge_dept_bills(
-                    l_model, l_pat, l_dis,
-                    [
-                        '|',
-                        ('status', '=', 'unpaid'),
-                        '&',
-                        ('status', '=', 'paid'),
-                        ('mode_of_payment', '=', 'credit'),
-                    ],
-                    l_date, admitted_date, end_date,
-                )
+            unpaid_lab = rec._search_discharge_dept_bills(
+                l_model, l_pat, l_dis,
+                [('status', '=', 'unpaid'), ('mode_of_payment', '=', 'credit')],
+                l_date, admitted_date, end_date,
+            )
+            unpaid_lab = unpaid_lab - paid_lab
 
             paid_ip = _fetch('ip', ('status', '=', 'paid'))
             unpaid_ip = _fetch('ip', ('status', '=', 'unpaid'))
@@ -4561,25 +4582,42 @@ class DischargeBilling(models.Model):
             paid_casualty = _fetch('casualty', ('status', '=', 'paid'))
             unpaid_casualty = _fetch('casualty', ('status', '=', 'unpaid'))
 
-            rec._assign_computed_x2many(rec, 'paid_general_ids', paid_general)
-            rec._assign_computed_x2many(rec, 'unpaid_general_ids', unpaid_general)
-            rec._assign_computed_x2many(rec, 'paid_pharmacy_ids', paid_pharmacy)
-            rec._assign_computed_x2many(rec, 'unpaid_pharmacy_ids', unpaid_pharmacy)
-            rec._assign_computed_x2many(rec, 'paid_lab_ids', paid_lab)
-            rec._assign_computed_x2many(rec, 'unpaid_lab_ids', unpaid_lab)
-            rec._assign_computed_x2many(rec, 'paid_ip_ids', paid_ip)
-            rec._assign_computed_x2many(rec, 'unpaid_ip_ids', unpaid_ip)
-            rec._assign_computed_x2many(rec, 'paid_ot_ids', paid_ot)
-            rec._assign_computed_x2many(rec, 'unpaid_ot_ids', unpaid_ot)
-            rec._assign_computed_x2many(rec, 'paid_audiology_ids', paid_audiology)
-            rec._assign_computed_x2many(rec, 'unpaid_audiology_ids', unpaid_audiology)
-            rec._assign_computed_x2many(rec, 'paid_xray_ids', paid_xray)
-            rec._assign_computed_x2many(rec, 'unpaid_xray_ids', unpaid_xray)
-            rec._assign_computed_x2many(rec, 'paid_casualty_ids', paid_casualty)
-            rec._assign_computed_x2many(rec, 'unpaid_casualty_ids', unpaid_casualty)
+            rec._assign_computed_x2many(
+                rec, 'paid_general_ids', rec._filter_discharge_tree_bills(paid_general))
+            rec._assign_computed_x2many(
+                rec, 'unpaid_general_ids', rec._filter_discharge_tree_bills(unpaid_general))
+            rec._assign_computed_x2many(
+                rec, 'paid_pharmacy_ids', rec._filter_discharge_tree_bills(paid_pharmacy))
+            rec._assign_computed_x2many(
+                rec, 'unpaid_pharmacy_ids', rec._filter_discharge_tree_bills(unpaid_pharmacy))
+            rec._assign_computed_x2many(
+                rec, 'paid_lab_ids', rec._filter_discharge_tree_bills(paid_lab))
+            rec._assign_computed_x2many(
+                rec, 'unpaid_lab_ids', rec._filter_discharge_tree_bills(unpaid_lab))
+            rec._assign_computed_x2many(
+                rec, 'paid_ip_ids', rec._filter_discharge_tree_bills(paid_ip))
+            rec._assign_computed_x2many(
+                rec, 'unpaid_ip_ids', rec._filter_discharge_tree_bills(unpaid_ip))
+            rec._assign_computed_x2many(
+                rec, 'paid_ot_ids', rec._filter_discharge_tree_bills(paid_ot))
+            rec._assign_computed_x2many(
+                rec, 'unpaid_ot_ids', rec._filter_discharge_tree_bills(unpaid_ot))
+            rec._assign_computed_x2many(
+                rec, 'paid_audiology_ids', rec._filter_discharge_tree_bills(paid_audiology))
+            rec._assign_computed_x2many(
+                rec, 'unpaid_audiology_ids', rec._filter_discharge_tree_bills(unpaid_audiology))
+            rec._assign_computed_x2many(
+                rec, 'paid_xray_ids', rec._filter_discharge_tree_bills(paid_xray))
+            rec._assign_computed_x2many(
+                rec, 'unpaid_xray_ids', rec._filter_discharge_tree_bills(unpaid_xray))
+            rec._assign_computed_x2many(
+                rec, 'paid_casualty_ids', rec._filter_discharge_tree_bills(paid_casualty))
+            rec._assign_computed_x2many(
+                rec, 'unpaid_casualty_ids', rec._filter_discharge_tree_bills(unpaid_casualty))
 
-            # Tree views show ALL bills (the x2many fields above), but only IP
-            # credit bills are summed into the totals (Cash / OP excluded).
+            # Totals: IP credit only across every department (general / lab /
+            # pharmacy / IP / OT / audiology / xray / casualty). OP and cash
+            # never enter Total Amount; VSSC trees use the same rule.
             rec.paid_lab_total = rec._credit_total(paid_lab)
             rec.unpaid_lab_total = rec._credit_total(unpaid_lab)
             rec.paid_total = (
@@ -5101,11 +5139,14 @@ class DischargeBilling(models.Model):
         room_rent, extra_charges = self._get_room_rent_and_extras()
         advance = self._get_advance_amount()
 
-        if self.status in ('discharged', 'paid', 'cancelled'):
-            # Settled bills: count ALL department bills (paid + unpaid) so the
-            # total stays stable once bills get marked paid.
+        if self.vssc_boolean or self.status in ('discharged', 'paid', 'cancelled'):
+            # VSSC (open or settled): paid + unpaid IP *credit* — so IP credit
+            # paid lab (and other credit depts) enter Total Amount and match
+            # consolidated. Cash / OP stay out via _credit_total.
+            # Non-VSSC settled: same grant_total freeze after discharge/pay.
             department_bills_total = self.grant_total
         else:
+            # Normal open bill: unpaid credit only (paid-during-stay stay out).
             department_bills_total = self.unpaid_total
 
         gross_total = (
@@ -5284,9 +5325,32 @@ class DischargeBilling(models.Model):
             rec.room_rent = amounts['room_rent']
             # Balance / net payable = Total − Amount Paid (advance already netted).
             rec.balance = int(total) - int(rec.amount_paid or 0)
+
+    def get_consolidated_pdf_bills(self, unpaid_bills, paid_bills=None):
+        """Department bills printed on the consolidated PDF.
+
+        Same rule for *every* department (general, lab, pharmacy, IP, OT,
+        audiology, xray, casualty): only IP *credit* bills print, matching
+        Total Amount. Cash / card / UPI / cheque (and OP) never print.
+
+        VSSC or discharged/paid: paid + unpaid credit.
+        Normal open: unpaid credit only (paid-during-stay stay out).
+        """
+        self.ensure_one()
+        if paid_bills is None:
+            paid_bills = unpaid_bills.browse()
+        if self.vssc_boolean or self.status in ('discharged', 'paid'):
+            bills = unpaid_bills | paid_bills
+        else:
+            bills = unpaid_bills
+        return bills.filtered(lambda b: self._count_in_total(b))
+
     def get_grouped_general_lines(self):
         grouped = defaultdict(lambda: {'quantity': 0, 'total_amt': 0})
-        for line in self.unpaid_general_ids.mapped('general_bill_line_ids'):
+        bills = self.get_consolidated_pdf_bills(
+            self.unpaid_general_ids, self.paid_general_ids,
+        )
+        for line in bills.mapped('general_bill_line_ids'):
             key = line.particulars.display_name
             grouped[key]['quantity'] += line.quantity or 0
             grouped[key]['total_amt'] += line.total_amt or 0
@@ -5498,6 +5562,13 @@ class DischargeBilling(models.Model):
                 'settled_total_amount': settled_total,
                 'amount_in_advance': advance_amount,
             })
+            # Persist Consolidated Bill PDF so Download Bill is not empty after discharge.
+            try:
+                rec._store_consolidated_pdf()
+            except Exception:
+                _logger.exception(
+                    'Failed storing consolidated PDF on discharge for %s', rec.id,
+                )
 
             # 2️⃣ Update MRD record status
             if rec.mrd_no:
@@ -5753,54 +5824,121 @@ class DischargeBilling(models.Model):
                 'payment_mode': self.mode_pay
             })
             wallet_rec.action_add_amount()
-        report = record.env.ref('homeo_doctor.action_report_consolidated_discharge_menu_challan')  # Replace with actual report XML ID
+        report = record.env.ref('homeo_doctor.action_report_consolidated_discharge_menu_challan')
         pdf_content, _ = report._render_qweb_pdf(record.id)
+        record._store_consolidated_pdf(pdf_content)
 
-        # ✅ Encode and store in Binary field
-        record.consolidated_pdf = base64.b64encode(pdf_content)
-        record.consolidated_pdf_filename = f"Bill_{record.id or record.id}.pdf"
-        # Return action to print PDF and show notification
-        # return {
-        #     'type': 'ir.actions.report',
-        #     'report_name': 'homeo_doctor.report_ip_part_billing_document',
-        #     'report_type': 'qweb-pdf',
-        #     'context': {
-        #         'active_ids': self.ids,
-        #         'active_model': 'ip.part.billing',
-        #     },
-        #     'target': 'new',
-        # }
+    def _consolidated_pdf_available(self):
+        """True when Consolidated Bill PDF has real PDF bytes on disk."""
+        self.ensure_one()
+        try:
+            att = self.env['ir.attachment'].sudo().search([
+                ('res_model', '=', 'discharge.billing'),
+                ('res_id', '=', self.id),
+                ('res_field', '=', 'consolidated_pdf'),
+            ], limit=1)
+            if not att or not att.store_fname or not att.file_size:
+                return False
+            import os
+            path = att._full_path(att.store_fname)
+            if not path or not os.path.exists(path):
+                return False
+            data = self.with_context(bin_size=False, skip_pdf_recover=True).consolidated_pdf
+            if not data:
+                return False
+            raw = base64.b64decode(data)
+            return raw[:4] == b'%PDF'
+        except Exception:
+            return False
 
-    # @api.depends('general_bill_line_ids.quantity', 'general_bill_line_ids.total_amt', 'general_bill_line_ids.tax',
-    #              'rent')
-    # def _compute_totals(self):
-    #     for record in self:
-    #         record.total_item = len(record.general_bill_line_ids)
-    #         record.total_qty = sum(record.general_bill_line_ids.mapped('quantity'))
-    #         record.total_amount = sum(record.general_bill_line_ids.mapped('total_amt')) + record.rent
-    #
-    #         record.total_tax = sum(
-    #             line.tax.tax * line.total_amt / 100 for line in record.general_bill_line_ids if line.tax)
-    #
-    #         record.net_amount = sum(record.general_bill_line_ids.mapped('total_amt')) + record.rent
-    #
-    # total_rent_amount = fields.Float(string='Total Rent Amount', compute='_compute_rent_amount')
+    def _store_consolidated_pdf(self, pdf_content=None):
+        """Render (if needed) and save consolidated PDF into the Download Bill field.
 
-    # @api.onchange('mrd_no')
-    # def _onchange_mrd_no(self):
-    #     if self.mrd_no:
-    #         self.patient_name = self.mrd_no.patient_id
-    #         self.age = self.mrd_no.age
-    #         self.gender = self.mrd_no.gender
-    #         self.mobile = self.mrd_no.phone_number
-    #         self.doctor = self.mrd_no.doc_name
-    #         self.admitted_date = self.mrd_no.admitted_date
-    #         self.rent_full_day = self.mrd_no.rent_full
-    #         self.rent_half_day = self.mrd_no.rent_half
-    #         self.vssc_boolean = self.mrd_no.vssc_boolean
+        Empty Download Bill usually means the attachment row exists but the
+        filestore file was lost, or Pay/Discharge never stored the PDF.
+        Regenerating fills the field again.
+        """
+        for record in self:
+            content = pdf_content
+            if not content:
+                report = record.env.ref(
+                    'homeo_doctor.action_report_consolidated_discharge_menu_challan'
+                )
+                content, _ = report.with_context(skip_pdf_recover=True)._render_qweb_pdf(
+                    record.ids
+                )
+            old_atts = record.env['ir.attachment'].sudo().search([
+                ('res_model', '=', 'discharge.billing'),
+                ('res_id', '=', record.id),
+                ('res_field', '=', 'consolidated_pdf'),
+            ])
+            if old_atts:
+                old_atts.unlink()
+            record.with_context(skip_pdf_recover=True).write({
+                'consolidated_pdf': base64.b64encode(content),
+                'consolidated_pdf_filename': 'Bill_%s.pdf' % (
+                    (record.bill_number or str(record.id)).replace('/', '-')
+                ),
+            })
+
+    @api.model
+    def _recover_missing_consolidated_pdfs(self, limit=None, commit_every=25):
+        """Regenerate Consolidated Bill PDFs for paid/discharged bills with missing files."""
+        domain = [('status', 'in', ('paid', 'discharged'))]
+        records = self.sudo().search(domain, order='id desc', limit=limit or False)
+        fixed = 0
+        skipped = 0
+        failed = 0
+        for idx, rec in enumerate(records, 1):
+            try:
+                with self.env.cr.savepoint():
+                    if rec.with_context(skip_pdf_recover=True)._consolidated_pdf_available():
+                        skipped += 1
+                    else:
+                        rec.with_context(skip_pdf_recover=True)._store_consolidated_pdf()
+                        fixed += 1
+            except Exception:
+                failed += 1
+                _logger.exception(
+                    'Failed recovering consolidated PDF for discharge bill %s (%s)',
+                    rec.id, rec.bill_number,
+                )
+            if commit_every and idx % commit_every == 0:
+                self.env.cr.commit()
+                _logger.info(
+                    'Consolidated PDF recovery progress: %s/%s (fixed=%s skipped=%s failed=%s)',
+                    idx, len(records), fixed, skipped, failed,
+                )
+        self.env.cr.commit()
+        _logger.info(
+            'Consolidated PDF recovery done: fixed=%s skipped=%s failed=%s total=%s',
+            fixed, skipped, failed, len(records),
+        )
+        return {'fixed': fixed, 'skipped': skipped, 'failed': failed, 'total': len(records)}
+
+    def read(self, fields=None, load='_classic_read'):
+        # Auto-heal empty Consolidated Bill PDF on single-record form open only.
+        if (
+            not self.env.context.get('skip_pdf_recover')
+            and fields is not None
+            and 'consolidated_pdf' in fields
+            and len(self) == 1
+        ):
+            rec = self
+            if rec.status in ('paid', 'discharged'):
+                try:
+                    if not rec.with_context(skip_pdf_recover=True)._consolidated_pdf_available():
+                        rec.with_context(skip_pdf_recover=True)._store_consolidated_pdf()
+                except Exception:
+                    _logger.exception(
+                        'Auto-recover consolidated PDF failed for discharge %s', rec.id,
+                    )
+        return super(DischargeBilling, self).read(fields=fields, load=load)
 
     def consolidated_bill(self):
         self._sync_patient_charges()
+        # Regenerate + store so Download Bill works again for old/missing PDFs.
+        self._store_consolidated_pdf()
         return self.env.ref('homeo_doctor.action_report_consolidated_discharge_menu_challan').report_action(self)
 
     def discharge_bill(self):

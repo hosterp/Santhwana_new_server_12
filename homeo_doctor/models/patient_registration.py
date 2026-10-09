@@ -583,28 +583,17 @@ class PatientRegistration(models.Model):
                 ('date', '<=', end_date),
                 # ('date', '<=', today),
             ])
-            if not rec.vssc_boolean:
-                unpaid_lab = self.env['doctor.lab.report'].search([
-                    ('user_ide', '=', rec.id),
-                    ('status', '=', 'unpaid'),
-                    ('mode_of_payment', '=', 'credit'),
-                    ('date', '>=', rec.admitted_date),
-                    ('date', '<=', end_date),
-                    # ('date', '<=', today),
-                ])
-            else:
-                unpaid_lab = self.env['doctor.lab.report'].search([
-                    ('user_ide', '=', rec.id),
-                    '|',
-                    ('status', '!=', 'paid'),
-                    '&',
-                    ('status', '=', 'paid'),
-                    ('mode_of_payment', '=', 'credit'),
-                    ('status', '!=', 'credit'),
-                    ('date', '>=', rec.admitted_date),
-                    ('date', '<=', end_date),
-                    # ('date', '<=', today),
-                ])
+            # Unpaid credit only. VSSC previously also loaded paid credit labs
+            # into unpaid, which duplicated them on the discharge bill page.
+            unpaid_lab = self.env['doctor.lab.report'].search([
+                ('user_ide', '=', rec.id),
+                ('status', '=', 'unpaid'),
+                ('mode_of_payment', '=', 'credit'),
+                ('date', '>=', rec.admitted_date),
+                ('date', '<=', end_date),
+                # ('date', '<=', today),
+            ])
+            unpaid_lab = unpaid_lab - paid_lab
 
             rec.paid_lab_ids = paid_lab
             rec.unpaid_lab_ids = unpaid_lab
