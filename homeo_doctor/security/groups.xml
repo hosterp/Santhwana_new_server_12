@@ -3,7 +3,7 @@
     <data>
 
         <record id="group_pharmacy_date_editor" model="res.groups">
-            <field name="name">Pharmacy Bill Date Editor</field>
+            <field name="name">All Bill Date Editor</field>
         </record>
 
         <!-- Group to allow Edit button -->
