@@ -675,9 +675,13 @@
                                         <span class="o_form_label" style="font-weight: bold;">Doctor:</span>
                                         <field name="doctor_name"/>
                                     </div>
+<!--                                    <div style="flex: 1; min-width: 180px;">-->
+<!--                                        <span class="o_form_label" style="font-weight: bold;">Date:</span>-->
+<!--                                        <field name="date"/>-->
+<!--                                    </div>-->
                                     <div style="flex: 1; min-width: 180px;">
                                         <span class="o_form_label" style="font-weight: bold;">Date:</span>
-                                        <field name="date"/>
+                                        <field name="date" readonly="1"/>
                                     </div>
                                     <div style="flex: 1; min-width: 180px; max-width:16%;">
                                         <span class="o_form_label" style="font-weight: bold;">OP Category:</span>
@@ -874,6 +878,18 @@
 
 
                 </form>
+            </field>
+        </record>
+
+        <record id="view_pharmacy_description_form_date_edit" model="ir.ui.view">
+            <field name="name">pharmacy.description.form.date.edit</field>
+            <field name="model">pharmacy.description</field>
+            <field name="inherit_id" ref="homeo_doctor.view_pharmacy_description_form"/>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_system')])]"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='date']" position="attributes">
+                    <attribute name="readonly">0</attribute>
+                </xpath>
             </field>
         </record>
 

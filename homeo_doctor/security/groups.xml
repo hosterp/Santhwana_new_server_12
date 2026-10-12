@@ -2,6 +2,10 @@
 <odoo>
     <data>
 
+        <record id="group_pharmacy_date_editor" model="res.groups">
+            <field name="name">Pharmacy Bill Date Editor</field>
+        </record>
+
         <!-- Group to allow Edit button -->
         <record id="group_allowed_edit" model="res.groups">
             <field name="name">Allowed Edit</field>
