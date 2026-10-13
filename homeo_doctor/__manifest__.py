@@ -10,6 +10,7 @@
     'depends': [
         'product', 'hr', 'account', 'purchase', 'web'],
     'data': [
+        'security/groups.xml',
         "views/patient_reg.xml",
         "views/menu.xml",
         "views/medicine_entry.xml",
@@ -165,7 +166,6 @@
         "views/doctor_list_two.xml",
         "views/zero_stock_report_view.xml",
         "data/ir_sequence_data.xml",
-        'security/groups.xml',
         'security/ir.model.access.csv',
 
     ],
