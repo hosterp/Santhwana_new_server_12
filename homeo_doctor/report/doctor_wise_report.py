@@ -76,6 +76,8 @@ class DoctorBillingReportWizard(models.TransientModel):
             'master': {},                                # pid -> (doc_name_id, doctor_id)
             'doctor_names': {},                          # doctor_id -> name
             'doctor_by_name': {},                        # name -> doctor_id
+            'appt_created': {},                          # appointment id -> create_date
+            'reg_created': {},                           # registration id -> create_date
         }
         if not patient_ids and not patient_names:
             cr = self.env.cr
@@ -107,7 +109,7 @@ class DoctorBillingReportWizard(models.TransientModel):
 
             # Appointments in/around range (also need history before from_date)
             cr.execute("""
-                SELECT a.id, a.patient_id, a.appointment_date, rel.doctor_profile_id
+                SELECT a.id, a.patient_id, a.appointment_date, a.create_date, rel.doctor_profile_id
                   FROM patient_appointment a
                   JOIN doctor_profile_patient_appointment_rel rel
                     ON rel.patient_appointment_id = a.id
@@ -118,9 +120,10 @@ class DoctorBillingReportWizard(models.TransientModel):
             """, (pids, to_date))
             appt_docs = defaultdict(list)
             appt_meta = {}
-            for aid, pid, adate, doc_id in cr.fetchall():
+            for aid, pid, adate, created, doc_id in cr.fetchall():
                 appt_docs[aid].append(doc_id)
                 appt_meta[aid] = (pid, adate)
+                cache['appt_created'][aid] = created
             for aid, (pid, adate) in appt_meta.items():
                 docs = appt_docs[aid]
                 cache['appt_by_patient_date'][(pid, adate)].append((aid, docs))
@@ -130,14 +133,15 @@ class DoctorBillingReportWizard(models.TransientModel):
             cr.execute("""
                 SELECT preg.id, preg.patient_id, preg.user_id, preg.date, preg.doctor,
                        preg.doctor_id, preg.status, pr.patient_id AS patient_name,
-                       preg.ctid::text AS ctid
+                       preg.ctid::text AS ctid, preg.create_date
                   FROM patient_registration preg
              LEFT JOIN patient_reg pr ON pr.id = COALESCE(preg.user_id, preg.patient_id)
                  WHERE (preg.patient_id = ANY(%s) OR preg.user_id = ANY(%s))
                    AND preg.date <= %s
                  ORDER BY preg.date, preg.id
             """, (pids, pids, to_date))
-            for rid, patient_id, user_id, rdate, doctor, doctor_char, status, pname, ctid in cr.fetchall():
+            for rid, patient_id, user_id, rdate, doctor, doctor_char, status, pname, ctid, created in cr.fetchall():
+                cache['reg_created'][rid] = created
                 for pid in {patient_id, user_id}:
                     if not pid or pid not in patient_ids:
                         continue
@@ -177,14 +181,15 @@ class DoctorBillingReportWizard(models.TransientModel):
             cr.execute("""
                 SELECT preg.id, preg.patient_id, preg.user_id, preg.date, preg.doctor,
                        preg.doctor_id, preg.status, pr.patient_id AS patient_name,
-                       preg.ctid::text AS ctid
+                       preg.ctid::text AS ctid, preg.create_date
                   FROM patient_registration preg
                   JOIN patient_reg pr ON pr.id = preg.user_id
                  WHERE pr.patient_id = ANY(%s)
                    AND preg.date <= %s
                  ORDER BY preg.date, preg.id
             """, (names, to_date))
-            for rid, patient_id, user_id, rdate, doctor, doctor_char, status, pname, ctid in cr.fetchall():
+            for rid, patient_id, user_id, rdate, doctor, doctor_char, status, pname, ctid, created in cr.fetchall():
+                cache['reg_created'][rid] = created
                 if not pname:
                     continue
                 cache['reg_by_name_date'][(pname, rdate)].append((rid, doctor, doctor_char))
@@ -226,7 +231,16 @@ class DoctorBillingReportWizard(models.TransientModel):
         hist.sort(key=lambda x: (-x[0].toordinal(), x[1]))
         return self._resolve_reg_doctor(cache, [(hist[0][1], hist[0][2], hist[0][4])])
 
-    def _resolve_standard_doctor(self, cache, patient_id, bill_date, bill_type, patient_name=None):
+    def _source_before_bill(self, cache, bucket, source_id, bill_created):
+        """A revisit or consultation created after the bill must not move that bill."""
+        if not bill_created or not source_id:
+            return True
+        created = cache.get(bucket, {}).get(source_id)
+        if not created:
+            return True
+        return created <= bill_created
+
+    def _resolve_standard_doctor(self, cache, patient_id, bill_date, bill_type, patient_name=None, bill_created=None):
         if not patient_id or not bill_date:
             return False
         if hasattr(bill_date, 'date'):
@@ -245,7 +259,10 @@ class DoctorBillingReportWizard(models.TransientModel):
                         break
 
         if not doctor and bill_type != 'admitted':
-            appts = cache['appt_by_patient_date'].get((patient_id, bill_date), [])
+            appts = [
+                item for item in cache['appt_by_patient_date'].get((patient_id, bill_date), [])
+                if self._source_before_bill(cache, 'appt_created', item[0], bill_created)
+            ]
             if appts:
                 # latest appointment id, first doctor
                 appts_sorted = sorted(appts, key=lambda x: x[0], reverse=True)
@@ -253,11 +270,15 @@ class DoctorBillingReportWizard(models.TransientModel):
                     doctor = appts_sorted[0][1][0]
 
         if not doctor:
-            entries = cache['reg_by_patient_date'].get((patient_id, bill_date), [])
+            entries = [
+                item for item in cache['reg_by_patient_date'].get((patient_id, bill_date), [])
+                if self._source_before_bill(cache, 'reg_created', item[0], bill_created)
+            ]
             if not entries and patient_name:
                 entries = [
                     (rid, doc, dchar)
                     for rid, doc, dchar in cache['reg_by_name_date'].get((patient_name, bill_date), [])
+                    if self._source_before_bill(cache, 'reg_created', rid, bill_created)
                 ]
             doctor = self._resolve_reg_doctor(cache, entries)
 
@@ -267,13 +288,18 @@ class DoctorBillingReportWizard(models.TransientModel):
                 (d, rid, doc, st, dchar)
                 for d, rid, doc, st, dchar in cache['reg_by_patient'].get(patient_id, [])
                 if d and d < bill_date
+                and self._source_before_bill(cache, 'reg_created', rid, bill_created)
             ]
             if hist:
                 hist.sort(key=lambda x: (-x[0].toordinal(), x[1]))
                 doctor = self._resolve_reg_doctor(cache, [(hist[0][1], hist[0][2], hist[0][4])])
 
         if not doctor and bill_type != 'admitted':
-            befores = [x for x in cache['appt_before'].get(patient_id, []) if x[0] and x[0] < bill_date]
+            befores = [
+                x for x in cache['appt_before'].get(patient_id, [])
+                if x[0] and x[0] < bill_date
+                and self._source_before_bill(cache, 'appt_created', x[1], bill_created)
+            ]
             if befores:
                 befores.sort(key=lambda x: (x[0], x[1]))
                 docs = befores[-1][2]
@@ -313,16 +339,19 @@ class DoctorBillingReportWizard(models.TransientModel):
         def _doc_from_reg(doc, dchar):
             return doc or cache['doctor_by_name'].get(dchar) or False
 
+        bill_created = row.get('bill_created')
+
         def _pick_op_reg():
-            # search | user_id OR patient_id, order date desc (ctid tie-break)
+            # Latest consultation on or before the bill. Same-day tie uses the later visit.
             hist = [
                 (d, rid, doc, dchar, ct)
                 for d, rid, doc, st, dchar, ct, _ppid in cache['reg_by_patient_full'].get(patient_id, [])
                 if d and d <= bill_date
+                and self._source_before_bill(cache, 'reg_created', rid, bill_created)
             ]
             if not hist:
                 return False
-            hist.sort(key=lambda x: (-x[0].toordinal(), x[4]))
+            hist.sort(key=lambda x: (-x[0].toordinal(), -x[1]))
             return _doc_from_reg(hist[0][2], hist[0][3])
 
         def _pick_ip_reg():
@@ -334,10 +363,11 @@ class DoctorBillingReportWizard(models.TransientModel):
                 and ppid == patient_id
                 and (st or '') not in ('admitted', 'proceed_discharge')
                 and doc
+                and self._source_before_bill(cache, 'reg_created', rid, bill_created)
             ]
             if not hist:
                 return False
-            hist.sort(key=lambda x: (-x[0].toordinal(), x[3]))
+            hist.sort(key=lambda x: (-x[0].toordinal(), -x[1]))
             return hist[0][2]
 
         if op_category == 'op':
@@ -368,7 +398,11 @@ class DoctorBillingReportWizard(models.TransientModel):
             doctor = row.get('doc_name') or row.get('master_doctor')
 
         if not doctor:
-            befores = [x for x in cache['appt_before'].get(patient_id, []) if x[0] and x[0] <= bill_date]
+            befores = [
+                x for x in cache['appt_before'].get(patient_id, [])
+                if x[0] and x[0] <= bill_date
+                and self._source_before_bill(cache, 'appt_created', x[1], bill_created)
+            ]
             if befores:
                 befores.sort(key=lambda x: (x[0], x[1]))
                 docs = befores[-1][2]
@@ -429,7 +463,11 @@ class DoctorBillingReportWizard(models.TransientModel):
             doctor = row.get('master_doctor') or row.get('doc_name')
 
         if not doctor:
-            befores = [x for x in cache['appt_before'].get(patient_id, []) if x[0] and x[0] <= bill_date]
+            befores = [
+                x for x in cache['appt_before'].get(patient_id, [])
+                if x[0] and x[0] <= bill_date
+                and self._source_before_bill(cache, 'appt_created', x[1], row.get('bill_created'))
+            ]
             if befores:
                 befores.sort(key=lambda x: (x[0], x[1]))
                 docs = befores[-1][2]
@@ -437,7 +475,7 @@ class DoctorBillingReportWizard(models.TransientModel):
                     doctor = docs[0]
         return doctor or False
 
-    def _resolve_casualty_doctor(self, cache, patient_id, bill_date, bill_type, patient_name=None):
+    def _resolve_casualty_doctor(self, cache, patient_id, bill_date, bill_type, patient_name=None, bill_created=None):
         """Match casuality.billing._compute_doctor_name (report-only).
 
         Registration pick uses date desc + ctid (same as Odoo order='date desc'
@@ -455,7 +493,7 @@ class DoctorBillingReportWizard(models.TransientModel):
             hist = []
             seen = set()
             for d, rid, doc, st, dchar, ct, _ppid in cache['reg_by_patient_full'].get(patient_id, []):
-                if not d:
+                if not d or not self._source_before_bill(cache, 'reg_created', rid, bill_created):
                     continue
                 if before_only:
                     if not (d < bill_date):
@@ -467,7 +505,7 @@ class DoctorBillingReportWizard(models.TransientModel):
                 seen.add(rid)
             if patient_name:
                 for d, rid, doc, st, dchar, ct in cache['reg_by_name_full'].get(patient_name, []):
-                    if not d or rid in seen:
+                    if not d or rid in seen or not self._source_before_bill(cache, 'reg_created', rid, bill_created):
                         continue
                     if before_only:
                         if not (d < bill_date):
@@ -504,7 +542,10 @@ class DoctorBillingReportWizard(models.TransientModel):
             return doctor or False
 
         # OP: appointment today → reg (same-day/hist) → historical appt → master → admission
-        appts = cache['appt_by_patient_date'].get((patient_id, bill_date), [])
+        appts = [
+            item for item in cache['appt_by_patient_date'].get((patient_id, bill_date), [])
+            if self._source_before_bill(cache, 'appt_created', item[0], bill_created)
+        ]
         if appts:
             appts_sorted = sorted(appts, key=lambda x: x[0], reverse=True)
             if appts_sorted[0][1]:
@@ -514,7 +555,11 @@ class DoctorBillingReportWizard(models.TransientModel):
             doctor = reg_doctor
 
         if not doctor:
-            befores = [x for x in cache['appt_before'].get(patient_id, []) if x[0] and x[0] < bill_date]
+            befores = [
+                x for x in cache['appt_before'].get(patient_id, [])
+                if x[0] and x[0] < bill_date
+                and self._source_before_bill(cache, 'appt_created', x[1], bill_created)
+            ]
             if befores:
                 befores.sort(key=lambda x: (x[0], x[1]))
                 docs = befores[-1][2]
@@ -544,6 +589,12 @@ class DoctorBillingReportWizard(models.TransientModel):
             return "%s.others_doctor" % alias
         return "NULL::integer"
 
+    def _locked_doctor_expr(self, model_name, alias):
+        """Doctor frozen on the bill when it was saved. NULL when the column is absent."""
+        if self._columns_exist(self.env[model_name], ['locked_doctor']):
+            return "%s.locked_doctor" % alias
+        return "NULL::integer"
+
     def _aggregate_rows(self, result, result_key, rows, cache, resolve_fn, doctor_filter_id=False):
         """rows: iterable of dicts with amount + fields needed by resolve_fn."""
         for row in rows:
@@ -553,6 +604,10 @@ class DoctorBillingReportWizard(models.TransientModel):
             # Others bills keep the doctor selected on the bill. OP/IP lookup is unchanged.
             if row.get('bill_type') == 'others' and row.get('others_doctor'):
                 doc_id = row['others_doctor']
+            elif row.get('override_doctor'):
+                doc_id = row['override_doctor']
+            elif row.get('locked_doctor'):
+                doc_id = row['locked_doctor']
             else:
                 doc_id = resolve_fn(row, cache)
             if doctor_filter_id and doc_id != doctor_filter_id:
@@ -719,6 +774,8 @@ class DoctorBillingReportWizard(models.TransientModel):
         general_rows = self._fetch_bill_rows("""
             SELECT t.mrd_no AS patient_id, t.bill_date, t.bill_type,
                    t.patient_name, """ + self._others_doctor_expr('general.billing', 't') + """ AS others_doctor,
+                   """ + self._locked_doctor_expr('general.billing', 't') + """ AS locked_doctor,
+                   t.create_date AS bill_created,
                    COALESCE(t.total_amount, 0) AS amount
               FROM general_billing t
              WHERE t.bill_date >= %s AND t.bill_date <= %s AND """ + paid_vssc, [from_date, to_date])
@@ -729,6 +786,8 @@ class DoctorBillingReportWizard(models.TransientModel):
                    p.date AS bill_date,
                    p.bill_type,
                    """ + self._others_doctor_expr('doctor.lab.report', 'p') + """ AS others_doctor,
+                   """ + self._locked_doctor_expr('doctor.lab.report', 'p') + """ AS locked_doctor,
+                   p.create_date AS bill_created,
                    COALESCE(p.admitted_check, false) AS admitted_check,
                    preg_order.doctor AS order_doctor,
                    pr.status AS user_status,
@@ -747,9 +806,10 @@ class DoctorBillingReportWizard(models.TransientModel):
                  LEFT JOIN patient_registration preg
                         ON preg.patient_id = p2.user_ide
                        AND preg.date <= p2.date
+                       AND preg.create_date <= p2.create_date
                      WHERE p2.date >= %s AND p2.date <= %s
                        AND COALESCE(p2.status, '') <> 'cancelled'
-                  ORDER BY p2.id, preg.date DESC NULLS LAST, preg.ctid
+                  ORDER BY p2.id, preg.date DESC NULLS LAST, preg.id DESC
                    ) reg ON reg.lab_id = p.id
          LEFT JOIN (
                     SELECT l.lab_billing_id,
@@ -769,6 +829,8 @@ class DoctorBillingReportWizard(models.TransientModel):
                    p.op_category AS bill_type,
                    p.status AS bill_status,
                    """ + self._others_doctor_expr('pharmacy.description', 'p') + """ AS others_doctor,
+                   """ + self._locked_doctor_expr('pharmacy.description', 'p') + """ AS locked_doctor,
+                   p.create_date AS bill_created,
                    p.doctor_name AS stored_doctor,
                    preg_order.doctor AS order_doctor,
                    pr.doc_name AS doc_name,
@@ -796,6 +858,8 @@ class DoctorBillingReportWizard(models.TransientModel):
             SELECT t.id AS casualty_id,
                    t.mrd_no AS patient_id, t.bill_date, t.bill_type,
                    t.patient_name, """ + self._others_doctor_expr('casuality.billing', 't') + """ AS others_doctor,
+                   """ + self._locked_doctor_expr('casuality.billing', 't') + """ AS locked_doctor,
+                   t.create_date AS bill_created,
                    COALESCE(t.net_amount, 0) AS amount
               FROM casuality_billing t
              WHERE t.bill_date >= %s AND t.bill_date <= %s AND """ + paid_vssc, [from_date, to_date])
@@ -803,6 +867,8 @@ class DoctorBillingReportWizard(models.TransientModel):
         ot_rows = self._fetch_bill_rows("""
             SELECT t.mrd_no AS patient_id, t.bill_date, t.bill_type,
                    t.doctor_override AS override_doctor,
+                   """ + self._locked_doctor_expr('ot.billing', 't') + """ AS locked_doctor,
+                   t.create_date AS bill_created,
                    COALESCE(t.total_amount, 0) AS amount
               FROM ot_billing t
              WHERE t.bill_date >= %s AND t.bill_date <= %s AND """ + paid_vssc, [from_date, to_date])
@@ -810,6 +876,8 @@ class DoctorBillingReportWizard(models.TransientModel):
         xray_rows = self._fetch_bill_rows("""
             SELECT t.mrd_no AS patient_id, t.bill_date, t.bill_type,
                    """ + self._others_doctor_expr('xray.billing', 't') + """ AS others_doctor,
+                   """ + self._locked_doctor_expr('xray.billing', 't') + """ AS locked_doctor,
+                   t.create_date AS bill_created,
                    COALESCE(t.total_amount, 0) AS amount
               FROM xray_billing t
              WHERE t.bill_date >= %s AND t.bill_date <= %s AND """ + paid_vssc, [from_date, to_date])
@@ -817,6 +885,8 @@ class DoctorBillingReportWizard(models.TransientModel):
         audio_rows = self._fetch_bill_rows("""
             SELECT t.mrd_no AS patient_id, t.bill_date, t.bill_type,
                    """ + self._others_doctor_expr('audiology.billing', 't') + """ AS others_doctor,
+                   """ + self._locked_doctor_expr('audiology.billing', 't') + """ AS locked_doctor,
+                   t.create_date AS bill_created,
                    GREATEST(
                        COALESCE(line_amt.amount, 0) + COALESCE(t.rent, 0)
                        - COALESCE(t.discount, 0)
@@ -851,7 +921,8 @@ class DoctorBillingReportWizard(models.TransientModel):
         self._aggregate_rows(
             result, 'general_amount', general_rows, cache,
             lambda row, c: self._resolve_standard_doctor(
-                c, row['patient_id'], row['bill_date'], row.get('bill_type'), row.get('patient_name')),
+                c, row['patient_id'], row['bill_date'], row.get('bill_type'),
+                row.get('patient_name'), row.get('bill_created')),
             doctor_id)
 
         # Lab / Pharmacy / Casualty: fast cache resolve (same rules as form computes,
@@ -881,27 +952,31 @@ class DoctorBillingReportWizard(models.TransientModel):
         self._aggregate_rows(
             result, 'casuality_amount', casualty_rows, cache,
             lambda row, c: self._resolve_casualty_doctor(
-                c, row['patient_id'], row['bill_date'], row.get('bill_type'), row.get('patient_name')),
+                c, row['patient_id'], row['bill_date'], row.get('bill_type'),
+                row.get('patient_name'), row.get('bill_created')),
             doctor_id)
 
         def _resolve_ot(row, c):
             if row.get('override_doctor'):
                 return row['override_doctor']
             return self._resolve_standard_doctor(
-                c, row['patient_id'], row['bill_date'], row.get('bill_type'))
+                c, row['patient_id'], row['bill_date'], row.get('bill_type'),
+                bill_created=row.get('bill_created'))
 
         self._aggregate_rows(result, 'ot_amount', ot_rows, cache, _resolve_ot, doctor_id)
 
         self._aggregate_rows(
             result, 'xray_amount', xray_rows, cache,
             lambda row, c: self._resolve_standard_doctor(
-                c, row['patient_id'], row['bill_date'], row.get('bill_type')),
+                c, row['patient_id'], row['bill_date'], row.get('bill_type'),
+                bill_created=row.get('bill_created')),
             doctor_id)
 
         self._aggregate_rows(
             result, 'audiology_amount', audio_rows, cache,
             lambda row, c: self._resolve_standard_doctor(
-                c, row['patient_id'], row['bill_date'], row.get('bill_type')),
+                c, row['patient_id'], row['bill_date'], row.get('bill_type'),
+                bill_created=row.get('bill_created')),
             doctor_id)
 
         return result

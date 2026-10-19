@@ -11,10 +11,14 @@ import math
 
 class PharmacyDescription(models.Model):
     _name = 'pharmacy.description'
+    _inherit = ['bill.doctor.lock']
     _description = 'Pharmacy Description'
     # _order = 'date desc,bill_number desc'
     _order = "fiscal_year_end desc, bill_sequence desc"
     _rec_name = 'bill_number'
+
+    def _bill_doctor_field(self):
+        return 'doctor_name'
 
     patient_id = fields.Many2one('patient.registration', string="UHID")
     uhid_id = fields.Many2one('patient.reg', string="UHID", ondelete='set null')
@@ -96,11 +100,14 @@ class PharmacyDescription(models.Model):
             if rec.op_category == 'others':
                 rec.others_doctor = rec.doctor_name
 
-    @api.depends('others_doctor', 'uhid_id', 'uhid_id.admission_boolean', 'uhid_id.status', 'uhid_id.admitted_date', 'uhid_id.doctor', 'uhid_id.doc_name', 'patient_id', 'date', 'op_category')
+    @api.depends('locked_doctor', 'others_doctor', 'uhid_id', 'uhid_id.admission_boolean', 'uhid_id.status', 'uhid_id.admitted_date', 'uhid_id.doctor', 'uhid_id.doc_name', 'patient_id', 'date', 'op_category')
     def _compute_doctor_name(self):
         for rec in self:
             if rec.op_category == 'others' and rec.others_doctor:
                 rec.doctor_name = rec.others_doctor
+                continue
+            if rec.locked_doctor:
+                rec.doctor_name = rec.locked_doctor
                 continue
             # 1. Standard Guard: paid bills never change
             if rec.status == 'paid' and rec.doctor_name:
@@ -127,8 +134,8 @@ class PharmacyDescription(models.Model):
                     # Checking both user_id and patient_id to be safe
                     reg_log = self.env['patient.registration'].search([
                         '|', ('user_id', '=', rec.uhid_id.id), ('patient_id', '=', rec.uhid_id.id),
-                        ('date', '<=', bill_date)
-                    ], order='date desc', limit=1)
+                        ('date', '<=', bill_date),
+                    ] + rec._source_cutoff(), order='date desc, id desc', limit=1)
                     
                     if reg_log:
                         # Try Many2one first, then search by name from Char field
@@ -182,8 +189,8 @@ class PharmacyDescription(models.Model):
                     reg = self.env['patient.registration'].search([
                         ('patient_id', '=', rec.uhid_id.id),
                         ('date', '<=', bill_date),
-                        ('status', 'not in', ['admitted', 'proceed_discharge'])
-                    ], order='date desc', limit=1)
+                        ('status', 'not in', ['admitted', 'proceed_discharge']),
+                    ] + rec._source_cutoff(), order='date desc, id desc', limit=1)
                     if reg and reg.doctor:
                         doctor = reg.doctor.id
 
@@ -197,8 +204,8 @@ class PharmacyDescription(models.Model):
                     appt = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.uhid_id.id),
                         ('appointment_date', '<=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='appointment_date desc', limit=1)
+                        ('status', '=', 'confirmed'),
+                    ] + rec._source_cutoff(), order='appointment_date desc, id desc', limit=1)
                     if appt and appt.doctor_ids:
                         doctor = appt.doctor_ids[0].id
 

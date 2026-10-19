@@ -176,6 +176,14 @@ class AdmittedPatient(models.Model):
                 'target': 'new',
             }
 
+    def write(self, vals):
+        if vals.get('attending_doctor') and not self.env.context.get('skip_doctor_lock'):
+            for rec in self:
+                new_id = vals.get('attending_doctor') or False
+                if new_id != (rec.attending_doctor.id or False) and rec.patient_id:
+                    rec.patient_id._freeze_bill_doctors()
+        return super(AdmittedPatient, self).write(vals)
+
     @api.depends('patient_id')
     def _compute_lab_test(self):
         for record in self:

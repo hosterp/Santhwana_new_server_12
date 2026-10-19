@@ -13,8 +13,12 @@ _logger = logging.getLogger(__name__)
 
 class DoctorLabReport(models.Model):
     _name = 'doctor.lab.report'
+    _inherit = ['bill.doctor.lock']
     _description = 'Doctor Lab Report'
     _rec_name = 'report_reference'
+
+    def _bill_doctor_field(self):
+        return 'doctor_id'
     # _order = 'report_reference desc, date desc'
     # _order = 'date desc, report_reference desc'
     _order = "fiscal_year_end desc, bill_sequence desc"
@@ -131,6 +135,9 @@ class DoctorLabReport(models.Model):
     @api.onchange('user_ide', 'date', 'bill_type')
     def _onchange_mrd_no_update_doctor(self):
         for rec in self:
+            if rec.locked_doctor:
+                rec.doctor_id = rec.locked_doctor
+                continue
             # 1. ABSOLUTE HISTORICAL LOCK (IP ONLY)
             if rec.doctor_id and rec.user_ide and rec.user_ide.status == 'discharged':
                 if rec.bill_type == 'admitted':
@@ -203,8 +210,8 @@ class DoctorLabReport(models.Model):
                     reg = self.env['patient.registration'].search([
                         '|', ('user_id', '=', rec.user_ide.id), ('patient_id', '=', rec.user_ide.id),
                         ('date', '<=', bill_date),
-                        ('status', 'not in', ['admitted', 'proceed_discharge'])
-                    ], order='date desc', limit=1)
+                        ('status', 'not in', ['admitted', 'proceed_discharge']),
+                    ] + rec._source_cutoff(), order='date desc, id desc', limit=1)
                     if reg:
                         # Priority: Many2one first, then search by name from doctor_id (Char)
                         target_doctor = reg.doctor.id
@@ -231,8 +238,8 @@ class DoctorLabReport(models.Model):
                     appt = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.user_ide.id),
                         ('appointment_date', '<=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='appointment_date desc', limit=1)
+                        ('status', '=', 'confirmed'),
+                    ] + rec._source_cutoff(), order='appointment_date desc, id desc', limit=1)
                     if appt and appt.doctor_ids:
                         doctor = appt.doctor_ids[0].id
 
@@ -243,11 +250,14 @@ class DoctorLabReport(models.Model):
             if rec.bill_type == 'others':
                 rec.others_doctor = rec.doctor_id
 
-    @api.depends('others_doctor', 'user_ide', 'user_ide.admission_boolean', 'user_ide.status', 'user_ide.admitted_date', 'user_ide.doctor', 'user_ide.doc_name', 'patient_id', 'date', 'bill_type')
+    @api.depends('locked_doctor', 'others_doctor', 'user_ide', 'user_ide.admission_boolean', 'user_ide.status', 'user_ide.admitted_date', 'user_ide.doctor', 'user_ide.doc_name', 'patient_id', 'date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
             if rec.bill_type == 'others' and rec.others_doctor:
                 rec.doctor_id = rec.others_doctor
+                continue
+            if rec.locked_doctor:
+                rec.doctor_id = rec.locked_doctor
                 continue
             # 1. ABSOLUTE HISTORICAL LOCK: If patient is discharged and we HAVE a doctor, never change for IP bills.
             if rec.doctor_id and rec.user_ide and rec.user_ide.status == 'discharged':
@@ -322,8 +332,8 @@ class DoctorLabReport(models.Model):
                 if not doctor:
                     reg = self.env['patient.registration'].search([
                         ('patient_id', '=', rec.user_ide.id),
-                        ('date', '<=', bill_date)
-                    ], order='date desc', limit=1)
+                        ('date', '<=', bill_date),
+                    ] + rec._source_cutoff(), order='date desc, id desc', limit=1)
                     if reg and reg.doctor:
                         doctor = reg.doctor.id
 
@@ -337,8 +347,8 @@ class DoctorLabReport(models.Model):
                     appt = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.user_ide.id),
                         ('appointment_date', '<=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='appointment_date desc', limit=1)
+                        ('status', '=', 'confirmed'),
+                    ] + rec._source_cutoff(), order='appointment_date desc, id desc', limit=1)
                     if appt and appt.doctor_ids:
                         doctor = appt.doctor_ids[0].id
 

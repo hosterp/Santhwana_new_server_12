@@ -27,6 +27,7 @@ _logger = logging.getLogger(__name__)
 
 class GeneralBilling(models.Model):
     _name = 'general.billing'
+    _inherit = ['bill.doctor.lock']
     _description = 'General Billing'
     _rec_name = 'bill_number'
     _order = "fiscal_year_end desc, bill_sequence desc"
@@ -120,6 +121,9 @@ class GeneralBilling(models.Model):
     @api.onchange('mrd_no', 'bill_date', 'bill_type')
     def _onchange_mrd_no_update_doctor(self):
         for rec in self:
+            if rec.locked_doctor:
+                rec.doctor = rec.locked_doctor
+                continue
             # 1. Historical Lock: If bill is finalized (paid/discharge/cancelled), never recompute doctor.
             if rec.doctor and rec.status in ['paid', 'discharge', 'cancelled']:
                 continue
@@ -172,8 +176,8 @@ class GeneralBilling(models.Model):
                     appt_today = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('appointment_date', '=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='id desc', limit=1)
+                        ('status', '=', 'confirmed'),
+                    ] + rec._source_cutoff(), order='id desc', limit=1)
                     if appt_today and appt_today.doctor_ids:
                         doctor = appt_today.doctor_ids[0].id
 
@@ -183,7 +187,7 @@ class GeneralBilling(models.Model):
                         ('patient_id', '=', rec.mrd_no.id),
                         ('date', '=', bill_date),
                         # ('status', 'not in', ['admitted', 'proceed_discharge']) # Removed to allow picking doctor even if admitted
-                    ], order='id desc', limit=1)
+                    ] + rec._source_cutoff(), order='id desc', limit=1)
                     if reg_today and reg_today.doctor:
                         doctor = reg_today.doctor.id
 
@@ -192,8 +196,8 @@ class GeneralBilling(models.Model):
                     reg_prev = self.env['patient.registration'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('date', '<', bill_date),
-                        ('status', 'not in', ['admitted', 'proceed_discharge'])
-                    ], order='date desc', limit=1)
+                        ('status', 'not in', ['admitted', 'proceed_discharge']),
+                    ] + rec._source_cutoff(), order='date desc', limit=1)
                     if reg_prev and reg_prev.doctor:
                         doctor = reg_prev.doctor.id
 
@@ -202,8 +206,8 @@ class GeneralBilling(models.Model):
                     appt_prev = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('appointment_date', '<', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='appointment_date desc', limit=1)
+                        ('status', '=', 'confirmed'),
+                    ] + rec._source_cutoff(), order='appointment_date desc', limit=1)
                     if appt_prev and appt_prev.doctor_ids:
                         doctor = appt_prev.doctor_ids[0].id
 
@@ -221,11 +225,14 @@ class GeneralBilling(models.Model):
             if rec.bill_type == 'others':
                 rec.others_doctor = rec.doctor
 
-    @api.depends('others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    @api.depends('locked_doctor', 'others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
             if rec.bill_type == 'others' and rec.others_doctor:
                 rec.doctor = rec.others_doctor
+                continue
+            if rec.locked_doctor:
+                rec.doctor = rec.locked_doctor
                 continue
             # 1. Historical Lock: If bill is finalized (paid/discharged/cancelled), never recompute doctor.
             if rec.doctor and rec.status in ['paid', 'discharge', 'cancelled']:
@@ -279,8 +286,8 @@ class GeneralBilling(models.Model):
                     appt_today = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('appointment_date', '=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='id desc', limit=1)
+                        ('status', '=', 'confirmed'),
+                    ] + rec._source_cutoff(), order='id desc', limit=1)
                     if appt_today and appt_today.doctor_ids:
                         doctor = appt_today.doctor_ids[0].id
 
@@ -290,7 +297,7 @@ class GeneralBilling(models.Model):
                         ('patient_id', '=', rec.mrd_no.id),
                         ('date', '=', bill_date),
                         # ('status', 'not in', ['admitted', 'proceed_discharge']) # Removed to allow picking doctor even if admitted
-                    ], order='id desc', limit=1)
+                    ] + rec._source_cutoff(), order='id desc', limit=1)
                     if reg_today and reg_today.doctor:
                         doctor = reg_today.doctor.id
 
@@ -299,8 +306,8 @@ class GeneralBilling(models.Model):
                     reg_prev = self.env['patient.registration'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('date', '<', bill_date),
-                        ('status', 'not in', ['admitted', 'proceed_discharge'])
-                    ], order='date desc', limit=1)
+                        ('status', 'not in', ['admitted', 'proceed_discharge']),
+                    ] + rec._source_cutoff(), order='date desc', limit=1)
                     if reg_prev and reg_prev.doctor:
                         doctor = reg_prev.doctor.id
 
@@ -309,8 +316,8 @@ class GeneralBilling(models.Model):
                     appt_prev = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('appointment_date', '<', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='appointment_date desc', limit=1)
+                        ('status', '=', 'confirmed'),
+                    ] + rec._source_cutoff(), order='appointment_date desc', limit=1)
                     if appt_prev and appt_prev.doctor_ids:
                         doctor = appt_prev.doctor_ids[0].id
 
@@ -707,6 +714,7 @@ class GeneralBillLine(models.Model):
 
 class IPPartBilling(models.Model):
     _name = 'ip.part.billing'
+    _inherit = ['bill.doctor.lock']
     _description = 'IP Part Billing'
     _rec_name = 'mrd_no'
     # _order = 'bill_number desc'
@@ -741,6 +749,9 @@ class IPPartBilling(models.Model):
     @api.onchange('mrd_no', 'bill_date')
     def _onchange_mrd_no_update_doctor_ip(self):
         for rec in self:
+            if rec.locked_doctor:
+                rec.doctor = rec.locked_doctor
+                continue
             # Historical Guard: IP Part Billing is strictly for IP. Lock on discharge.
             if rec.doctor and rec.mrd_no and rec.mrd_no.status == 'discharged':
                 continue
@@ -780,8 +791,8 @@ class IPPartBilling(models.Model):
                 if not doctor:
                     reg = self.env['patient.registration'].search([
                         ('patient_id', '=', rec.mrd_no.id),
-                        ('date', '<=', bill_date)
-                    ], order='date desc', limit=1)
+                        ('date', '<=', bill_date),
+                    ] + rec._source_cutoff(), order='date desc', limit=1)
                     if reg and reg.doctor:
                         doctor = reg.doctor.id
 
@@ -793,9 +804,12 @@ class IPPartBilling(models.Model):
 
             rec.doctor = doctor
 
-    @api.depends('mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date')
+    @api.depends('locked_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date')
     def _compute_doctor_name_ip(self):
         for rec in self:
+            if rec.locked_doctor:
+                rec.doctor = rec.locked_doctor
+                continue
             # 1. Standard Guard: Locked if explicitly paid.
             if rec.status == 'paid' and rec.doctor:
                 continue
@@ -839,8 +853,8 @@ class IPPartBilling(models.Model):
                 if not doctor:
                     reg = self.env['patient.registration'].search([
                         ('patient_id', '=', rec.mrd_no.id),
-                        ('date', '<=', bill_date)
-                    ], order='date desc', limit=1)
+                        ('date', '<=', bill_date),
+                    ] + rec._source_cutoff(), order='date desc', limit=1)
                     if reg and reg.doctor:
                         doctor = reg.doctor.id
 
@@ -1338,6 +1352,7 @@ class IPPartBillLine(models.Model):
 
 class CasualityBilling(models.Model):
     _name = 'casuality.billing'
+    _inherit = ['bill.doctor.lock']
     _description = 'Casuality Billing'
     _rec_name = 'mrd_no'
     # _order = 'bill_number desc'
@@ -1460,6 +1475,9 @@ class CasualityBilling(models.Model):
     @api.onchange('mrd_no', 'bill_date')
     def _onchange_mrd_no_update_doctor(self):
         for rec in self:
+            if rec.locked_doctor:
+                rec.doctor = rec.locked_doctor
+                continue
             rec.doctor = False
 
             if not rec.mrd_no or not rec.bill_date:
@@ -1490,26 +1508,23 @@ class CasualityBilling(models.Model):
                 else:
                      rec.doctor = rec.mrd_no.doctor.id
             else:
-                # 1. Try Consultation log
+                # Revisit today wins on a new bill. A bill saved earlier ignores that revisit.
+                appt_today = self.env['patient.appointment'].search([
+                    ('patient_id', '=', rec.mrd_no.id),
+                    ('appointment_date', '=', bill_date),
+                    ('status', '=', 'confirmed'),
+                ] + rec._source_cutoff(), order='id desc', limit=1)
+                if appt_today and appt_today.doctor_ids:
+                    rec.doctor = appt_today.doctor_ids[0].id
+                    continue
                 reg_log = self.env['patient.registration'].search([
                     '|', ('user_id', '=', rec.mrd_no.id), ('patient_id', '=', rec.mrd_no.id),
-                    ('date', '<=', bill_date)
-                ], order='date desc', limit=1)
-                
+                    ('date', '<=', bill_date),
+                ] + rec._source_cutoff(), order='date desc, id desc', limit=1)
                 if reg_log and reg_log.doctor:
                     rec.doctor = reg_log.doctor.id
                 else:
-                    # 2. Try Appointment fallback
-                    appt = self.env['patient.appointment'].search([
-                        ('patient_id', '=', rec.mrd_no.id),
-                        ('appointment_date', '<=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='appointment_date desc', limit=1)
-                    if appt and appt.doctor_ids:
-                        rec.doctor = appt.doctor_ids[0].id
-                    else:
-                        # 3. Use master registration doctor
-                        rec.doctor = rec.mrd_no.doc_name.id
+                    rec.doctor = rec.mrd_no.doc_name.id
 
     # @api.depends('mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'bill_date')
     # def _compute_doctor_name(self):
@@ -1555,11 +1570,14 @@ class CasualityBilling(models.Model):
             if rec.bill_type == 'others':
                 rec.others_doctor = rec.doctor
 
-    @api.depends('others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    @api.depends('locked_doctor', 'others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
             if rec.bill_type == 'others' and rec.others_doctor:
                 rec.doctor = rec.others_doctor
+                continue
+            if rec.locked_doctor:
+                rec.doctor = rec.locked_doctor
                 continue
             doctor = False
             if rec.mrd_no and rec.bill_date:
@@ -1571,14 +1589,14 @@ class CasualityBilling(models.Model):
                 # Lookup Consultation (Revisit)
                 reg_log = self.env['patient.registration'].search([
                     '|', '|', ('user_id', '=', rec.mrd_no.id), ('patient_id', '=', rec.mrd_no.id), ('patient_name', '=', rec.patient_name),
-                    ('date', '=', bill_date)
-                ], order='date desc', limit=1)
+                    ('date', '=', bill_date),
+                ] + rec._source_cutoff(), order='date desc, id desc', limit=1)
                 
                 if not reg_log:
                     reg_log = self.env['patient.registration'].search([
                         '|', '|', ('user_id', '=', rec.mrd_no.id), ('patient_id', '=', rec.mrd_no.id), ('patient_name', '=', rec.patient_name),
-                        ('date', '<', bill_date)
-                    ], order='date desc', limit=1)
+                        ('date', '<', bill_date),
+                    ] + rec._source_cutoff(), order='date desc, id desc', limit=1)
 
                 if rec.bill_type == 'admitted':
                     # 1️⃣ IP Priority: Admission logs
@@ -1601,8 +1619,8 @@ class CasualityBilling(models.Model):
                     appt_today = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('appointment_date', '=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='id desc', limit=1)
+                        ('status', '=', 'confirmed'),
+                    ] + rec._source_cutoff(), order='id desc', limit=1)
                     if appt_today and appt_today.doctor_ids:
                         doctor = appt_today.doctor_ids[0].id
 
@@ -1629,8 +1647,8 @@ class CasualityBilling(models.Model):
                         appt_prev = self.env['patient.appointment'].search([
                             ('patient_id', '=', rec.mrd_no.id),
                             ('appointment_date', '<', bill_date),
-                            ('status', '=', 'confirmed')
-                        ], order='appointment_date desc', limit=1)
+                            ('status', '=', 'confirmed'),
+                        ] + rec._source_cutoff(), order='appointment_date desc', limit=1)
                         if appt_prev and appt_prev.doctor_ids:
                             doctor = appt_prev.doctor_ids[0].id
                     
@@ -2058,6 +2076,7 @@ class CasualityBillLine(models.Model):
 
 class AudiologyBilling(models.Model):
     _name = 'audiology.billing'
+    _inherit = ['bill.doctor.lock']
     _description = 'Audiology Billing'
     _rec_name = 'mrd_no'
     # _order = 'bill_number desc'
@@ -2177,11 +2196,14 @@ class AudiologyBilling(models.Model):
             if rec.bill_type == 'others':
                 rec.others_doctor = rec.doctor
 
-    @api.depends('others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    @api.depends('locked_doctor', 'others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
             if rec.bill_type == 'others' and rec.others_doctor:
                 rec.doctor = rec.others_doctor
+                continue
+            if rec.locked_doctor:
+                rec.doctor = rec.locked_doctor
                 continue
             doctor = False
             if rec.mrd_no and rec.bill_date:
@@ -2192,14 +2214,14 @@ class AudiologyBilling(models.Model):
                 # Lookup Consultation (Revisit)
                 reg_log = self.env["patient.registration"].search([
                     "|", ("user_id", "=", rec.mrd_no.id), ("patient_id", "=", rec.mrd_no.id),
-                    ("date", "=", bill_date)
-                ], order="date desc", limit=1)
+                    ("date", "=", bill_date),
+                ] + rec._source_cutoff(), order="date desc", limit=1)
 
                 if not reg_log:
                     reg_log = self.env["patient.registration"].search([
                         "|", ("user_id", "=", rec.mrd_no.id), ("patient_id", "=", rec.mrd_no.id),
-                        ("date", "<", bill_date)
-                    ], order="date desc", limit=1)
+                        ("date", "<", bill_date),
+                    ] + rec._source_cutoff(), order="date desc", limit=1)
 
                 # Determine Priority based on Bill Type
                 if rec.bill_type == 'admitted':
@@ -2221,16 +2243,16 @@ class AudiologyBilling(models.Model):
                     if not doctor:
                         reg_log = self.env['patient.registration'].search([
                             ('patient_id', '=', rec.mrd_no.id),
-                            ('date', '<=', bill_date)
-                        ], order='date desc', limit=1)
+                            ('date', '<=', bill_date),
+                        ] + rec._source_cutoff(), order='date desc', limit=1)
                         if reg_log: doctor = reg_log.doctor.id
                 else:
                     # 1️⃣ OP Priority: Appointment for TODAY
                     appt_today = self.env['patient.appointment'].search([
                         ('patient_id', '=', rec.mrd_no.id),
                         ('appointment_date', '=', bill_date),
-                        ('status', '=', 'confirmed')
-                    ], order='id desc', limit=1)
+                        ('status', '=', 'confirmed'),
+                    ] + rec._source_cutoff(), order='id desc', limit=1)
                     if appt_today and appt_today.doctor_ids:
                         doctor = appt_today.doctor_ids[0].id
 
@@ -2257,8 +2279,8 @@ class AudiologyBilling(models.Model):
                         appt_prev = self.env['patient.appointment'].search([
                             ('patient_id', '=', rec.mrd_no.id),
                             ('appointment_date', '<', bill_date),
-                            ('status', '=', 'confirmed')
-                        ], order='appointment_date desc', limit=1)
+                            ('status', '=', 'confirmed'),
+                        ] + rec._source_cutoff(), order='appointment_date desc', limit=1)
                         if appt_prev and appt_prev.doctor_ids:
                             doctor = appt_prev.doctor_ids[0].id
                     
@@ -2722,6 +2744,7 @@ class audiologyBillLine(models.Model):
 
 class XRAYBilling(models.Model):
     _name = 'xray.billing'
+    _inherit = ['bill.doctor.lock']
     _description = 'X Ray Billing'
     _rec_name = 'mrd_no'
     # _order = 'bill_number desc'
@@ -2843,13 +2866,16 @@ class XRAYBilling(models.Model):
             if rec.bill_type == 'others':
                 rec.others_doctor = rec.doctor
 
-    @api.depends('others_doctor', 'mrd_no', 'bill_date', 'bill_type')
+    @api.depends('locked_doctor', 'others_doctor', 'mrd_no', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         import logging
         _logger = logging.getLogger(__name__)
         for rec in self:
             if rec.bill_type == 'others' and rec.others_doctor:
                 rec.doctor = rec.others_doctor
+                continue
+            if rec.locked_doctor:
+                rec.doctor = rec.locked_doctor
                 continue
             doctor_id = False
             if rec.mrd_no and rec.bill_date:
@@ -2888,8 +2914,8 @@ class XRAYBilling(models.Model):
                     appt_today = self.env['patient.appointment'].sudo().search([
                         ('patient_id', '=', patient_db_id),
                         ('appointment_date', '=', bill_date),
-                        ('status', 'in', ['confirmed', 'completed'])
-                    ], order='id desc', limit=1)
+                        ('status', 'in', ['confirmed', 'completed']),
+                    ] + rec._source_cutoff(), order='id desc', limit=1)
                     
                     if appt_today and appt_today.doctor_ids:
                         doctor_id = appt_today.doctor_ids[0].id
@@ -2899,8 +2925,8 @@ class XRAYBilling(models.Model):
                     # Priority B: Consultation Log (patient.registration) for TODAY
                     reg_today = self.env['patient.registration'].sudo().search([
                         '|', ('user_id', '=', patient_db_id), ('patient_id', '=', patient_db_id),
-                        ('date', '=', bill_date)
-                    ], order='id desc', limit=1)
+                        ('date', '=', bill_date),
+                    ] + rec._source_cutoff(), order='id desc', limit=1)
                     
                     if reg_today and reg_today.doctor:
                         doctor_id = reg_today.doctor.id
@@ -2911,8 +2937,8 @@ class XRAYBilling(models.Model):
                     appt_latest = self.env['patient.appointment'].sudo().search([
                         ('patient_id', '=', patient_db_id),
                         ('appointment_date', '<=', bill_date),
-                        ('status', 'in', ['confirmed', 'completed'])
-                    ], order='appointment_date desc, id desc', limit=1)
+                        ('status', 'in', ['confirmed', 'completed']),
+                    ] + rec._source_cutoff(), order='appointment_date desc, id desc', limit=1)
                     
                     if appt_latest and appt_latest.doctor_ids:
                         doctor_id = appt_latest.doctor_ids[0].id
@@ -2922,8 +2948,8 @@ class XRAYBilling(models.Model):
                     # Priority D: Latest Consultation Log <= Today
                     reg_prev = self.env['patient.registration'].sudo().search([
                         '|', ('user_id', '=', patient_db_id), ('patient_id', '=', patient_db_id),
-                        ('date', '<=', bill_date)
-                    ], order='date desc, id desc', limit=1)
+                        ('date', '<=', bill_date),
+                    ] + rec._source_cutoff(), order='date desc, id desc', limit=1)
                     
                     if reg_prev and reg_prev.doctor:
                         doctor_id = reg_prev.doctor.id
@@ -3364,6 +3390,7 @@ class XRAYBillLine(models.Model):
 
 class OTBilling(models.Model):
     _name = 'ot.billing'
+    _inherit = ['bill.doctor.lock']
     _description = 'ot Billing'
     _rec_name = 'mrd_no'
     # _order = 'bill_number desc'
@@ -3493,13 +3520,13 @@ class OTBilling(models.Model):
 
         reg_log = self.env['patient.registration'].search([
             '|', ('user_id', '=', self.mrd_no.id), ('patient_id', '=', self.mrd_no.id),
-            ('date', '=', bill_date)
-        ], order='date desc', limit=1)
+            ('date', '=', bill_date),
+        ] + self._source_cutoff(), order='date desc', limit=1)
         if not reg_log:
             reg_log = self.env['patient.registration'].search([
                 '|', ('user_id', '=', self.mrd_no.id), ('patient_id', '=', self.mrd_no.id),
-                ('date', '<', bill_date)
-            ], order='date desc', limit=1)
+                ('date', '<', bill_date),
+            ] + self._source_cutoff(), order='date desc', limit=1)
 
         doctor = False
         if self.bill_type == 'admitted':
@@ -3521,8 +3548,8 @@ class OTBilling(models.Model):
             appt_today = self.env['patient.appointment'].search([
                 ('patient_id', '=', self.mrd_no.id),
                 ('appointment_date', '=', bill_date),
-                ('status', '=', 'confirmed')
-            ], order='id desc', limit=1)
+                ('status', '=', 'confirmed'),
+            ] + self._source_cutoff(), order='id desc', limit=1)
             if appt_today and appt_today.doctor_ids:
                 doctor = appt_today.doctor_ids[0].id
 
@@ -3548,8 +3575,8 @@ class OTBilling(models.Model):
                 appt_prev = self.env['patient.appointment'].search([
                     ('patient_id', '=', self.mrd_no.id),
                     ('appointment_date', '<', bill_date),
-                    ('status', '=', 'confirmed')
-                ], order='appointment_date desc', limit=1)
+                    ('status', '=', 'confirmed'),
+                ] + self._source_cutoff(), order='appointment_date desc', limit=1)
                 if appt_prev and appt_prev.doctor_ids:
                     doctor = appt_prev.doctor_ids[0].id
 
@@ -3579,13 +3606,15 @@ class OTBilling(models.Model):
         return doctor or False
 
     @api.depends(
-        'doctor_override', 'mrd_no', 'mrd_no.doc_name', 'mrd_no.doctor',
+        'locked_doctor', 'doctor_override', 'mrd_no', 'mrd_no.doc_name', 'mrd_no.doctor',
         'bill_date', 'bill_type', 'status',
     )
     def _compute_ot_doctor(self):
         for rec in self:
             if rec.doctor_override:
                 rec.doctor = rec.doctor_override
+            elif rec.locked_doctor:
+                rec.doctor = rec.locked_doctor
             else:
                 rec.doctor = rec._lookup_ot_doctor()
 
@@ -3600,6 +3629,10 @@ class OTBilling(models.Model):
     @api.onchange('mrd_no')
     def _onchange_mrd_no_update_doctor(self):
         for rec in self:
+            if rec.locked_doctor:
+                if not rec.doctor_override:
+                    rec.doctor = rec.locked_doctor
+                continue
             rec.doctor_override = False
             if rec.status in ['paid', 'cancelled']:
                 continue
@@ -3610,6 +3643,9 @@ class OTBilling(models.Model):
     @api.onchange('bill_date', 'bill_type')
     def _onchange_bill_date_update_doctor(self):
         for rec in self:
+            if rec.locked_doctor and not rec.doctor_override:
+                rec.doctor = rec.locked_doctor
+                continue
             if rec.status in ['paid', 'cancelled'] or rec.doctor_override:
                 continue
             if not rec.mrd_no or not rec.bill_date:
@@ -4304,6 +4340,8 @@ class DischargeBilling(models.Model):
     @api.onchange('mrd_no', 'bill_date')
     def _onchange_mrd_no_update_doctor(self):
         for rec in self:
+            if isinstance(rec.id, int) and rec.doctor:
+                continue
             rec.doctor = False
 
             if not rec.mrd_no or not rec.bill_date:

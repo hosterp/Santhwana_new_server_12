@@ -176,9 +176,53 @@ class PatientRegistration(models.Model):
         now = datetime.now(india)
         return now.strftime('%I:%M %p')
 
+    def _freeze_bill_doctors(self):
+        """Store the doctor already on each bill before the patient doctor changes.
+
+        Bills saved earlier keep that doctor. Bills created after the change
+        pick up the new doctor.
+        """
+        specs = [
+            ('general.billing', 'mrd_no', 'doctor'),
+            ('casuality.billing', 'mrd_no', 'doctor'),
+            ('audiology.billing', 'mrd_no', 'doctor'),
+            ('xray.billing', 'mrd_no', 'doctor'),
+            ('ot.billing', 'mrd_no', 'doctor'),
+            ('ip.part.billing', 'mrd_no', 'doctor'),
+            ('pharmacy.description', 'uhid_id', 'doctor_name'),
+            ('doctor.lab.report', 'user_ide', 'doctor_id'),
+            ('discharge.billing', 'mrd_no', 'doctor'),
+        ]
+        for patient in self:
+            for model, link, doc_field in specs:
+                bills = self.env[model].sudo().search([(link, '=', patient.id)])
+                for bill in bills:
+                    if 'locked_doctor' not in bill._fields or bill.locked_doctor:
+                        continue
+                    if 'doctor_override' in bill._fields and bill.doctor_override:
+                        continue
+                    if doc_field not in bill._fields:
+                        continue
+                    doctor = bill[doc_field]
+                    if doctor:
+                        bill.sudo().with_context(skip_doctor_lock=True).write({
+                            'locked_doctor': doctor.id,
+                        })
+
     def write(self, vals):
         if self.env.context.get('no_sync'):
             return super(PatientRegistration, self).write(vals)
+
+        if not self.env.context.get('skip_doctor_lock') and (
+                'doctor' in vals or 'doc_name' in vals):
+            changing = self.browse()
+            for rec in self:
+                if 'doctor' in vals and (vals.get('doctor') or False) != (rec.doctor.id or False):
+                    changing |= rec
+                elif 'doc_name' in vals and (vals.get('doc_name') or False) != (rec.doc_name.id or False):
+                    changing |= rec
+            if changing:
+                changing._freeze_bill_doctors()
 
         employee = self.env['hr.employee'].sudo().search([('user_id', '=', self.env.uid)], limit=1)
         if employee:
@@ -272,20 +316,8 @@ class PatientRegistration(models.Model):
 
         if 'doctor' in vals or 'doc_name' in vals or 'department_id' in vals:
             for rec in self:
-                # 0. Sync Consultation records (OP ONLY)
-                if 'doc_name' in vals:
-                    new_op_doc = vals.get('doc_name')
-                    if new_op_doc:
-                        # Consultation records link back via patient_id or user_id
-                        # Only update today's consultations to prevent overwriting history
-                        op_consultations = self.env['patient.registration'].sudo().search([
-                            ('user_id', '=', rec.id),
-                            ('date', '=', date.today())
-                        ])
-                        if op_consultations:
-                            op_consultations.write({'doctor': new_op_doc})
-
-                # 1. Update active admission doctor if patient is admitted (IP ONLY)
+                # Update the active admission so new IP bills use the new doctor.
+                # Bills already saved were frozen above and are not rewritten.
                 if rec.status == 'admitted' and 'doctor' in vals:
                     new_ip_doc = vals.get('doctor')
                     admitted_patient = self.env['hospital.admitted.patient'].search([
@@ -346,8 +378,6 @@ class PatientRegistration(models.Model):
                             # Direct search to find all potentially relevant records
                             records = self.env[model_name].sudo().search([(patient_field, '=', rec.id)])
                             for record in records:
-                                update_doc_id = False
-                                
                                 # Date Check
                                 r_date = record[date_field]
                                 if isinstance(r_date, datetime):
@@ -368,27 +398,6 @@ class PatientRegistration(models.Model):
                                 else:
                                     if op_session_start and r_date and r_date < op_session_start:
                                         continue # Skip old OP records
-
-                                # Apply IP doctor change ONLY to IP bills
-                                if is_ip_bill and 'doctor' in vals:
-                                    update_doc_id = vals.get('doctor')
-                                # Apply OP doctor change ONLY to OP bills
-                                elif not is_ip_bill and 'doc_name' in vals:
-                                    update_doc_id = vals.get('doc_name')
-
-                                if update_doc_id:
-                                    if model_name == 'ot.billing':
-                                        continue
-
-                                    # Trigger recomputation
-                                    for method_name in ['_compute_doctor_name', '_compute_doctor_name_ip', '_compute_doctor_id', '_compute_doctor']:
-                                        if hasattr(record, method_name):
-                                            getattr(record, method_name)()
-                                    
-                                    # Force direct write
-                                    doc_f = 'doctor' if 'doctor' in record._fields else ('doctor_id' if 'doctor_id' in record._fields else ('doctor_name' if 'doctor_name' in record._fields else False))
-                                    if doc_f:
-                                        record.write({doc_f: update_doc_id})
 
                                 # Update Department (Specific to general billing models)
                                 if target_general_dept_id and model_name in ['general.billing', 'ip.part.billing', 'ot.billing', 'casuality.billing', 'audiology.billing', 'xray.billing']:
