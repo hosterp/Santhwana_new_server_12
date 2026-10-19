@@ -97,14 +97,34 @@ class PharmacyDescription(models.Model):
 
     def _inverse_others_doctor(self):
         for rec in self:
+            if rec.op_category == 'others' and rec.doctor_name:
+                with rec.env.protecting([rec._fields['doctor_name']], rec):
+                    rec.others_doctor = rec.doctor_name
+
+    @api.onchange('op_category')
+    def _onchange_op_category_keep_doctor(self):
+        for rec in self:
             if rec.op_category == 'others':
+                chosen = rec.doctor_name or rec.others_doctor
+                if chosen:
+                    with rec.env.protecting([rec._fields['doctor_name']], rec):
+                        rec.others_doctor = chosen
+                    rec.doctor_name = chosen
+                continue
+            rec._compute_doctor_name()
+
+    @api.onchange('doctor_name')
+    def _onchange_doctor_name_others(self):
+        for rec in self:
+            if rec.op_category == 'others' and rec.doctor_name:
                 rec.others_doctor = rec.doctor_name
 
-    @api.depends('locked_doctor', 'others_doctor', 'uhid_id', 'uhid_id.admission_boolean', 'uhid_id.status', 'uhid_id.admitted_date', 'uhid_id.doctor', 'uhid_id.doc_name', 'patient_id', 'date', 'op_category')
+    @api.depends('locked_doctor', 'uhid_id', 'uhid_id.admission_boolean', 'uhid_id.status', 'uhid_id.admitted_date', 'uhid_id.doctor', 'uhid_id.doc_name', 'patient_id', 'date')
     def _compute_doctor_name(self):
         for rec in self:
-            if rec.op_category == 'others' and rec.others_doctor:
-                rec.doctor_name = rec.others_doctor
+            if rec.op_category == 'others':
+                if not rec.doctor_name and rec.others_doctor:
+                    rec.doctor_name = rec.others_doctor
                 continue
             if rec.locked_doctor:
                 rec.doctor_name = rec.locked_doctor
