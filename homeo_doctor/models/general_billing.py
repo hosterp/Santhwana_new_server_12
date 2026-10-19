@@ -40,8 +40,9 @@ class GeneralBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date', default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                             readonly=False)
+    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name",
+                             inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
     bill_types = fields.Many2one('bill.type', string='Bill Type')
@@ -215,9 +216,17 @@ class GeneralBilling(models.Model):
 
             rec.doctor = doctor
 
-    @api.depends('mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    @api.depends('others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
+            if rec.bill_type == 'others' and rec.others_doctor:
+                rec.doctor = rec.others_doctor
+                continue
             # 1. Historical Lock: If bill is finalized (paid/discharged/cancelled), never recompute doctor.
             if rec.doctor and rec.status in ['paid', 'discharge', 'cancelled']:
                 continue
@@ -1343,8 +1352,9 @@ class CasualityBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date', default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                             readonly=False,)
+    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name",
+                             inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
     bill_types = fields.Many2one('bill.type', string='Bill Type')
@@ -1540,9 +1550,17 @@ class CasualityBilling(models.Model):
     #                     ('appointment_date', '<=', bill_date),
     #                     ('status', '=', 'confirmed')
     #                 ], limit=1)
-    @api.depends('mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    @api.depends('others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
+            if rec.bill_type == 'others' and rec.others_doctor:
+                rec.doctor = rec.others_doctor
+                continue
             doctor = False
             if rec.mrd_no and rec.bill_date:
                 bill_date = rec.bill_date
@@ -2054,8 +2072,9 @@ class AudiologyBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date',default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                             readonly=False,)
+    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name",
+                             inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
     bill_types = fields.Many2one('bill.type', string='Bill Type')
@@ -2153,9 +2172,17 @@ class AudiologyBilling(models.Model):
             limit=1
         )
         return employee.id or False
-    @api.depends('mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    @api.depends('others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
+            if rec.bill_type == 'others' and rec.others_doctor:
+                rec.doctor = rec.others_doctor
+                continue
             doctor = False
             if rec.mrd_no and rec.bill_date:
                 bill_date = rec.bill_date
@@ -2709,8 +2736,9 @@ class XRAYBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date',default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                             readonly=False,)
+    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name",
+                             inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
     bill_types = fields.Many2one('bill.type', string='Bill Type')
@@ -2810,11 +2838,19 @@ class XRAYBilling(models.Model):
 
 
 
-    @api.depends('mrd_no', 'bill_date', 'bill_type')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    @api.depends('others_doctor', 'mrd_no', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         import logging
         _logger = logging.getLogger(__name__)
         for rec in self:
+            if rec.bill_type == 'others' and rec.others_doctor:
+                rec.doctor = rec.others_doctor
+                continue
             doctor_id = False
             if rec.mrd_no and rec.bill_date:
                 # 0️⃣ Setup Patient & Date Context
@@ -4770,11 +4806,54 @@ class DischargeBilling(models.Model):
         net = base - int(refunds)
         return net if net > 0 else 0
 
+    def _frozen_discharge_advance(self):
+        """Advance captured when the bill was discharged.
+
+        Pay consumes the wallet, so the live balance is 0 afterwards. A second
+        discharge pass, or a bill added after discharge, must not replace the
+        captured advance with that 0. A later history row can store 0; the
+        earlier row for the same frozen net still has the real advance.
+        """
+        self.ensure_one()
+        if self.amount_in_advance:
+            return int(self.amount_in_advance)
+        if self.status not in ('discharged', 'paid'):
+            return 0
+        DischargedRecord = self.env['discharged.patient.record'].sudo()
+        if self.mrd_no and self.mrd_no.reference_no:
+            histories = DischargedRecord.search([
+                ('patient_id', '=', self.mrd_no.reference_no),
+            ], order='id desc', limit=15)
+        elif self.patient_name:
+            histories = DischargedRecord.search([
+                ('name', '=', self.patient_name),
+            ], order='id desc', limit=15)
+        else:
+            return 0
+        settled = float(self.settled_total_amount or 0)
+        for history in histories:
+            try:
+                advance = int(float(history.amount_in_advance or 0))
+            except (TypeError, ValueError):
+                continue
+            if advance <= 0:
+                continue
+            try:
+                hist_total = float(history.total_amount or 0)
+            except (TypeError, ValueError):
+                hist_total = 0.0
+            if settled and abs(hist_total - settled) < 1.0:
+                return advance
+        return 0
+
     def _resolve_historical_advance_amount(self):
         """Restore advance for discharged bills from history or wallet."""
         self.ensure_one()
         if self.amount_in_advance:
             return int(self.amount_in_advance)
+        frozen = self._frozen_discharge_advance()
+        if frozen:
+            return frozen
 
         DischargedRecord = self.env['discharged.patient.record'].sudo()
         history = DischargedRecord.browse()
@@ -5265,9 +5344,12 @@ class DischargeBilling(models.Model):
                 # insurance/company so the advance is kept separate (not deducted);
                 # cash / card / upi / cheque bills are paid by the patient, so the
                 # advance stored on the bill is subtracted from the total.
+                # A bill added after discharge increases the gross. The advance
+                # captured at discharge stays; it is not re-read from the wallet.
                 total = rec._calculate_discharge_amounts()['settled_amount']
                 if rec.mode_pay != 'credit':
-                    total -= (rec.amount_in_advance or 0)
+                    advance = rec.amount_in_advance or rec._frozen_discharge_advance()
+                    total -= advance
                 rec.total_amount = total
                 rec.net_amount = int(total)
                 room_rent, _extras = rec._get_room_rent_and_extras()
@@ -5526,6 +5608,12 @@ class DischargeBilling(models.Model):
         today = fields.Date.today()
 
         for rec in self:
+            # Already discharged. The wallet balance is 0 because the advance
+            # was applied on the first pass. Running this again (a second click,
+            # or after a new department bill) would store that 0 and remove the
+            # advance from the bill.
+            if rec.status == 'discharged':
+                continue
             prev_status = rec.status
             # Capture unpaid bills before status changes or they are marked paid
             if prev_status != 'paid':
@@ -5917,6 +6005,16 @@ class DischargeBilling(models.Model):
         return {'fixed': fixed, 'skipped': skipped, 'failed': failed, 'total': len(records)}
 
     def read(self, fields=None, load='_classic_read'):
+        # Put back an advance that a second discharge pass cleared after the
+        # wallet was already consumed. Only the form (one record) is healed.
+        if len(self) == 1 and not self.env.context.get('skip_advance_restore'):
+            rec = self
+            if rec.status == 'discharged' and not rec.amount_in_advance:
+                frozen = rec._frozen_discharge_advance()
+                if frozen:
+                    rec.with_context(no_sync=True, skip_advance_restore=True).write({
+                        'amount_in_advance': frozen,
+                    })
         # Auto-heal empty Consolidated Bill PDF on single-record form open only.
         if (
             not self.env.context.get('skip_pdf_recover')
@@ -6009,7 +6107,10 @@ class DischargeBilling(models.Model):
 
         # On UHID selection the bill is unpaid: show the patient's actual current
         # wallet balance as the advance (same as normal billing).
-        self.amount_in_advance = self._resolve_wallet_balance_advance()
+        # Discharged / paid bills keep the advance captured at settlement. The
+        # wallet is already 0, so refreshing it here would clear the advance.
+        if self.status not in ('discharged', 'paid', 'cancelled'):
+            self.amount_in_advance = self._resolve_wallet_balance_advance()
 
     @api.depends('mrd_no', 'admission_date', 'discharge_date')
     def _compute_patient_wallet_value(self):

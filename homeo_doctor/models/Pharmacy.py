@@ -22,8 +22,9 @@ class PharmacyDescription(models.Model):
     name = fields.Char(string="Patient Name")
     phone_number = fields.Char(string="Phone Number")
     # bill_amount=fields.Integer(string='Bill Amount')
-    doctor_name = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                                  readonly=False)
+    doctor_name = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name",
+                                  inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     date = fields.Date(string="Date", default=fields.Date.context_today)
     prescription_line_ids = fields.One2many('pharmacy.prescription.line', 'pharmacy_id', string="Prescriptions")
     bill_amount = fields.Float(string="Total Bill Amount", compute="_compute_bill_amount")
@@ -90,9 +91,17 @@ class PharmacyDescription(models.Model):
         ], limit=1)
         return employee.id
 
-    @api.depends('uhid_id', 'uhid_id.admission_boolean', 'uhid_id.status', 'uhid_id.admitted_date', 'uhid_id.doctor', 'uhid_id.doc_name', 'patient_id', 'date', 'op_category')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.op_category == 'others':
+                rec.others_doctor = rec.doctor_name
+
+    @api.depends('others_doctor', 'uhid_id', 'uhid_id.admission_boolean', 'uhid_id.status', 'uhid_id.admitted_date', 'uhid_id.doctor', 'uhid_id.doc_name', 'patient_id', 'date', 'op_category')
     def _compute_doctor_name(self):
         for rec in self:
+            if rec.op_category == 'others' and rec.others_doctor:
+                rec.doctor_name = rec.others_doctor
+                continue
             # 1. Standard Guard: paid bills never change
             if rec.status == 'paid' and rec.doctor_name:
                 continue

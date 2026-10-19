@@ -27,8 +27,9 @@ class DoctorLabReport(models.Model):
     reference_no = fields.Char(string="Reference No")
     report_reference = fields.Char(string="Report Reference", readonly=True, default=lambda self: _('New'))
     date = fields.Date(string="Report Date", default=fields.Date.context_today)
-    doctor_id = fields.Many2one('doctor.profile', string="Doctor", compute="_compute_doctor_name", 
-                                readonly=False)
+    doctor_id = fields.Many2one('doctor.profile', string="Doctor", compute="_compute_doctor_name",
+                                inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     report_details = fields.Text(string="Report Details")
     attachment = fields.Binary(string="Result")
     attachment_name = fields.Char(string="Result")
@@ -237,9 +238,17 @@ class DoctorLabReport(models.Model):
 
             rec.doctor_id = doctor
 
-    @api.depends('user_ide', 'user_ide.admission_boolean', 'user_ide.status', 'user_ide.admitted_date', 'user_ide.doctor', 'user_ide.doc_name', 'patient_id', 'date', 'bill_type')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor_id
+
+    @api.depends('others_doctor', 'user_ide', 'user_ide.admission_boolean', 'user_ide.status', 'user_ide.admitted_date', 'user_ide.doctor', 'user_ide.doc_name', 'patient_id', 'date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
+            if rec.bill_type == 'others' and rec.others_doctor:
+                rec.doctor_id = rec.others_doctor
+                continue
             # 1. ABSOLUTE HISTORICAL LOCK: If patient is discharged and we HAVE a doctor, never change for IP bills.
             if rec.doctor_id and rec.user_ide and rec.user_ide.status == 'discharged':
                 if rec.bill_type == 'admitted':
