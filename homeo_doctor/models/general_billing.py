@@ -225,7 +225,7 @@ class GeneralBilling(models.Model):
             if rec.bill_type == 'others':
                 rec.others_doctor = rec.doctor
 
-    @api.depends('locked_doctor', 'others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    @api.depends('locked_doctor', 'others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
             if rec.bill_type == 'others' and rec.others_doctor:
@@ -804,7 +804,7 @@ class IPPartBilling(models.Model):
 
             rec.doctor = doctor
 
-    @api.depends('locked_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date')
+    @api.depends('locked_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'bill_date')
     def _compute_doctor_name_ip(self):
         for rec in self:
             if rec.locked_doctor:
@@ -1570,7 +1570,7 @@ class CasualityBilling(models.Model):
             if rec.bill_type == 'others':
                 rec.others_doctor = rec.doctor
 
-    @api.depends('locked_doctor', 'others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    @api.depends('locked_doctor', 'others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
             if rec.bill_type == 'others' and rec.others_doctor:
@@ -2196,7 +2196,7 @@ class AudiologyBilling(models.Model):
             if rec.bill_type == 'others':
                 rec.others_doctor = rec.doctor
 
-    @api.depends('locked_doctor', 'others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    @api.depends('locked_doctor', 'others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
             if rec.bill_type == 'others' and rec.others_doctor:
@@ -3606,7 +3606,7 @@ class OTBilling(models.Model):
         return doctor or False
 
     @api.depends(
-        'locked_doctor', 'doctor_override', 'mrd_no', 'mrd_no.doc_name', 'mrd_no.doctor',
+        'locked_doctor', 'doctor_override', 'mrd_no',
         'bill_date', 'bill_type', 'status',
     )
     def _compute_ot_doctor(self):

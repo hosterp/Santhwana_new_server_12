@@ -250,7 +250,7 @@ class DoctorLabReport(models.Model):
             if rec.bill_type == 'others':
                 rec.others_doctor = rec.doctor_id
 
-    @api.depends('locked_doctor', 'others_doctor', 'user_ide', 'user_ide.admission_boolean', 'user_ide.status', 'user_ide.admitted_date', 'user_ide.doctor', 'user_ide.doc_name', 'patient_id', 'date', 'bill_type')
+    @api.depends('locked_doctor', 'others_doctor', 'user_ide', 'user_ide.admission_boolean', 'user_ide.status', 'user_ide.admitted_date', 'patient_id', 'date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
             if rec.bill_type == 'others' and rec.others_doctor:

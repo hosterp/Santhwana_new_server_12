@@ -176,11 +176,35 @@ class PatientRegistration(models.Model):
         now = datetime.now(india)
         return now.strftime('%I:%M %p')
 
-    def _freeze_bill_doctors(self):
-        """Store the doctor already on each bill before the patient doctor changes.
+    def _bill_is_ip(self, bill, model_name):
+        bill_type = bill.bill_type if 'bill_type' in bill._fields else False
+        op_cat = bill.op_category if 'op_category' in bill._fields else False
+        # Selection fields are strings; Many2one bill_type/op_category need name/code
+        if hasattr(bill_type, 'id'):
+            bill_type = (
+                getattr(bill_type, 'code', False)
+                or getattr(bill_type, 'name', False)
+                or ''
+            )
+            bill_type = str(bill_type).lower()
+        if hasattr(op_cat, 'id'):
+            op_cat = (
+                getattr(op_cat, 'code', False)
+                or getattr(op_cat, 'name', False)
+                or ''
+            )
+            op_cat = str(op_cat).lower()
+        return (
+            bill_type in ('admitted', 'ip')
+            or op_cat in ('admitted', 'ip')
+            or model_name == 'ip.part.billing'
+        )
 
-        Bills saved earlier keep that doctor. Bills created after the change
-        pick up the new doctor.
+    def _freeze_bill_doctors(self, ip_doctor=None, op_doctor=None, freeze_ip=False):
+        """Freeze doctors on existing bills before an OP doctor / revisit change.
+
+        By default only OP bills are frozen. IP bills follow the admitted doctor
+        when that doctor is changed (see _sync_ip_bill_doctors).
         """
         specs = [
             ('general.billing', 'mrd_no', 'doctor'),
@@ -194,6 +218,7 @@ class PatientRegistration(models.Model):
             ('discharge.billing', 'mrd_no', 'doctor'),
         ]
         for patient in self:
+            op_doc = op_doctor or patient.doc_name
             for model, link, doc_field in specs:
                 bills = self.env[model].sudo().search([(link, '=', patient.id)])
                 for bill in bills:
@@ -203,26 +228,88 @@ class PatientRegistration(models.Model):
                         continue
                     if doc_field not in bill._fields:
                         continue
-                    doctor = bill[doc_field]
+                    is_ip = self._bill_is_ip(bill, model)
+                    if is_ip and not freeze_ip:
+                        continue
+                    doctor = bill[doc_field] or op_doc
                     if doctor:
                         bill.sudo().with_context(skip_doctor_lock=True).write({
                             'locked_doctor': doctor.id,
                         })
 
-    def write(self, vals):
-        if self.env.context.get('no_sync'):
-            return super(PatientRegistration, self).write(vals)
+    def _sync_ip_bill_doctors(self, new_doctor):
+        """Apply the new admitted doctor on existing IP bills for this admission."""
+        if not new_doctor:
+            return
+        new_id = new_doctor.id if hasattr(new_doctor, 'id') else new_doctor
+        specs = [
+            ('general.billing', 'mrd_no', 'doctor'),
+            ('casuality.billing', 'mrd_no', 'doctor'),
+            ('audiology.billing', 'mrd_no', 'doctor'),
+            ('xray.billing', 'mrd_no', 'doctor'),
+            ('ot.billing', 'mrd_no', 'doctor'),
+            ('ip.part.billing', 'mrd_no', 'doctor'),
+            ('pharmacy.description', 'uhid_id', 'doctor_name'),
+            ('doctor.lab.report', 'user_ide', 'doctor_id'),
+            ('discharge.billing', 'mrd_no', 'doctor'),
+        ]
+        for patient in self:
+            ip_start = patient.admitted_date
+            for model, link, doc_field in specs:
+                bills = self.env[model].sudo().search([(link, '=', patient.id)])
+                for bill in bills:
+                    if not self._bill_is_ip(bill, model):
+                        continue
+                    if 'doctor_override' in bill._fields and bill.doctor_override:
+                        continue
+                    # Only current admission session
+                    date_field = 'date' if 'date' in bill._fields else (
+                        'bill_date' if 'bill_date' in bill._fields else False
+                    )
+                    if ip_start and date_field:
+                        r_date = bill[date_field]
+                        if isinstance(r_date, datetime):
+                            r_date = r_date.date()
+                        if r_date and r_date < ip_start:
+                            continue
+                    vals = {}
+                    if 'locked_doctor' in bill._fields:
+                        vals['locked_doctor'] = new_id
+                    field = bill._fields.get(doc_field)
+                    # Stored non-computed doctor (e.g. discharge) must be written directly
+                    if field and field.store and not field.compute:
+                        vals[doc_field] = new_id
+                    if vals:
+                        bill.sudo().with_context(skip_doctor_lock=True).write(vals)
 
-        if not self.env.context.get('skip_doctor_lock') and (
-                'doctor' in vals or 'doc_name' in vals):
-            changing = self.browse()
+    def write(self, vals):
+        changing_op = self.browse()
+        changing_ip = self.browse()
+        if not self.env.context.get('skip_doctor_lock'):
             for rec in self:
+                if 'doc_name' in vals and (vals.get('doc_name') or False) != (rec.doc_name.id or False):
+                    changing_op |= rec
                 if 'doctor' in vals and (vals.get('doctor') or False) != (rec.doctor.id or False):
-                    changing |= rec
-                elif 'doc_name' in vals and (vals.get('doc_name') or False) != (rec.doc_name.id or False):
-                    changing |= rec
-            if changing:
-                changing._freeze_bill_doctors()
+                    changing_ip |= rec
+            # OP revisit / OP doctor change: keep doctors already on OP bills
+            for rec in changing_op:
+                rec._freeze_bill_doctors(op_doctor=rec.doc_name, freeze_ip=False)
+
+        if self.env.context.get('no_sync'):
+            res = super(PatientRegistration, self).write(vals)
+            if changing_ip:
+                for rec in changing_ip:
+                    if rec.doctor:
+                        admitted_patient = self.env['hospital.admitted.patient'].search([
+                            ('patient_id', '=', rec.id),
+                            ('status', 'in', ['admitted', 'proceed_discharge', 'discharged']),
+                        ], order='id desc', limit=1)
+                        if admitted_patient:
+                            admitted_patient.with_context(skip_doctor_lock=True).write({
+                                'attending_doctor': rec.doctor.id,
+                            })
+                        rec._sync_ip_bill_doctors(rec.doctor)
+            return res
 
         employee = self.env['hr.employee'].sudo().search([('user_id', '=', self.env.uid)], limit=1)
         if employee:
@@ -316,23 +403,24 @@ class PatientRegistration(models.Model):
 
         if 'doctor' in vals or 'doc_name' in vals or 'department_id' in vals:
             for rec in self:
-                # Update the active admission so new IP bills use the new doctor.
-                # Bills already saved were frozen above and are not rewritten.
-                if rec.status == 'admitted' and 'doctor' in vals:
+                # Update admission + push new doctor onto existing IP bills.
+                if 'doctor' in vals:
                     new_ip_doc = vals.get('doctor')
-                    admitted_patient = self.env['hospital.admitted.patient'].search([
-                        ('patient_id', '=', rec.id),
-                        ('status', '=', 'admitted')
-                    ], limit=1)
-                    if admitted_patient and new_ip_doc:
-                        old_doctor_id = admitted_patient.attending_doctor.id
-                        write_vals = {
-                            'attending_doctor': new_ip_doc,
-                            'visited_doctor_ids': [(4, new_ip_doc)],
-                        }
-                        if old_doctor_id:
-                            write_vals['visited_doctor_ids'].append((4, old_doctor_id))
-                        admitted_patient.write(write_vals)
+                    if new_ip_doc:
+                        admitted_patient = self.env['hospital.admitted.patient'].search([
+                            ('patient_id', '=', rec.id),
+                            ('status', 'in', ['admitted', 'proceed_discharge', 'discharged']),
+                        ], order='id desc', limit=1)
+                        if admitted_patient:
+                            old_doctor_id = admitted_patient.attending_doctor.id
+                            write_vals = {
+                                'attending_doctor': new_ip_doc,
+                                'visited_doctor_ids': [(4, new_ip_doc)],
+                            }
+                            if old_doctor_id:
+                                write_vals['visited_doctor_ids'].append((4, old_doctor_id))
+                            admitted_patient.with_context(skip_doctor_lock=True).write(write_vals)
+                        rec._sync_ip_bill_doctors(new_ip_doc)
 
                 # 2. Synchronize billing models (Context-aware: IP doc to IP bills, OP doc to OP bills)
                 if rec.status != 'discharged':

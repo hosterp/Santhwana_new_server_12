@@ -177,12 +177,13 @@ class AdmittedPatient(models.Model):
             }
 
     def write(self, vals):
+        res = super(AdmittedPatient, self).write(vals)
         if vals.get('attending_doctor') and not self.env.context.get('skip_doctor_lock'):
             for rec in self:
-                new_id = vals.get('attending_doctor') or False
-                if new_id != (rec.attending_doctor.id or False) and rec.patient_id:
-                    rec.patient_id._freeze_bill_doctors()
-        return super(AdmittedPatient, self).write(vals)
+                if rec.patient_id and rec.attending_doctor:
+                    # Existing IP bills follow the new admitted doctor.
+                    rec.patient_id._sync_ip_bill_doctors(rec.attending_doctor)
+        return res
 
     @api.depends('patient_id')
     def _compute_lab_test(self):

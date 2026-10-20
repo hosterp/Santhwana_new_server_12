@@ -119,7 +119,7 @@ class PharmacyDescription(models.Model):
             if rec.op_category == 'others' and rec.doctor_name:
                 rec.others_doctor = rec.doctor_name
 
-    @api.depends('locked_doctor', 'uhid_id', 'uhid_id.admission_boolean', 'uhid_id.status', 'uhid_id.admitted_date', 'uhid_id.doctor', 'uhid_id.doc_name', 'patient_id', 'date')
+    @api.depends('locked_doctor', 'uhid_id', 'uhid_id.admission_boolean', 'uhid_id.status', 'uhid_id.admitted_date', 'patient_id', 'date')
     def _compute_doctor_name(self):
         for rec in self:
             if rec.op_category == 'others':
