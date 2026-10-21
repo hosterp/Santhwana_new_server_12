@@ -431,7 +431,7 @@
         </field>
     </record>
 
-         <record id="view_audiology_billing_form_date_edit" model="ir.ui.view">
+        <record id="view_casuality_billing_form_date_edit" model="ir.ui.view">
             <field name="name">casuality.billing.form.date.edit</field>
             <field name="model">casuality.billing</field>
             <field name="inherit_id" ref="homeo_doctor.view_casuality_billing_form"/>
@@ -443,7 +443,6 @@
                 </xpath>
             </field>
         </record>
-
     <record id="view_casuality_billing_search" model="ir.ui.view">
         <field name="name">casuality.billing.search</field>
         <field name="model">casuality.billing</field>
