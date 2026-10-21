@@ -27,6 +27,17 @@
                                 <!-- First row with uniform column sizes (all fields same size as patient name) -->
                                 <div class="col-12">
                                     <div class="row mx-n1">
+                                        <!--                                        <div class="col px-1" style="max-width: 14.28%;">-->
+                                        <!--                                            <div class="form-group row my-1">-->
+                                        <!--                                                <label for="bill_type" class="col-md-5 col-form-label py-0 small">Bill-->
+                                        <!--                                                    Type-->
+                                        <!--                                                </label>-->
+                                        <!--                                                <div class="col-md-7 field-container py-0">-->
+                                        <!--                                                    <field name="bill_type"/>-->
+                                        <!--                                                </div>-->
+
+                                        <!--                                            </div>-->
+                                        <!--                                        </div>-->
                                         <div class="col px-1" style="max-width: 14.28%;">
                                             <div class="form-group row my-1">
                                                 <label for="bill_type" class="col-md-5 col-form-label py-0 small">Bill
@@ -43,10 +54,20 @@
                                                     Date
                                                 </label>
                                                 <div class="col-md-7 field-container py-0">
-                                                    <field name="bill_date"/>
+                                                    <field name="bill_date" readonly="1"/>
                                                 </div>
                                             </div>
                                         </div>
+<!--                                        <div class="col px-1" style="max-width: 14.28%;">-->
+<!--                                            <div class="form-group row my-1">-->
+<!--                                                <label for="bill_date" class="col-md-5 col-form-label py-0 small">Bill-->
+<!--                                                    Date-->
+<!--                                                </label>-->
+<!--                                                <div class="col-md-7 field-container py-0">-->
+<!--                                                    <field name="bill_date"/>-->
+<!--                                                </div>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
                                         <div class="col px-1" style="max-width: 14.28%;">
                                             <div class="form-group row my-1">
                                                 <label for="mrd_no" class="col-md-5 col-form-label py-0 small">UHID
@@ -227,26 +248,44 @@
                                         </field>
                                     </page>
                                 </notebook>
-                                <div attrs="{'invisible': [('payment_method_split', '=', False)]}" style="margin-top: 15px;">
-                                    <table class="table table-bordered table-sm" style="width: 45%; border: 1px solid #dee2e6; box-shadow: -1px 1px 5px #53aade; border-radius: 8px; overflow: hidden; font-size: 13px;">
+                                <div attrs="{'invisible': [('payment_method_split', '=', False)]}"
+                                     style="margin-top: 15px;">
+                                    <table class="table table-bordered table-sm"
+                                           style="width: 45%; border: 1px solid #dee2e6; box-shadow: -1px 1px 5px #53aade; border-radius: 8px; overflow: hidden; font-size: 13px;">
                                         <thead style="background-color: #387298; color: white;">
                                             <tr style="height: 25px;">
-                                                <th style="text-align: center; border: 1px solid #dee2e6; width: 50%; padding: 2px;">Method</th>
-                                                <th style="text-align: center; border: 1px solid #dee2e6; width: 50%; padding: 2px;">Amount</th>
+                                                <th style="text-align: center; border: 1px solid #dee2e6; width: 50%; padding: 2px;">
+                                                    Method
+                                                </th>
+                                                <th style="text-align: center; border: 1px solid #dee2e6; width: 50%; padding: 2px;">
+                                                    Amount
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr style="height: 25px;">
-                                                <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">Cash</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 2px;"><field name="cash_amount" nolabel="1"/></td>
+                                                <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">
+                                                    Cash
+                                                </td>
+                                                <td style="border: 1px solid #dee2e6; padding: 2px;">
+                                                    <field name="cash_amount" nolabel="1"/>
+                                                </td>
                                             </tr>
                                             <tr style="height: 25px;">
-                                                <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">UPI</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 2px;"><field name="upi_amount" nolabel="1"/></td>
+                                                <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">
+                                                    UPI
+                                                </td>
+                                                <td style="border: 1px solid #dee2e6; padding: 2px;">
+                                                    <field name="upi_amount" nolabel="1"/>
+                                                </td>
                                             </tr>
                                             <tr style="height: 25px;">
-                                                <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">Card</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 2px;"><field name="card_amount" nolabel="1"/></td>
+                                                <td style="text-align: center; vertical-align: middle; border: 1px solid #dee2e6; font-weight: bold; padding: 2px;">
+                                                    Card
+                                                </td>
+                                                <td style="border: 1px solid #dee2e6; padding: 2px;">
+                                                    <field name="card_amount" nolabel="1"/>
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -258,7 +297,8 @@
                                     <div class="row column_one" style="display:block; width: 33%;">
                                         <div class="col-md-12">
                                             <div class="form-group row">
-                                                <label for="total_item" class="col-md-4 col-form-label">Total Item</label>
+                                                <label for="total_item" class="col-md-4 col-form-label">Total Item
+                                                </label>
                                                 <div class="col-md-8 field-container">
                                                     <field name="total_item"/>
                                                 </div>
@@ -266,7 +306,8 @@
                                         </div>
                                         <div class="col-md-12">
                                             <div class="form-group row">
-                                                <label for="mode_pay" class="col-md-4 col-form-label">Payment Method</label>
+                                                <label for="mode_pay" class="col-md-4 col-form-label">Payment Method
+                                                </label>
                                                 <div class="col-md-8 field-container">
                                                     <field name="mode_pay"/>
                                                 </div>
@@ -274,7 +315,9 @@
                                         </div>
                                         <div class="col-md-12">
                                             <div class="form-group row">
-                                                <label for="payment_method_split" class="col-md-4 col-form-label pay_mode_style">Split Payment</label>
+                                                <label for="payment_method_split"
+                                                       class="col-md-4 col-form-label pay_mode_style">Split Payment
+                                                </label>
                                                 <div class="col-md-8 field-container">
                                                     <field name="payment_method_split"/>
                                                 </div>
@@ -302,7 +345,8 @@
                                         </div>
                                         <div class="col-md-12">
                                             <div class="form-group row">
-                                                <label for="amount_paid" class="col-md-4 col-form-label">Amount Paid</label>
+                                                <label for="amount_paid" class="col-md-4 col-form-label">Amount Paid
+                                                </label>
                                                 <div class="col-md-8 field-container">
                                                     <field name="amount_paid"/>
                                                 </div>
@@ -326,7 +370,8 @@
                                     <div class="row column_three" style="display:block; width: 33%;">
                                         <div class="col-md-12">
                                             <div class="form-group row">
-                                                <label for="total_amount" class="col-md-4 col-form-label">Total Amount</label>
+                                                <label for="total_amount" class="col-md-4 col-form-label">Total Amount
+                                                </label>
                                                 <div class="col-md-8 field-container">
                                                     <field name="total_amount"/>
                                                 </div>
@@ -334,7 +379,8 @@
                                         </div>
                                         <div class="col-md-12">
                                             <div class="form-group row">
-                                                <label for="net_amount" class="col-md-4 col-form-label">Net Amount</label>
+                                                <label for="net_amount" class="col-md-4 col-form-label">Net Amount
+                                                </label>
                                                 <div class="col-md-8 field-container">
                                                     <field name="net_amount"/>
                                                 </div>
@@ -403,7 +449,7 @@
                         </div>
                     </sheet>
 
-                      <script type="text/javascript">
+                    <script type="text/javascript">
                         function togglePwd(el) {
                         var input = el.closest('div').querySelector('input');
                         var icon = el.querySelector('i');
@@ -421,6 +467,20 @@
                 </form>
             </field>
         </record>
+
+        <record id="view_xray_billing_form_date_edit" model="ir.ui.view">
+            <field name="name">xray.billing.form.date.edit</field>
+            <field name="model">xray.billing</field>
+            <field name="inherit_id" ref="homeo_doctor.view_xray_billing_form"/>
+            <field name="groups_id"
+                   eval="[(6, 0, [ref('base.group_system'), ref('homeo_doctor.group_pharmacy_date_editor')])]"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='bill_date']" position="attributes">
+                    <attribute name="readonly">0</attribute>
+                </xpath>
+            </field>
+        </record>
+
         <record id="view_xray_billing_search" model="ir.ui.view">
             <field name="name">xray.billing.search</field>
             <field name="model">xray.billing</field>

@@ -48,8 +48,11 @@
                                                 <label for="bill_date" class="col-md-5 col-form-label py-0 small">Bill
                                                     Date
                                                 </label>
-                                                <div class="col-md-7 field-container py-0">
-                                                    <field name="bill_date"/>
+<!--                                                <div class="col-md-7 field-container py-0">-->
+<!--                                                    <field name="bill_date"/>-->
+<!--                                                </div>-->
+                                                 <div class="col-md-7 field-container py-0">
+                                                    <field name="bill_date" readonly="1"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -426,6 +429,20 @@
             </form>
         </field>
     </record>
+
+         <record id="view_audiology_billing_form_date_edit" model="ir.ui.view">
+            <field name="name">casuality.billing.form.date.edit</field>
+            <field name="model">casuality.billing</field>
+            <field name="inherit_id" ref="homeo_doctor.view_casuality_billing_form"/>
+            <field name="groups_id"
+                   eval="[(6, 0, [ref('base.group_system'), ref('homeo_doctor.group_pharmacy_date_editor')])]"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='bill_date']" position="attributes">
+                    <attribute name="readonly">0</attribute>
+                </xpath>
+            </field>
+        </record>
+
     <record id="view_casuality_billing_search" model="ir.ui.view">
         <field name="name">casuality.billing.search</field>
         <field name="model">casuality.billing</field>
