@@ -706,7 +706,9 @@
                                     </div>
                                     <div style="flex: 1; min-width: 180px;">
                                         <span class="o_form_label" style="font-weight: bold;">Doctor:</span>
-                                        <field name="doctor_name"/>
+                                        <field name="doctor_name"
+                                               options="{'no_create': True, 'no_edit': True}"/>
+                                        <field name="others_doctor" invisible="1"/>
                                     </div>
 <!--                                    <div style="flex: 1; min-width: 180px;">-->
 <!--                                        <span class="o_form_label" style="font-weight: bold;">Date:</span>-->

@@ -27,8 +27,9 @@ class DoctorLabReport(models.Model):
     reference_no = fields.Char(string="Reference No")
     report_reference = fields.Char(string="Report Reference", readonly=True, default=lambda self: _('New'))
     date = fields.Date(string="Report Date", default=fields.Date.context_today)
-    doctor_id = fields.Many2one('doctor.profile', string="Doctor", compute="_compute_doctor_name", 
-                                readonly=False)
+    doctor_id = fields.Many2one('doctor.profile', string="Doctor", compute="_compute_doctor_name",
+                                inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     report_details = fields.Text(string="Report Details")
     attachment = fields.Binary(string="Result")
     attachment_name = fields.Char(string="Result")
@@ -237,9 +238,38 @@ class DoctorLabReport(models.Model):
 
             rec.doctor_id = doctor
 
-    @api.depends('user_ide', 'user_ide.admission_boolean', 'user_ide.status', 'user_ide.admitted_date', 'user_ide.doctor', 'user_ide.doc_name', 'patient_id', 'date', 'bill_type')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor_id
+
+    def onchange(self, values, field_name, field_onchange):
+        # bill_type depends doctor_id compute — stash doctor before recompute clears it
+        vals = values
+        if field_name == 'bill_type' and values:
+            if values.get('bill_type') == 'others':
+                doctor = values.get('doctor_id') or values.get('others_doctor')
+                if doctor:
+                    vals = dict(values)
+                    vals['others_doctor'] = doctor
+            elif values.get('bill_type') in ('op', 'admitted'):
+                vals = dict(values)
+                vals['others_doctor'] = False
+        return super(DoctorLabReport, self).onchange(vals, field_name, field_onchange)
+
+    @api.onchange('doctor_id')
+    def _onchange_doctor_id_others(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor_id
+
+    @api.depends('others_doctor', 'user_ide', 'user_ide.admission_boolean', 'user_ide.status', 'user_ide.admitted_date', 'user_ide.doctor', 'user_ide.doc_name', 'patient_id', 'date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
+            # Others: only show the doctor saved on the bill (never auto-clear)
+            if rec.bill_type == 'others':
+                rec.doctor_id = rec.others_doctor
+                continue
             # 1. ABSOLUTE HISTORICAL LOCK: If patient is discharged and we HAVE a doctor, never change for IP bills.
             if rec.doctor_id and rec.user_ide and rec.user_ide.status == 'discharged':
                 if rec.bill_type == 'admitted':

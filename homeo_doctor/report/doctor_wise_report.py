@@ -538,13 +538,25 @@ class DoctorBillingReportWizard(models.TransientModel):
             return 'Unknown'
         return cache['doctor_names'].get(doctor_id) or 'Unknown'
 
+    def _others_doctor_expr(self, model_name, alias):
+        """Stored doctor chosen on an Others bill. NULL when the column is absent."""
+        if self._columns_exist(self.env[model_name], ['others_doctor']):
+            return "%s.others_doctor" % alias
+        return "NULL::integer"
+
     def _aggregate_rows(self, result, result_key, rows, cache, resolve_fn, doctor_filter_id=False):
         """rows: iterable of dicts with amount + fields needed by resolve_fn."""
         for row in rows:
             amount = row.get('amount') or 0.0
             if not amount:
                 continue
-            doc_id = resolve_fn(row, cache)
+            # Others bills keep the doctor selected on the bill. OP/IP lookup is unchanged.
+            if row.get('bill_type') == 'others' and row.get('others_doctor'):
+                doc_id = row['others_doctor']
+            elif row.get('override_doctor'):
+                doc_id = row['override_doctor']
+            else:
+                doc_id = resolve_fn(row, cache)
             if doctor_filter_id and doc_id != doctor_filter_id:
                 continue
             self._set_summary_amount(result, self._doctor_name(cache, doc_id), result_key, amount)
@@ -708,7 +720,8 @@ class DoctorBillingReportWizard(models.TransientModel):
         # Fetch all other bill rows first, then one shared doctor cache
         general_rows = self._fetch_bill_rows("""
             SELECT t.mrd_no AS patient_id, t.bill_date, t.bill_type,
-                   t.patient_name, COALESCE(t.total_amount, 0) AS amount
+                   t.patient_name, """ + self._others_doctor_expr('general.billing', 't') + """ AS others_doctor,
+                   COALESCE(t.total_amount, 0) AS amount
               FROM general_billing t
              WHERE t.bill_date >= %s AND t.bill_date <= %s AND """ + paid_vssc, [from_date, to_date])
 
@@ -717,6 +730,7 @@ class DoctorBillingReportWizard(models.TransientModel):
                    p.user_ide AS patient_id,
                    p.date AS bill_date,
                    p.bill_type,
+                   """ + self._others_doctor_expr('doctor.lab.report', 'p') + """ AS others_doctor,
                    COALESCE(p.admitted_check, false) AS admitted_check,
                    preg_order.doctor AS order_doctor,
                    pr.status AS user_status,
@@ -756,6 +770,7 @@ class DoctorBillingReportWizard(models.TransientModel):
                    p.date AS bill_date,
                    p.op_category AS bill_type,
                    p.status AS bill_status,
+                   """ + self._others_doctor_expr('pharmacy.description', 'p') + """ AS others_doctor,
                    p.doctor_name AS stored_doctor,
                    preg_order.doctor AS order_doctor,
                    pr.doc_name AS doc_name,
@@ -782,7 +797,8 @@ class DoctorBillingReportWizard(models.TransientModel):
         casualty_rows = self._fetch_bill_rows("""
             SELECT t.id AS casualty_id,
                    t.mrd_no AS patient_id, t.bill_date, t.bill_type,
-                   t.patient_name, COALESCE(t.net_amount, 0) AS amount
+                   t.patient_name, """ + self._others_doctor_expr('casuality.billing', 't') + """ AS others_doctor,
+                   COALESCE(t.net_amount, 0) AS amount
               FROM casuality_billing t
              WHERE t.bill_date >= %s AND t.bill_date <= %s AND """ + paid_vssc, [from_date, to_date])
 
@@ -795,12 +811,14 @@ class DoctorBillingReportWizard(models.TransientModel):
 
         xray_rows = self._fetch_bill_rows("""
             SELECT t.mrd_no AS patient_id, t.bill_date, t.bill_type,
+                   """ + self._others_doctor_expr('xray.billing', 't') + """ AS others_doctor,
                    COALESCE(t.total_amount, 0) AS amount
               FROM xray_billing t
              WHERE t.bill_date >= %s AND t.bill_date <= %s AND """ + paid_vssc, [from_date, to_date])
 
         audio_rows = self._fetch_bill_rows("""
             SELECT t.mrd_no AS patient_id, t.bill_date, t.bill_type,
+                   """ + self._others_doctor_expr('audiology.billing', 't') + """ AS others_doctor,
                    GREATEST(
                        COALESCE(line_amt.amount, 0) + COALESCE(t.rent, 0)
                        - COALESCE(t.discount, 0)

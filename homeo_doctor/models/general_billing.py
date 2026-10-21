@@ -40,8 +40,9 @@ class GeneralBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date', default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                             readonly=False)
+    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name",
+                             inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
     bill_types = fields.Many2one('bill.type', string='Bill Type')
@@ -215,9 +216,46 @@ class GeneralBilling(models.Model):
 
             rec.doctor = doctor
 
-    @api.depends('mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    def onchange(self, values, field_name, field_onchange):
+        vals = values
+        if field_name == 'bill_type' and values:
+            if values.get('bill_type') == 'others':
+                doctor = values.get('doctor') or values.get('others_doctor')
+                if doctor:
+                    vals = dict(values)
+                    vals['others_doctor'] = doctor
+            elif values.get('bill_type') in ('op', 'admitted'):
+                vals = dict(values)
+                vals['others_doctor'] = False
+        return super().onchange(vals, field_name, field_onchange)
+
+    @api.onchange('bill_type')
+    def _onchange_bill_type_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                if rec.doctor:
+                    rec.others_doctor = rec.doctor
+            else:
+                rec.others_doctor = False
+
+    @api.onchange('doctor')
+    def _onchange_doctor_others(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    @api.depends('others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.status', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
+            # Others: keep the doctor selected on the bill (OP/IP unchanged)
+            if rec.bill_type == 'others':
+                rec.doctor = rec.others_doctor
+                continue
             # 1. Historical Lock: If bill is finalized (paid/discharged/cancelled), never recompute doctor.
             if rec.doctor and rec.status in ['paid', 'discharge', 'cancelled']:
                 continue
@@ -1343,8 +1381,9 @@ class CasualityBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date', default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                             readonly=False,)
+    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name",
+                             inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
     bill_types = fields.Many2one('bill.type', string='Bill Type')
@@ -1540,9 +1579,45 @@ class CasualityBilling(models.Model):
     #                     ('appointment_date', '<=', bill_date),
     #                     ('status', '=', 'confirmed')
     #                 ], limit=1)
-    @api.depends('mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    def onchange(self, values, field_name, field_onchange):
+        vals = values
+        if field_name == 'bill_type' and values:
+            if values.get('bill_type') == 'others':
+                doctor = values.get('doctor') or values.get('others_doctor')
+                if doctor:
+                    vals = dict(values)
+                    vals['others_doctor'] = doctor
+            elif values.get('bill_type') in ('op', 'admitted'):
+                vals = dict(values)
+                vals['others_doctor'] = False
+        return super().onchange(vals, field_name, field_onchange)
+
+    @api.onchange('bill_type')
+    def _onchange_bill_type_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                if rec.doctor:
+                    rec.others_doctor = rec.doctor
+            else:
+                rec.others_doctor = False
+
+    @api.onchange('doctor')
+    def _onchange_doctor_others(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    @api.depends('others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
+            if rec.bill_type == 'others':
+                rec.doctor = rec.others_doctor
+                continue
             doctor = False
             if rec.mrd_no and rec.bill_date:
                 bill_date = rec.bill_date
@@ -2054,8 +2129,9 @@ class AudiologyBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date',default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                             readonly=False,)
+    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name",
+                             inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
     bill_types = fields.Many2one('bill.type', string='Bill Type')
@@ -2153,9 +2229,46 @@ class AudiologyBilling(models.Model):
             limit=1
         )
         return employee.id or False
-    @api.depends('mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
+
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    def onchange(self, values, field_name, field_onchange):
+        vals = values
+        if field_name == 'bill_type' and values:
+            if values.get('bill_type') == 'others':
+                doctor = values.get('doctor') or values.get('others_doctor')
+                if doctor:
+                    vals = dict(values)
+                    vals['others_doctor'] = doctor
+            elif values.get('bill_type') in ('op', 'admitted'):
+                vals = dict(values)
+                vals['others_doctor'] = False
+        return super().onchange(vals, field_name, field_onchange)
+
+    @api.onchange('bill_type')
+    def _onchange_bill_type_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                if rec.doctor:
+                    rec.others_doctor = rec.doctor
+            else:
+                rec.others_doctor = False
+
+    @api.onchange('doctor')
+    def _onchange_doctor_others(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    @api.depends('others_doctor', 'mrd_no', 'mrd_no.admission_boolean', 'mrd_no.admitted_date', 'mrd_no.doctor', 'mrd_no.doc_name', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         for rec in self:
+            if rec.bill_type == 'others':
+                rec.doctor = rec.others_doctor
+                continue
             doctor = False
             if rec.mrd_no and rec.bill_date:
                 bill_date = rec.bill_date
@@ -2709,8 +2822,9 @@ class XRAYBilling(models.Model):
     mobile = fields.Char(string='Mobile')
     bill_date = fields.Date(string='Bill Date',default=fields.Date.context_today)
     op_category = fields.Many2one('op.category', string='OP Category')
-    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                             readonly=False,)
+    doctor = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name",
+                             inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     department = fields.Many2one('general.department', string='Department')
     particulars = fields.Many2one('general.dept.costing', string='Select Particulars')
     bill_types = fields.Many2one('bill.type', string='Bill Type')
@@ -2810,11 +2924,47 @@ class XRAYBilling(models.Model):
 
 
 
-    @api.depends('mrd_no', 'bill_date', 'bill_type')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    def onchange(self, values, field_name, field_onchange):
+        vals = values
+        if field_name == 'bill_type' and values:
+            if values.get('bill_type') == 'others':
+                doctor = values.get('doctor') or values.get('others_doctor')
+                if doctor:
+                    vals = dict(values)
+                    vals['others_doctor'] = doctor
+            elif values.get('bill_type') in ('op', 'admitted'):
+                vals = dict(values)
+                vals['others_doctor'] = False
+        return super().onchange(vals, field_name, field_onchange)
+
+    @api.onchange('bill_type')
+    def _onchange_bill_type_others_doctor(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                if rec.doctor:
+                    rec.others_doctor = rec.doctor
+            else:
+                rec.others_doctor = False
+
+    @api.onchange('doctor')
+    def _onchange_doctor_others(self):
+        for rec in self:
+            if rec.bill_type == 'others':
+                rec.others_doctor = rec.doctor
+
+    @api.depends('others_doctor', 'mrd_no', 'bill_date', 'bill_type')
     def _compute_doctor_name(self):
         import logging
         _logger = logging.getLogger(__name__)
         for rec in self:
+            if rec.bill_type == 'others':
+                rec.doctor = rec.others_doctor
+                continue
             doctor_id = False
             if rec.mrd_no and rec.bill_date:
                 # 0️⃣ Setup Patient & Date Context
@@ -3575,6 +3725,11 @@ class OTBilling(models.Model):
     def _onchange_bill_date_update_doctor(self):
         for rec in self:
             if rec.status in ['paid', 'cancelled'] or rec.doctor_override:
+                continue
+            if rec.bill_type == 'others':
+                # Others: user picks doctor manually (stored in doctor_override)
+                if rec.doctor and not rec.doctor_override:
+                    rec.doctor_override = rec.doctor
                 continue
             if not rec.mrd_no or not rec.bill_date:
                 continue
@@ -5410,41 +5565,31 @@ class DischargeBilling(models.Model):
                 })
                 wallet_rec.action_add_amount()
 
-        all_bill_groups = [
-            rec.paid_general_ids,
-            rec.paid_pharmacy_ids,
-            rec.paid_lab_ids,
-            rec.paid_ot_ids,
-            rec.paid_audiology_ids,
-            rec.paid_xray_ids,
-            rec.paid_casualty_ids,
-        ]
-        for group in all_bill_groups:
-
-            for bill in group:
-
-                if bill.status != 'paid':
-                    continue
-
-                # Skip OP bills
-                if 'bill_type' in bill._fields and bill.bill_type == 'op':
-                    continue
-
-                if 'op_category' in bill._fields and bill.op_category == 'op':
-                    continue
-
-                bill.write({'status': 'unpaid'})
-
-                print('UPDATED:', bill)
-        # for group in all_bill_groups:
-        #     paid_bills = group.filtered(
-        #         lambda b: b.status == 'paid' and b.bill_type != 'op'  or
-        #         ('op_category' in b._fields and b.op_category != 'op')
-        #     )
-        #
-        #     paid_bills.write({'status': 'unpaid'})
-        #     print('jhdhjsfhjsdhfgjsdg',  paid_bills)
-        #
+            # Only IP *credit* dept bills revert to unpaid.
+            # OP and IP cash/card/upi/cheque stay paid.
+            all_bill_groups = [
+                rec.paid_general_ids,
+                rec.paid_pharmacy_ids,
+                rec.paid_lab_ids,
+                rec.paid_ot_ids,
+                rec.paid_audiology_ids,
+                rec.paid_xray_ids,
+                rec.paid_casualty_ids,
+            ]
+            for group in all_bill_groups:
+                for bill in group:
+                    if bill.status != 'paid':
+                        continue
+                    if rec._is_op_department_bill(bill):
+                        continue
+                    mode = None
+                    for fname in ('mode_of_payment', 'mode_pay', 'payment_mathod'):
+                        if fname in bill._fields:
+                            mode = bill[fname]
+                            break
+                    if mode != 'credit':
+                        continue
+                    bill.write({'status': 'unpaid'})
 
     def action_reopen(self):
         """Re-open a CANCELLED discharge bill so it can be paid again like a
@@ -5463,8 +5608,9 @@ class DischargeBilling(models.Model):
         - patient / admission status: restored to the proceed-discharge state so
           the bill behaves like a normal payable discharge bill again.
 
-        Department bills were reverted to 'unpaid' by cancel, which is already the
-        correct state for an unpaid re-opened bill, so they are left as-is.
+        Only IP credit department bills were reverted to unpaid by cancel; they
+        stay unpaid for a re-opened bill. Cash/card/upi/cheque IP bills were left
+        paid and are left as-is.
         """
         for rec in self:
             # Guard against double-processing: only cancelled bills re-open.

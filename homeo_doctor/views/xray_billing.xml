@@ -136,6 +136,7 @@
                                         <label for="doctor" class="col-md-5 col-form-label py-0 small">Doctor</label>
                                         <div class="col-md-7 field-container py-0">
                                             <field name="doctor" options="{'no_create': True, 'no_edit': True}"/>
+                                            <field name="others_doctor" invisible="1"/>
                                         </div>
                                     </div>
                                 </div>

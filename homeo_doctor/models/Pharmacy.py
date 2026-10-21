@@ -22,8 +22,9 @@ class PharmacyDescription(models.Model):
     name = fields.Char(string="Patient Name")
     phone_number = fields.Char(string="Phone Number")
     # bill_amount=fields.Integer(string='Bill Amount')
-    doctor_name = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name", 
-                                  readonly=False)
+    doctor_name = fields.Many2one('doctor.profile', string='Doctor', compute="_compute_doctor_name",
+                                  inverse='_inverse_others_doctor', readonly=False)
+    others_doctor = fields.Many2one('doctor.profile', string='Others Doctor', copy=False)
     date = fields.Date(string="Date", default=fields.Date.context_today)
     prescription_line_ids = fields.One2many('pharmacy.prescription.line', 'pharmacy_id', string="Prescriptions")
     bill_amount = fields.Float(string="Total Bill Amount", compute="_compute_bill_amount")
@@ -90,9 +91,40 @@ class PharmacyDescription(models.Model):
         ], limit=1)
         return employee.id
 
-    @api.depends('uhid_id', 'uhid_id.admission_boolean', 'uhid_id.status', 'uhid_id.admitted_date', 'uhid_id.doctor', 'uhid_id.doc_name', 'patient_id', 'date', 'op_category')
+    def _inverse_others_doctor(self):
+        for rec in self:
+            if rec.op_category == 'others':
+                rec.others_doctor = rec.doctor_name
+
+    def onchange(self, values, field_name, field_onchange):
+        # op_category is a compute dependency of doctor_name, so Odoo recomputes
+        # (and clears) doctor before @api.onchange runs. Stash the UI doctor into
+        # others_doctor first so Others keeps the selected name.
+        vals = values
+        if field_name == 'op_category' and values:
+            if values.get('op_category') == 'others':
+                doctor = values.get('doctor_name') or values.get('others_doctor')
+                if doctor:
+                    vals = dict(values)
+                    vals['others_doctor'] = doctor
+            elif values.get('op_category') in ('op', 'admitted'):
+                vals = dict(values)
+                vals['others_doctor'] = False
+        return super(PharmacyDescription, self).onchange(vals, field_name, field_onchange)
+
+    @api.onchange('doctor_name')
+    def _onchange_doctor_name_others(self):
+        for rec in self:
+            if rec.op_category == 'others':
+                rec.others_doctor = rec.doctor_name
+
+    @api.depends('others_doctor', 'uhid_id', 'uhid_id.admission_boolean', 'uhid_id.status', 'uhid_id.admitted_date', 'uhid_id.doctor', 'uhid_id.doc_name', 'patient_id', 'date', 'op_category')
     def _compute_doctor_name(self):
         for rec in self:
+            # Others: only show the doctor saved on the bill (never auto-clear)
+            if rec.op_category == 'others':
+                rec.doctor_name = rec.others_doctor
+                continue
             # 1. Standard Guard: paid bills never change
             if rec.status == 'paid' and rec.doctor_name:
                 continue

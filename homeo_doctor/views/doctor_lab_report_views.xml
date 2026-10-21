@@ -164,6 +164,7 @@
                                             <label for="doctor_id" class="col-md-4 col-form-label">Doctor</label>
                                             <div class="col-md-8 field-container">
                                                 <field name="doctor_id" options="{'no_create': True, 'no_edit': True}"/>
+                                                <field name="others_doctor" invisible="1"/>
                                             </div>
                                         </div>
                                     </div>
