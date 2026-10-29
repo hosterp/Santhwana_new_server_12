@@ -243,7 +243,7 @@
                                                 <field name="particulars"/>
                                                 <field name="rate"/>
                                                 <field name="tax" class="narrow_tax_column"/>
-                                                <field name="quantity"/>
+                                                <field name="quantity" invisible="1"/>
                                                 <field name="total_amt" sum="total amt"/>
                                             </tree>
                                         </field>
@@ -336,7 +336,7 @@
 
                                     <!-- Second column -->
                                     <div class="row column_two" style="display:block; width: 33%;">
-                                        <div class="col-md-12">
+                                        <div class="col-md-12" invisible="1">
                                             <div class="form-group row">
                                                 <label for="total_qty" class="col-md-4 col-form-label">Total Qty</label>
                                                 <div class="col-md-8 field-container">

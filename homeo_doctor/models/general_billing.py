@@ -3460,7 +3460,7 @@ class XRAYBillLine(models.Model):
     particulars = fields.Many2one('xray.test', string='Select particulars')
     rate = fields.Integer(string='Rate')
     tax = fields.Many2one('dept.tax', string='Tax(%)')
-    quantity = fields.Float(string='Qty')
+    quantity = fields.Float(string='Qty', default=1.0)
     total_amt = fields.Integer(string='Amount', compute="_compute_total")
 
 
@@ -3468,12 +3468,14 @@ class XRAYBillLine(models.Model):
     def _compute_total(self):
         for line in self:
             tax_amount = line.tax.tax if line.tax else 0.0
-            line.total_amt = line.rate * line.quantity * (1 + tax_amount / 100)
+            line.total_amt = line.rate * (line.quantity or 1.0) * (1 + tax_amount / 100)
 
     @api.onchange('particulars')
     def _rate_auto_fill(self):
         for rec in self:
             rec.rate = rec.particulars.price
+            if not rec.quantity:
+                rec.quantity = 1.0
 
 
 class OTBilling(models.Model):
