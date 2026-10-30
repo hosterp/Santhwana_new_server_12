@@ -3452,7 +3452,7 @@ class XRAYBilling(models.Model):
     # def action_ip_print_general_bill(self):
     #     return self.env.ref('homeo_doctor.action_report_ip_part_billing').report_action(self)
 
-
+OLD_LOGIC_UNTIL = date(2026, 10, 29)
 class XRAYBillLine(models.Model):
     _name = 'xray.bill.line'
 
@@ -3463,20 +3463,33 @@ class XRAYBillLine(models.Model):
     quantity = fields.Float(string='Qty', default=1.0)
     total_amt = fields.Integer(string='Amount', compute="_compute_total")
 
+    def _use_new_logic(self):
+        self.ensure_one()
+        bill_date = self.bill_line_id.bill_date      # <-- change to your real date field name
+        if not bill_date:
+            return True                              # new bill without a date yet
+        if isinstance(bill_date, datetime):
+            bill_date = bill_date.date()
+        return bill_date > OLD_LOGIC_UNTIL
 
-    @api.depends('rate', 'tax', 'quantity')
+    @api.depends('rate', 'tax', 'quantity', 'bill_line_id.bill_date')
     def _compute_total(self):
         for line in self:
             tax_amount = line.tax.tax if line.tax else 0.0
-            line.total_amt = line.rate * (line.quantity or 1.0) * (1 + tax_amount / 100)
+            if line._use_new_logic():
+                qty = line.quantity or 1.0  # new bills (after 29 Oct): empty qty counts as 1
+            else:
+                qty = line.quantity  # old bills (29 Oct or earlier): use the saved qty as it is, 0 stays 0
+            line.total_amt = line.rate * qty * (1 + tax_amount / 100)
 
     @api.onchange('particulars')
     def _rate_auto_fill(self):
         for rec in self:
             rec.rate = rec.particulars.price
-            if not rec.quantity:
-                rec.quantity = 1.0
-
+            if rec._use_new_logic():
+                if not rec.quantity:
+                    rec.quantity = 1.0
+            # bills on or before 29 Oct: qty is not touched
 
 class OTBilling(models.Model):
     _name = 'ot.billing'
